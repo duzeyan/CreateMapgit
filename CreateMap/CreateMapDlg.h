@@ -1,0 +1,113 @@
+
+// CreateMapDlg.h : 头文件
+//
+
+#pragma once
+ 
+#include"QDib.h"
+#include "afxwin.h"
+#include "NJUSTMap.h"
+#include"DrawMapMark.h"
+#include "CreateLineDlg.h"
+
+#include<math.h>
+
+// CCreateMapDlg 对话框
+class CCreateMapDlg : public CDialog
+{
+// 构造
+public:
+	CCreateMapDlg(CWnd* pParent = NULL);	// 标准构造函数
+
+// 对话框数据
+	enum { IDD = IDD_CREATEMAP_DIALOG };
+
+	protected:
+	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV 支持
+
+
+private:
+	QDib qDib;
+// 实现
+protected:
+	HICON m_hIcon;
+
+	// 生成的消息映射函数
+	virtual BOOL OnInitDialog();
+	afx_msg void OnPaint();
+	afx_msg HCURSOR OnQueryDragIcon();
+	DECLARE_MESSAGE_MAP()
+public:
+	bool m_isMove;			//鼠标是否在移动
+	CPoint m_startPoint;   //左键启动点
+	CImage *m_loadImage;   //最新绘制的图片
+	CImage *m_backUpImage; //原始图像备份
+	CImage *m_canvas;	   //画布 为了记录绘制点集 
+	CImage *m_canvas1;	   //画布 为了记录绘制点集 
+
+	CRect m_srcRect;       //原图上的视窗
+	CRect m_picRect;       //图片控件大小
+	bool m_isDrawLine;     //是否进入画状态
+	CPoint m_lineP;			//画线的起始点和终点
+	CPoint m_nodeP;         //绘制路口时候需要的点
+	CDC *m_pPicDC;		 //图片控件DC
+	vector<DRAW_RECORD> m_records; //绘图操作记录表
+	NJUSTMap m_njustMap;     //最后使用的地图拓扑结构(计算和存储)
+
+	CONTROL_CASE m_nowCase;
+	CONTROL_BEZIER control_bezier; //绘制贝塞尔曲线时 记录鼠标状态
+	CONTORL_POINTS control_points;//绘制孤立点时 记录鼠标状态
+
+	CreateLineDlg *m_lineDlg;       //道路子窗口
+	CPoint m_Line2ID ;				//x y为直线两边的ID
+
+	afx_msg void OnBnClickedButton1();
+	CStatic m_picMain;
+	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
+	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
+//	afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
+	afx_msg void OnBnClickedButtonup();
+	afx_msg void OnBnClickedButtonleft();
+	afx_msg void OnBnClickedButtonright();
+	afx_msg void OnBnClickedButtonupleft();
+	afx_msg void OnBnClickedButton2();
+
+	afx_msg void OnBnClickedButnbezier();
+	CListBox m_listRecord;
+	CListBox m_listMap;
+
+//业务逻辑 功能函数
+private :
+	//对直线绘图的具体操作
+	//point:当前点坐标(全窗体)  rect:控件坐标
+	void DlgDrawLine(CPoint point,CRect rect);
+
+	//对曲线绘图的具体操作
+	//point:当前点坐标(全窗体)  rect:控件坐标
+	void DlgDrawBezier(CPoint point ,CRect rect);
+
+	//对离散点绘图的具体操作
+	//point:当前点坐标(全窗体)  rect:控件坐标
+	void DlgDrawPoints(CPoint point ,CRect rect);
+
+	//对节点绘图的具体操作
+	//point:当前点坐标(全窗体)  rect:控件坐标
+	void DlgDrawMark(CPoint point,CRect rect);
+
+public:
+	afx_msg void OnBnClickedButnpoints();
+	afx_msg void OnBnClickedButtondel();
+	afx_msg void OnBnClickedButtonshow();
+	afx_msg void OnBnClickedButnmarknode();
+	afx_msg void OnBnClickedButtonmeg();
+protected:
+	afx_msg LRESULT OnMapSetline2id(WPARAM wParam, LPARAM lParam);
+public:
+	afx_msg void OnLbnSelchangeListrecord();
+	
+	afx_msg void OnBnClickedButtonshowroad();
+	afx_msg void OnBnClickedButtonf5();
+	afx_msg void OnBnClickedButtondeline();
+	afx_msg void OnBnClickedButtondelineout();
+};
