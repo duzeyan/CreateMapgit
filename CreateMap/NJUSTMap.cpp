@@ -12,15 +12,16 @@ void NJUSTMap::init(COMPUTE_GPS buildGPS[2]){
 }
 
 void NJUSTMap::deleteEleByID(bool isNode,int id){
+	unsigned int i;
 	if(!isNode){
-		for(int i=0;i<roads.size();i++){
+		for(i=0;i<roads.size();i++){
 				if(id==roads[i].road.idself){
 					roads.erase(roads.begin()+i);
 					return ;
 				}
 		}
 	}else{
-		for(int i=0;i<nodes.size();i++){
+		for(i=0;i<nodes.size();i++){
 				if(id==nodes[i].node.idself){
 					nodes.erase(nodes.begin()+i);
 					return ;
@@ -93,23 +94,25 @@ CString NJUSTMap::printRoadBack()const{
 
 bool NJUSTMap::writeRoad(CString path){
 
-	//unsigned int i,j;
-	//for(i=0;i<roads.size();i++){
-	//	CString filename;
-	//	filename.Format(L"%s\\%d-%d.db",path, roads[i].road.idstart+1, roads[i].road.idend+1);
-	//	char *pfilename =(LPSTR)(LPCTSTR)filename;
-	//	FILE *pFile=fopen(pfilename,"wb");
-	//	if (pFile==NULL)
-	//	{
-	//		CString strdebug;
-	//		strdebug.Format(L"%s Ð´´íÎó",filename);
-	//		MYLOG(strdebug);
-	//		return false;
-	//	}
-	//	//for(j=0;j<;j++){
-
-	//	//}
-	//}
+	unsigned int i,j;
+	for(i=0;i<roads.size();i++){
+		CString filename;
+		filename.Format(L"%s\\%d-%d.db",path, 
+								roads[i].road.idstart-START_NODE_ID+1,
+								roads[i].road.idend-START_NODE_ID+1);
+		
+		CFile file;
+		if(file.Open(filename,CFile::modeCreate|CFile::modeWrite)){
+			for(j=0;j<roads[i].pInLine.size();j++){
+				COMPUTE_GPS var(roads[i].pInLine[j].x,roads[i].pInLine[j].y,0.0,0.0);
+				pixel2GPS(var);
+				MAP_DOUBLE_POINT outpoint;
+				outpoint.x=var.lng;outpoint.y=var.lat;
+				file.Write(&outpoint,sizeof(MAP_DOUBLE_POINT));
+			}
+			file.Close();
+		}	
+	}
 	return true;
 }
 

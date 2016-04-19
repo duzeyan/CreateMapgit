@@ -413,7 +413,7 @@ void CCreateMapDlg::OnBnClickedButtonmeg()
 //显示道路
 void CCreateMapDlg::OnBnClickedButtonshowroad()
 {
-	int i,k;
+	unsigned int k;
 	int index=m_listMap.GetCurSel();
 	if(index!=LB_ERR){
 		HDC hdc=m_loadImage->GetDC();
@@ -421,7 +421,6 @@ void CCreateMapDlg::OnBnClickedButtonshowroad()
 		for(k=0;k<m_njustMap.roads[index].pInLine.size();k++)
 			pDC->SetPixel(m_njustMap.roads[index].pInLine[k],RGB(255,255,255));
 
-		// --- Step.3---  更新图示
 		m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect);
 	}
 }
@@ -457,7 +456,14 @@ void CCreateMapDlg::OnBnClickedButtondeline()
 //保存道路
 void CCreateMapDlg::OnBnClickedButtondelineout()
 {
-	//m_njustMap.roads
+	CString path=L"D:\\map";
+	if(!m_njustMap.writeRoad(path)){
+		AfxMessageBox(L"保存失败",MB_OK);
+	}else{
+		CString msg;
+		msg.Format(L"保存在%s目录下",path);
+		AfxMessageBox(msg,MB_OK);
+	}
 }
 
 ///////////////////////业务逻辑代码//////////////////////////
@@ -675,7 +681,7 @@ void CCreateMapDlg::DlgDrawMark(CPoint point,CRect rect){
 afx_msg LRESULT CCreateMapDlg::OnMapSetline2id(WPARAM wParam, LPARAM lParam)
 {
 	//AfxMessageBox(L"获取消息",MB_OK);
-	int i,k;
+	unsigned int i,k;
 	int nItemCount = m_listRecord.GetSelCount();
 	if (0 != nItemCount){
 		int* indexBuf = new int[nItemCount];
