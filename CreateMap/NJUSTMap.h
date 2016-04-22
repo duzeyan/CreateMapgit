@@ -73,7 +73,11 @@ public:
 	//在特定目录下保存文件
 	bool writeRoad(CString path);
 
+	//像素转化为GPS
 	void pixel2GPS(COMPUTE_GPS &p2g);
+
+	//像素转化为GPS
+	void GPS2pexel(COMPUTE_GPS &p2g);
 
 	
 };

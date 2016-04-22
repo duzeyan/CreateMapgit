@@ -95,7 +95,7 @@ void drawmap::DrawNodeMark(CDC *pdc,CPoint p,unsigned int r,COLORREF color,int  
 	pdc->Ellipse(p.x-r,p.y-r,p.x+r,p.y+r);
 
 	CString outStr;
-	outStr.Format(L"no:%d",indexID);
+	outStr.Format(L"no:%d",indexID+1);
 	pdc->DrawTextEx(outStr,&textRect,DT_LEFT,NULL);
 }
 
@@ -228,7 +228,7 @@ CString drawmap::PrintRecord(DRAW_RECORD record){
 				break;
 			   }
 		case 3:{
-				str.Format(L"Node:%d",record.id);
+				str.Format(L"Node:%d",record.id+1);
 					break;
 			   }
 	default:

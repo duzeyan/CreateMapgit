@@ -6,6 +6,7 @@
 #include "CreateMap.h"
 #include "CreateMapDlg.h"
 #include "afxdialogex.h"
+#include <stdio.h>
 
 //#include"GDITest.h"
 //#include"DrawMapMark.h"
@@ -62,6 +63,10 @@ ON_BN_CLICKED(IDC_BUTTONSHOWROAD, &CCreateMapDlg::OnBnClickedButtonshowroad)
 ON_BN_CLICKED(IDC_BUTTONF5, &CCreateMapDlg::OnBnClickedButtonf5)
 ON_BN_CLICKED(IDC_BUTTONDELINE, &CCreateMapDlg::OnBnClickedButtondeline)
 ON_BN_CLICKED(IDC_BUTTONDELINEOUT, &CCreateMapDlg::OnBnClickedButtondelineout)
+ON_BN_CLICKED(IDCANCEL, &CCreateMapDlg::OnBnClickedCancel)
+ON_BN_CLICKED(IDC_BUTTONSHOWGPS, &CCreateMapDlg::OnBnClickedButtonshowgps)
+ON_WM_TIMER()
+ON_BN_CLICKED(IDC_BUTTONMEG2, &CCreateMapDlg::OnBnClickedButtonmeg2)
 END_MESSAGE_MAP()
 
 //手动注册事件响应
@@ -94,6 +99,8 @@ BOOL CCreateMapDlg::OnInitDialog()
 	control_bezier.index=0;
 	m_lineDlg=NULL;
 	
+	m_Show_cur=0;
+
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -171,11 +178,16 @@ void CCreateMapDlg::OnBnClickedButton1()
 
 		//初始化地图结构
 		COMPUTE_GPS gps2[2];
-		gps2[0]=COMPUTE_GPS(0,0,118.8537507276,32.0315140959);
+		/*gps2[0]=COMPUTE_GPS(484,311,118.8559087276,32.0303230959);
 		gps2[1]=COMPUTE_GPS(m_loadImage->GetWidth()-1
 							,m_loadImage->GetHeight()-1
 							,118.8583817276
-							,32.0258740959);
+							,32.0258740959);*/
+		gps2[0]=COMPUTE_GPS(484,311,118.8558887276,32.0302730959); //5- 2 ;5-5
+		gps2[1]=COMPUTE_GPS(m_loadImage->GetWidth()-1
+							,m_loadImage->GetHeight()-1
+							,118.8583617276
+							,32.0258240959);
 
 		m_njustMap.init(gps2);
 	}
@@ -391,7 +403,7 @@ void CCreateMapDlg::OnBnClickedButtonshow(){
 }
 
 
-//合并按钮
+//合并按钮 生成道路信息
 void CCreateMapDlg::OnBnClickedButtonmeg()
 {
 	// --- Step.1 ---初始化参数
@@ -407,6 +419,24 @@ void CCreateMapDlg::OnBnClickedButtonmeg()
 	}
 	m_lineDlg->Initialize(IDIndex);
 	m_lineDlg->ShowWindow(SW_SHOW);	
+}
+
+
+//生成路口信息
+void CCreateMapDlg::OnBnClickedButtonmeg2()
+{
+	// --- Step.1 ---初始化参数
+	unsigned int i;
+	vector<int> IDIndex;
+	for(i=0;i<m_njustMap.nodes.size();i++)
+		IDIndex.push_back(m_njustMap.nodes[i].node.idself-START_NODE_ID);
+
+	// --- Step.2 --- 构建子对话框
+	if(m_lineDlg==NULL){   //第一次创建
+		m_lineDlg=new CreateLineDlg();
+		m_lineDlg->Create(IDD_CREATELINE_DIALOG,this);
+	}
+	m_lineDlg->Initialize(IDIndex);
 }
 
 
@@ -438,7 +468,7 @@ void CCreateMapDlg::OnBnClickedButtonf5()
 	m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect); 
 }
 
-//删除
+//删除道路
 void CCreateMapDlg::OnBnClickedButtondeline()
 {
 	int index=m_listMap.GetCurSel();
@@ -720,6 +750,71 @@ void CCreateMapDlg::OnLbnSelchangeListrecord()
 
 
 
+void CCreateMapDlg::OnBnClickedCancel()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	CDialog::OnCancel();
+	
+}
 
+
+void CCreateMapDlg::OnBnClickedButtonshowgps()
+{
+	CString FilePathName;
+    CFileDialog dlg(TRUE, //TRUE为OPEN对话框，FALSE为SAVE AS对话框
+        NULL, 
+        NULL,
+        OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
+        (LPCTSTR)_TEXT("DB Files (*.db)|*.db|All Files (*.*)|*.*||"),
+        NULL);
+	if(dlg.DoModal()==IDOK){
+		FilePathName=dlg.GetPathName(); //文件名
+		m_Show_GPSList.clear();
+
+		CFile pf;
+		MAP_DOUBLE_POINT tPoint;  //读db
+		if(pf.Open(FilePathName,CFile::modeRead|CFile::modeNoTruncate)){
+			int GPSnum = pf.GetLength() / sizeof(MAP_DOUBLE_POINT);
+			for(int i=0;i<GPSnum;i++){
+					pf.Read(&tPoint,sizeof(MAP_DOUBLE_POINT)); //fread(&tPoint, sizeof(MAP_DOUBLE_POINT), 1, pf);
+					m_Show_GPSList.push_back(tPoint);  //记录
+			}
+		}else{
+			AfxMessageBox(L"读取DB文件失败",MB_OK);
+		}
+	}
+	CWnd::SetTimer(1,100,NULL);
+}
+
+
+void CCreateMapDlg::OnTimer(UINT_PTR nIDEvent)
+{
+	if(m_Show_cur!=m_Show_GPSList.size()){
+		// 计算
+		COMPUTE_GPS gps;
+		gps.lng=m_Show_GPSList[m_Show_cur].x/60.0; //文件中是分 
+		gps.lat=m_Show_GPSList[m_Show_cur].y/60.0;
+		m_Show_cur++;
+		m_njustMap.GPS2pexel(gps);
+
+		//Draw
+		HDC hdc=m_loadImage->GetDC();
+		CDC *pDC = CDC::FromHandle(hdc);
+		//pDC->SelectObject()
+
+		CPoint p=CPoint(gps.x,gps.y);int r=4;
+		pDC->MoveTo(p);
+		pDC->Ellipse(p.x-r,p.y-r,p.x+r,p.y+r);
+		m_loadImage->ReleaseDC();
+		//更新
+		m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect);
+
+	}else{
+		CWnd::KillTimer(1);
+		m_Show_cur=0;
+		AfxMessageBox(L"绘制完成结束",MB_OK);
+	}
+	CDialog::OnTimer(nIDEvent);
+}
 
 

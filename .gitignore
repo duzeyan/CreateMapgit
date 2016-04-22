@@ -54,3 +54,7 @@ Temporary Items
 CreateMap.sdf
 *.suo
 *.ipch
+CreateMap/CreateMap.vcxproj.filters
+CreateMap/CreateMap.vcxproj
+*.vcxproj
+ClassTest/ClassTest.vcxproj

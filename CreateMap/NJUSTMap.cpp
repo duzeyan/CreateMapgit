@@ -6,9 +6,9 @@
 void NJUSTMap::init(COMPUTE_GPS buildGPS[2]){
 	this->buildGPS[0]=buildGPS[0];
 	this->buildGPS[1]=buildGPS[1];
-	//buildGPS.x=.y=0
-	scaleX=(buildGPS[1].lng-buildGPS[0].lng)/buildGPS[1].x;
-	scaleY=(buildGPS[1].lat-buildGPS[0].lat)/buildGPS[1].y;
+
+	scaleX=(buildGPS[1].lng-buildGPS[0].lng)/(buildGPS[1].x-buildGPS[0].x);
+	scaleY=(buildGPS[1].lat-buildGPS[0].lat)/(buildGPS[1].y-buildGPS[0].y);
 }
 
 void NJUSTMap::deleteEleByID(bool isNode,int id){
@@ -108,6 +108,7 @@ bool NJUSTMap::writeRoad(CString path){
 				pixel2GPS(var);
 				MAP_DOUBLE_POINT outpoint;
 				outpoint.x=var.lng;outpoint.y=var.lat;
+				outpoint.x*=60.0;outpoint.y*=60.0;     //转化为分
 				file.Write(&outpoint,sizeof(MAP_DOUBLE_POINT));
 			}
 			file.Close();
@@ -119,7 +120,19 @@ bool NJUSTMap::writeRoad(CString path){
 void NJUSTMap::pixel2GPS(COMPUTE_GPS &var){
 	var=COMPUTE_GPS(var.x,
 					var.y
-					,var.x*scaleX+buildGPS[0].lng
-					,var.y*scaleY+buildGPS[0].lat);
+					,(var.x-buildGPS[0].x)*1.0*scaleX+buildGPS[0].lng
+					,(var.y-buildGPS[0].y)*1.0*scaleY+buildGPS[0].lat);
+	return ;
+}
+
+void NJUSTMap::GPS2pexel(COMPUTE_GPS &var){
+	int x=(int)((var.lng-buildGPS[0].lng)/scaleX);
+	int y=(int)((var.lat-buildGPS[0].lat)/scaleY);
+	x+=buildGPS[0].x;
+	y+=buildGPS[0].y;
+	var=COMPUTE_GPS(x
+					,y
+					,var.lng
+					,var.lat);
 	return ;
 }

@@ -61,6 +61,13 @@ public:
 	CreateLineDlg *m_lineDlg;       //道路子窗口
 	CPoint m_Line2ID ;				//x y为直线两边的ID
 
+
+
+	////////////////////////////////////////////////////////////////////////// 反向操作变量
+	vector<MAP_DOUBLE_POINT> m_Show_GPSList; //读取的GFS
+	int m_Show_cur; //当前读到的序列位置
+	//////////////////////////////////////////////////////////////////////////
+
 	afx_msg void OnBnClickedButton1();
 	CStatic m_picMain;
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
@@ -95,6 +102,8 @@ private :
 	//point:当前点坐标(全窗体)  rect:控件坐标
 	void DlgDrawMark(CPoint point,CRect rect);
 
+	
+
 public:
 	afx_msg void OnBnClickedButnpoints();
 	afx_msg void OnBnClickedButtondel();
@@ -110,4 +119,8 @@ public:
 	afx_msg void OnBnClickedButtonf5();
 	afx_msg void OnBnClickedButtondeline();
 	afx_msg void OnBnClickedButtondelineout();
+	afx_msg void OnBnClickedCancel();
+	afx_msg void OnBnClickedButtonshowgps();
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	afx_msg void OnBnClickedButtonmeg2();
 };
