@@ -41,8 +41,6 @@ END_MESSAGE_MAP()
 
 void CreateLineDlg::Initialize(vector<int> nodes){
 	m_nodesIndex=nodes;
-
-
 	InitializeView();
 }
 
@@ -53,7 +51,7 @@ void CreateLineDlg::InitializeView(){
 	m_startBox.ResetContent();
 	m_endBox.ResetContent();
 	for(i=0;i<m_nodesIndex.size();i++){
-		strPrint.Format(L"节点:%d",m_nodesIndex[i]+1);
+		strPrint.Format(L"道路:%d",m_nodesIndex[i]+1);
 		m_startBox.AddString(strPrint);
 		m_endBox.AddString(strPrint);
 	}

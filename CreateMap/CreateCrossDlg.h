@@ -5,15 +5,15 @@
 #include <iostream>
 using namespace std;
 
-// CreateCorssDlg 对话框
+// CreateCrossDlg 对话框
 
-class CreateCorssDlg : public CDialogEx
+class CreateCrossDlg : public CDialogEx
 {
-	DECLARE_DYNAMIC(CreateCorssDlg)
+	DECLARE_DYNAMIC(CreateCrossDlg)
 
 public:
-	CreateCorssDlg(CWnd* pParent = NULL);   // 标准构造函数
-	virtual ~CreateCorssDlg();
+	CreateCrossDlg(CWnd* pParent = NULL);   // 标准构造函数
+	virtual ~CreateCrossDlg();
 
 // 对话框数据
 	enum { IDD = IDD_CREATECROSS_DIALOG };
@@ -28,7 +28,7 @@ public:
 	CComboBox m_endComboBox;
 	afx_msg void OnBnClickedOk();
 
-		//设置必要参数 节点序列
+	//设置必要参数 道路ID序列
 	void Initialize(vector<int> roads);
 
 	void InitializeView(); //初始化视窗参数

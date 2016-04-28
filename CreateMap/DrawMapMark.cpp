@@ -95,10 +95,28 @@ void drawmap::DrawNodeMark(CDC *pdc,CPoint p,unsigned int r,COLORREF color,int  
 	pdc->Ellipse(p.x-r,p.y-r,p.x+r,p.y+r);
 
 	CString outStr;
-	outStr.Format(L"no:%d",indexID+1);
+	outStr.Format(L"路口:%d",indexID+1);
 	pdc->DrawTextEx(outStr,&textRect,DT_LEFT,NULL);
 }
 
+//绘制 道路标记
+void drawmap::DrawRoadMark(CDC *pDC,const vector<CPoint> &pV,int id){
+	unsigned midIndex=pV.size()/2;
+	CPoint p=pV[midIndex];
+	CPen pen;
+	int r=10;
+	CRect textRect(p.x+r,p.y-5*r,p.x+10*r,p.y-r);
+
+
+	//pDC->SelectStockObject(NULL_BRUSH);
+	//pDC->SelectObject(pen);
+	//pDC->MoveTo(p);
+	//pDC->Ellipse(p.x-r,p.y-r,p.x+r,p.y+r);
+
+	CString outStr;
+	outStr.Format(L"道路:%d",id); //ID是显示ID
+	pDC->DrawTextEx(outStr,&textRect,DT_LEFT,NULL);
+}
 
 //根据记录重绘
 void drawmap::DrawByRecord(CImage *ptrImage,const vector<DRAW_RECORD>  &vRecord,COLORREF color){
@@ -136,6 +154,27 @@ void drawmap::DrawByRecord(CImage *ptrImage,const vector<DRAW_RECORD>  &vRecord,
 					double r=(point.x-m_nodeP.x)*(point.x-m_nodeP.x)+(point.y-m_nodeP.y)*(point.y-m_nodeP.y);
 					r=sqrt(r);
 					drawmap::DrawNodeMark(pDC,m_nodeP,int(r),color,vRecord[i].id);
+					break;
+			   }
+	   //road 道路
+		case 4:{
+			  //      unsigned midIndex=vRecord[i].drawPoints.size()/2;
+					//CPoint p=vRecord[i].drawPoints[midIndex];
+					//CPen pen;
+					//int r=10;
+					//CRect textRect(p.x+r,p.y-2*r,p.x+5*r,p.y-r);
+
+					//pen.CreatePen(PS_SOLID,1,color);
+					//pDC->SelectStockObject(NULL_BRUSH);
+					//pDC->SelectObject(pen);
+					//pDC->MoveTo(p);
+					//pDC->Ellipse(p.x-r,p.y-r,p.x+r,p.y+r);
+
+					//CString outStr;
+					//outStr.Format(L"道路:%d",vRecord[i].id); //ID是显示ID
+					//pDC->DrawTextEx(outStr,&textRect,DT_LEFT,NULL);
+
+					drawmap::DrawRoadMark(pDC,vRecord[i].drawPoints,vRecord[i].id);
 					break;
 			   }
 		default:
@@ -229,6 +268,10 @@ CString drawmap::PrintRecord(DRAW_RECORD record){
 			   }
 		case 3:{
 				str.Format(L"Node:%d",record.id+1);
+					break;
+			   }
+		case 4:{
+					str.Format(L"道路:%d",record.id);
 					break;
 			   }
 	default:

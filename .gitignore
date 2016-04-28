@@ -58,3 +58,4 @@ CreateMap/CreateMap.vcxproj.filters
 CreateMap/CreateMap.vcxproj
 *.vcxproj
 ClassTest/ClassTest.vcxproj
+*.vcxproj

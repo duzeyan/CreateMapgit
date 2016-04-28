@@ -34,7 +34,7 @@ typedef struct  CONTORL_POINTS{
 
 //绘图操作
 typedef struct DRAW_RECORD{
-	int type;  //0:line 1:bezier 2:points 3:node
+	int type;  //0:line 1:bezier 2:points 3:node 4:road
 	int id;    //节点或道路的ID
 	vector<CPoint> drawPoints;//用于绘图的点
 }DRAW_RECORD;
@@ -43,9 +43,14 @@ typedef struct DRAW_RECORD{
 typedef struct CREATE_MAP_NODE{
 	CPoint position; //图中坐标
 	MAP_NODE node; //路口信息
-   
-	
 }CREATE_MAP_NODE;
+
+//路口信息
+typedef struct CREATE_MAP_CROSS{
+	int idstart;			//路口进入ID
+	int idend;				//路口出ID
+   vector<CPoint> points;   //图中的路口坐标序列
+}CREATE_MAP_CROSS;
 
 
 //绘图系统中的道路

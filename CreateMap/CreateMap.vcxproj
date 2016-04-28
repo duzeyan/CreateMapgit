@@ -101,7 +101,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CreateCorssDlg.h" />
+    <ClInclude Include="CreateCrossDlg.h" />
     <ClInclude Include="CreateLineDlg.h" />
     <ClInclude Include="CreateMap.h" />
     <ClInclude Include="CreateMapDlg.h" />
@@ -117,7 +117,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CreateCorssDlg.cpp" />
+    <ClCompile Include="CreateCrossDlg.cpp" />
     <ClCompile Include="CreateLineDlg.cpp" />
     <ClCompile Include="CreateMap.cpp" />
     <ClCompile Include="CreateMapDlg.cpp" />

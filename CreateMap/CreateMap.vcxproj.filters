@@ -57,7 +57,7 @@
     <ClInclude Include="CreateLineDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="CreateCorssDlg.h">
+    <ClInclude Include="CreateCrossDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -89,7 +89,7 @@
     <ClCompile Include="CreateLineDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="CreateCorssDlg.cpp">
+    <ClCompile Include="CreateCrossDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

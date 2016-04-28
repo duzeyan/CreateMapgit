@@ -9,6 +9,7 @@
 #include "NJUSTMap.h"
 #include"DrawMapMark.h"
 #include "CreateLineDlg.h"
+#include"CreateCrossDlg.h"
 
 #include<math.h>
 
@@ -59,6 +60,7 @@ public:
 	CONTORL_POINTS control_points;//绘制孤立点时 记录鼠标状态
 
 	CreateLineDlg *m_lineDlg;       //道路子窗口
+	CreateCrossDlg *m_crossDlg;  //路口子窗口s
 	CPoint m_Line2ID ;				//x y为直线两边的ID
 
 
@@ -102,7 +104,8 @@ private :
 	//point:当前点坐标(全窗体)  rect:控件坐标
 	void DlgDrawMark(CPoint point,CRect rect);
 
-	
+	//显示窗体重绘
+	void DlgReDraw();
 
 public:
 	afx_msg void OnBnClickedButnpoints();
@@ -123,4 +126,6 @@ public:
 	afx_msg void OnBnClickedButtonshowgps();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnBnClickedButtonmeg2();
+protected:
+	afx_msg LRESULT OnMapSetcross2id(WPARAM wParam, LPARAM lParam);
 };

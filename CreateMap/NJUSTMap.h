@@ -14,8 +14,10 @@ using std::vector;
 class NJUSTMap{
 public:
 	vector<CREATE_MAP_ROAD> roads; //道路序列
-	vector<CREATE_MAP_NODE> nodes; //路口序列
-	COMPUTE_GPS buildGPS[2];         //左上和右下的图片坐标和GPS
+	vector<CREATE_MAP_NODE> nodes; //节点序列
+	vector<CREATE_MAP_CROSS> crosses;//路口序列
+
+	COMPUTE_GPS buildGPS[2];         //图中任意两点的 图片坐标和GPS
 	double scaleX;  //X方向上GPS分布比例
 	double scaleY;  //Y方向上GPS分布比例
 	
@@ -52,14 +54,35 @@ public:
 	//************************************
 	bool merge2Line(const vector<DRAW_RECORD> &mergeV,CPoint line2ID);
 
+
+	//************************************
+	// 函数名:   merge2Cross
+	// 函数描述：对选中的绘画记录进行合并,得到路口信息
+	// 参数: 	 const vector<DRAW_RECORD> & mergeV
+	// 参数: 	 CPoint line2ID            :路口的两端ID
+	// 返回类型: bool
+	// 日期：	 2016/04/27
+	//************************************
+	bool merge2Cross(const vector<DRAW_RECORD> &mergeV,CPoint line2ID);
+
 	//************************************
 	// 函数名:   printLine
 	// 函数描述：打印一条道路信息
-	// 参数: 	 unsigned int index
+	// 参数: 	 unsigned int index: 索引
 	// 返回类型: CString
 	// 日期：	 2016/04/15
 	//************************************
 	CString printRoad(unsigned int index)const;
+
+
+	//************************************
+	// 函数名:   printCross
+	// 函数描述：打印一个路口信息
+	// 参数: 	 unsigned int index: 索引
+	// 返回类型: CString
+	// 日期：	 2016/04/27
+	//************************************
+	CString printCross(unsigned int index)const;
 
 	//************************************
 	// 函数名:   printLine
@@ -70,14 +93,19 @@ public:
 	//************************************
 	CString printRoadBack()const;
 
-	//在特定目录下保存文件
+	//在特定目录下保存二进制文件
 	bool writeRoad(CString path);
+
+	//在指定目录下保存文本文件
+	bool writeRoadTxt(CString path);
 
 	//像素转化为GPS
 	void pixel2GPS(COMPUTE_GPS &p2g);
 
 	//像素转化为GPS
 	void GPS2pexel(COMPUTE_GPS &p2g);
+
+	
 
 	
 };

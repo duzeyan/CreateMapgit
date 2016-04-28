@@ -1,7 +1,9 @@
 #include "stdafx.h"
 #include "NJUSTMap.h"
 #include <stdio.h>
-
+#include <afx.h>
+#include <iomanip>
+using namespace std;
 
 void NJUSTMap::init(COMPUTE_GPS buildGPS[2]){
 	this->buildGPS[0]=buildGPS[0];
@@ -60,9 +62,8 @@ bool NJUSTMap::merge2Line(const vector<DRAW_RECORD> &mergeV,CPoint line2ID){
 	}else{
 		road.road.idself=roads.back().road.idself+1;
 	}
-	road.road.idstart=line2ID.x+START_NODE_ID;
-	road.road.idend=line2ID.y+START_NODE_ID;
-	
+	road.road.idstart=line2ID.x+START_NODE_ID-1;
+	road.road.idend=line2ID.y+START_NODE_ID-1;
 
 	//更新 如果之前有相同元素则剔除
 	for(i=0;i<roads.size();i++){
@@ -72,20 +73,67 @@ bool NJUSTMap::merge2Line(const vector<DRAW_RECORD> &mergeV,CPoint line2ID){
 		}
 	}
 	roads.push_back(road);
-
 	return true;
+}
 
-	
+//生成路口
+bool NJUSTMap::merge2Cross(const vector<DRAW_RECORD> &mergeV,CPoint line2ID){
+	unsigned int i,j;
+	CREATE_MAP_CROSS cross;
+	//目前只支持直线和断点的连接 设置线上内容
+	for(i=0;i<mergeV.size();i++){
+		switch (mergeV[i].type)
+		{
+	     //line
+		case 0:{
+				for(j=0;j<mergeV[i].drawPoints.size();j+=MAP_DASH_NUM)
+					cross.points.push_back(mergeV[i].drawPoints[j]);
+				break;
+			 }
+		//points
+		case 2:{
+				for(j=0;j<mergeV[i].drawPoints.size();j++)
+					cross.points.push_back(mergeV[i].drawPoints[j]);
+				break;
+			}
+		default:
+				return false;
+			break;
+		}
+	}
+
+	cross.idstart=line2ID.x+START_LINE_ID-1;
+	cross.idend=line2ID.y+START_LINE_ID-1;
+
+	//更新 如果之前有相同元素则剔除
+	for(i=0;i<crosses.size();i++){
+		if(crosses[i].idstart==cross.idstart &&crosses[i].idend==cross.idend){
+			crosses.erase(crosses.begin()+i);
+			break;
+		}
+	}
+	crosses.push_back(cross);
+	return true;
 }
 
 
 CString NJUSTMap::printRoad(unsigned int index)const{
 	CString strShow;
-	strShow.Format(L"%d:%d->%d",roads[index].road.idself,
-								roads[index].road.idstart,
-								roads[index].road.idend); 
+	strShow.Format(L"道路%d:路口%d->路口%d",roads[index].road.idself-START_LINE_ID+1,
+								roads[index].road.idstart-START_NODE_ID+1,
+								roads[index].road.idend-START_NODE_ID+1); 
 	return strShow;
 }
+
+CString NJUSTMap::printCross(unsigned int index)const{
+	CString strShow;
+	strShow.Format(L"路口:道路%d->路口%d",
+								crosses[index].idstart-START_LINE_ID+1,
+								crosses[index].idend-START_LINE_ID+1); 
+	return strShow;
+}
+
+
 
 CString NJUSTMap::printRoadBack()const{
 	return printRoad(roads.size()-1);
@@ -95,6 +143,7 @@ CString NJUSTMap::printRoadBack()const{
 bool NJUSTMap::writeRoad(CString path){
 
 	unsigned int i,j;
+	//保存道路
 	for(i=0;i<roads.size();i++){
 		CString filename;
 		filename.Format(L"%s\\%d-%d.db",path, 
@@ -114,8 +163,84 @@ bool NJUSTMap::writeRoad(CString path){
 			file.Close();
 		}	
 	}
+	//保存路口
+	for(i=0;i<crosses.size();i++){
+		CString filename;
+		filename.Format(L"%s\\%d+%d.db",path, 
+								crosses[i].idstart-START_LINE_ID+1,
+								crosses[i].idend-START_LINE_ID+1);
+		CFile file;
+		if(file.Open(filename,CFile::modeCreate|CFile::modeWrite)){
+			for(j=0;j<crosses[i].points.size();j++){
+				COMPUTE_GPS var(crosses[i].points[j].x,crosses[i].points[j].y,0.0,0.0);
+				pixel2GPS(var);
+				MAP_DOUBLE_POINT outpoint;
+				outpoint.x=var.lng;outpoint.y=var.lat;
+				outpoint.x*=60.0;outpoint.y*=60.0;     //转化为分
+				file.Write(&outpoint,sizeof(MAP_DOUBLE_POINT));
+			}
+			file.Close();
+		}	
+	}
 	return true;
 }
+
+
+//在指定目录下保存文本文件
+bool NJUSTMap::writeRoadTxt(CString path){
+	unsigned int i,j;
+	//保存道路
+	for(i=0;i<roads.size();i++){
+		CString filename;
+		filename.Format(L"%s\\%d-%d.txt",path, 
+								roads[i].road.idstart-START_NODE_ID+1,
+								roads[i].road.idend-START_NODE_ID+1);
+		
+		CFile file;
+		//CArchive ar(&file,CArchive::store);
+		if(file.Open(filename,CFile::modeCreate|CFile::modeWrite)){
+			for(j=0;j<roads[i].pInLine.size();j++){
+				COMPUTE_GPS var(roads[i].pInLine[j].x,roads[i].pInLine[j].y,0.0,0.0);
+				pixel2GPS(var);
+				MAP_DOUBLE_POINT outpoint;
+				outpoint.x=var.lng;outpoint.y=var.lat;
+				//outpoint.x*=60.0;outpoint.y*=60.0;     //转化为分
+				
+				char buf[100];  
+				sprintf(buf,"%.10lf %.10lf \n",outpoint.x,outpoint.y);  
+				file.Write(buf,strlen(buf));
+			}
+		
+			file.Close();
+		}	
+	}
+	//保存路口
+	for(i=0;i<crosses.size();i++){
+		CString filename;
+		filename.Format(L"%s\\%d+%d.txt",path, 
+								crosses[i].idstart-START_LINE_ID+1,
+								crosses[i].idend-START_LINE_ID+1);
+		CFile file;
+		CArchive ar(&file,CArchive::store);
+		if(file.Open(filename,CFile::modeCreate|CFile::modeWrite|CFile::typeText)){
+			for(j=0;j<crosses[i].points.size();j++){
+				COMPUTE_GPS var(crosses[i].points[j].x,crosses[i].points[j].y,0.0,0.0);
+				pixel2GPS(var);
+				MAP_DOUBLE_POINT outpoint;
+				outpoint.x=var.lng;outpoint.y=var.lat;
+				//outpoint.x*=60.0;outpoint.y*=60.0;     //转化为分
+				
+				char buf[100];  
+				sprintf(buf,"%.10lf %.10lf\r\n",outpoint.x,outpoint.y);  
+				file.Write(buf,strlen(buf));
+			}
+			ar.Close();
+			file.Close();
+		}	
+	}
+	return true;
+}
+
 
 void NJUSTMap::pixel2GPS(COMPUTE_GPS &var){
 	var=COMPUTE_GPS(var.x,
