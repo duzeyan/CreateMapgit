@@ -86,7 +86,9 @@ void drawmap::LogLineBresenham(CPoint p1,CPoint p2,vector<CPoint> &pV){
 //绘制一个路口的标志
 void drawmap::DrawNodeMark(CDC *pdc,CPoint p,unsigned int r,COLORREF color,int  indexID){
 	CPen pen;
-	CRect textRect(p.x+r,p.y-2*r,p.x+5*r,p.y-r);
+	
+	int rr=10;
+	CRect textRect(p.x+rr,p.y-5*rr,p.x+10*rr,p.y-rr);
 
 	pen.CreatePen(PS_SOLID,1,color);
 	pdc->SelectStockObject(NULL_BRUSH);
@@ -106,12 +108,6 @@ void drawmap::DrawRoadMark(CDC *pDC,const vector<CPoint> &pV,int id){
 	CPen pen;
 	int r=10;
 	CRect textRect(p.x+r,p.y-5*r,p.x+10*r,p.y-r);
-
-
-	//pDC->SelectStockObject(NULL_BRUSH);
-	//pDC->SelectObject(pen);
-	//pDC->MoveTo(p);
-	//pDC->Ellipse(p.x-r,p.y-r,p.x+r,p.y+r);
 
 	CString outStr;
 	outStr.Format(L"道路:%d",id); //ID是显示ID
@@ -249,30 +245,35 @@ CString drawmap::PrintRecord(DRAW_RECORD record){
 	{
 		//line
 		case 0:{
-				str.Format(L"Line|p1:(%d,%d) p2:(%d,%d)",record.drawPoints[0].x,record.drawPoints[0].y,
-				record.drawPoints[1].x,record.drawPoints[1].y);
+				int c=record.drawPoints.size();
+				if(c==0)
+					break;
+				str.Format(L"Line|p1:(%d,%d)p2:(%d,%d)",record.drawPoints[0].x,record.drawPoints[0].y,
+				record.drawPoints[c-1].x,record.drawPoints[c-1].y);
 			 break;
 			   }
 		//曲线
 		case 1:{
-				str.Format(L"Bezier|p1:(%d,%d) p4:(%d,%d)",record.drawPoints[0].x,record.drawPoints[0].y,
+				str.Format(L"Bezier|p1:(%d,%d)p4:(%d,%d)",record.drawPoints[0].x,record.drawPoints[0].y,
 				record.drawPoints[3].x,record.drawPoints[3].y);
 				break;
 			   }
 		//points
 		case 2:{
 				int c=record.drawPoints.size();
-				str.Format(L"Points|p1:(%d,%d) p%d:(%d,%d)",record.drawPoints[0].x,record.drawPoints[0].y,c,
+				if(c==0)
+					break;
+				str.Format(L"Points|p1:(%d,%d)p%d:(%d,%d)",record.drawPoints[0].x,record.drawPoints[0].y,c,
 				record.drawPoints[c-1].x,record.drawPoints[c-1].y);
 				break;
 			   }
 		case 3:{
-				str.Format(L"Node:%d",record.id+1);
+				str.Format(L"路口:%d",record.id+1);
 					break;
 			   }
 		case 4:{
-					str.Format(L"道路:%d",record.id);
-					break;
+				str.Format(L"道路:%d",record.id);
+				break;
 			   }
 	default:
 		break;

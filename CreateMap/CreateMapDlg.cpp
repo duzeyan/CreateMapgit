@@ -68,6 +68,8 @@ ON_BN_CLICKED(IDC_BUTTONSHOWGPS, &CCreateMapDlg::OnBnClickedButtonshowgps)
 ON_WM_TIMER()
 ON_BN_CLICKED(IDC_BUTTONMEG2, &CCreateMapDlg::OnBnClickedButtonmeg2)
 ON_MESSAGE(MAP_SETCROSS_2ID, &CCreateMapDlg::OnMapSetcross2id)
+ON_BN_CLICKED(IDC_BUTTONSAVEMAP, &CCreateMapDlg::OnBnClickedButtonsavemap)
+ON_BN_CLICKED(IDC_BUTTONLOADMAP, &CCreateMapDlg::OnBnClickedButtonloadmap)
 END_MESSAGE_MAP()
 
 //手动注册事件响应
@@ -90,7 +92,6 @@ BOOL CCreateMapDlg::OnInitDialog()
 	m_isMove=false;
 	m_loadImage=NULL;
 	m_canvas=NULL;
-	m_canvas1=NULL;
 	m_backUpImage=NULL;
 	m_isDrawLine=false;
 	CWnd *pWnd=GetDlgItem(IDC_PIC_MAIN);//获得pictrue控件窗口的句柄   
@@ -100,9 +101,9 @@ BOOL CCreateMapDlg::OnInitDialog()
 	control_bezier.index=0;
 	m_lineDlg=NULL;
 	m_crossDlg=NULL;
-	
+	m_curMapName="";
 	m_Show_cur=0;
-
+	
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -144,11 +145,20 @@ HCURSOR CCreateMapDlg::OnQueryDragIcon()
 }
 
 
+//////////////////////////////////////////////////////////////////////////
+/// 控件事件响应
+//////////////////////////////////////////////////////////////////////////
 
-//打开 图片文件
+//打开 图片文件(新建地图)
 void CCreateMapDlg::OnBnClickedButton1()
 {
-	//// TODO: 在此添加控件通知处理程序代
+	//已经有数据
+	if(m_loadImage!=NULL){
+		INT_PTR re=AfxMessageBox(L"是否放弃当前工作空间,新建地图?",MB_OKCANCEL);
+		if(re!=IDOK)
+			return;
+	}
+
 	CString FilePathName;
     CFileDialog dlg(TRUE, //TRUE为OPEN对话框，FALSE为SAVE AS对话框
         NULL, 
@@ -169,14 +179,10 @@ void CCreateMapDlg::OnBnClickedButton1()
 		m_canvas=new CImage();
 		m_canvas->Create(m_loadImage->GetWidth(),m_loadImage->GetHeight(),24);
 
-		m_canvas1=new CImage();
-		m_canvas1->Create(m_loadImage->GetWidth(),m_loadImage->GetHeight(),24);
 
 
 		CWnd *pWnd=GetDlgItem(IDC_PIC_MAIN);//获得pictrue控件窗口的句柄      
-     
-		m_srcRect=m_picRect;
-		m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect); //将图片画到Picture控件表示的矩形区域  
+    
 
 		//初始化地图结构
 		COMPUTE_GPS gps2[2];
@@ -190,8 +196,15 @@ void CCreateMapDlg::OnBnClickedButton1()
 							,m_loadImage->GetHeight()-1
 							,118.8583617276
 							,32.0258240959);
+		m_njustMap.init(gps2); //重新初始化
+		m_records.clear();    //删除已有地图
+		//清除列表
+		m_listMap.ResetContent();
+		m_listRecord.ResetContent();
 
-		m_njustMap.init(gps2);
+
+		m_srcRect=m_picRect;
+		m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect); //将图片画到Picture控件表示的矩形区域  
 	}
 }
 
@@ -208,8 +221,9 @@ void CCreateMapDlg::OnLButtonDown(UINT nFlags, CPoint point)
 	ScreenToClient(rect);//转换为对话框上的相对位置
 
 	// -- Step 1 -- 判断鼠标动作是否在绘图区域内
-	
 	if(rect.PtInRect(point)){
+		if(!isLoad())
+			return;
 		switch(m_nowCase){
 			// -- Step 1.1 -- 绘制直线
 			case Case_Line:   {
@@ -247,7 +261,7 @@ void CCreateMapDlg::OnLButtonDown(UINT nFlags, CPoint point)
 //检测到鼠标移动
 void CCreateMapDlg::OnMouseMove(UINT nFlags, CPoint point)
 {
-	// TODO: 在此添加消息处理程序代码和/或调用默认值
+	
 	//左键点击 且 已经加载过图片
 	if(m_isMove&&m_loadImage!=NULL){
 		 SetClassLong(this->GetSafeHwnd(), GCL_HCURSOR ,(LONG)LoadCursor(NULL , IDC_HAND));
@@ -295,12 +309,16 @@ void CCreateMapDlg::OnLButtonUp(UINT nFlags, CPoint point)
 //绘直线
 void CCreateMapDlg::OnBnClickedButton2()
 {
+	if(!isLoad())
+		return;
 	m_nowCase=Case_Line;			//改变绘图状态
 }
 
 //贝塞尔曲线test
 void CCreateMapDlg::OnBnClickedButnbezier()
 {
+	if(!isLoad())
+		return;
 	m_nowCase=Case_BEZIER;
 }
 
@@ -308,6 +326,8 @@ void CCreateMapDlg::OnBnClickedButnbezier()
 //mark状态
 void CCreateMapDlg::OnBnClickedButnmarknode()
 {
+	if(!isLoad())
+		return;
 	m_nowCase=Case_MarkNode;
 }
 
@@ -315,6 +335,8 @@ void CCreateMapDlg::OnBnClickedButnmarknode()
 //孤立点集合
 void CCreateMapDlg::OnBnClickedButnpoints()
 {
+	if(!isLoad())
+		return;
 	if(Case_None==m_nowCase) // 第一次点
 		m_nowCase=Case_Points;
 	else if(Case_Points==m_nowCase){
@@ -344,6 +366,9 @@ void CCreateMapDlg::OnBnClickedButtondel()
         m_listRecord.GetSelItems(nItemCount,indexBuf);
         for (i = nItemCount-1 ;i >-1;i--)
         {
+			if(m_records[indexBuf[i]].type==4){ //cross信息不在绘画表中删除
+				continue;
+			}
             m_listRecord.DeleteString(indexBuf[i]);           //删除显示条目
 			if(m_records[indexBuf[i]].type==3){						//删除路口 地图结构
 				m_njustMap.deleteEleByID(true,m_records[indexBuf[i]].id+START_NODE_ID);
@@ -358,6 +383,9 @@ void CCreateMapDlg::OnBnClickedButtondel()
 }
 
 void CCreateMapDlg::DlgReDraw(){
+	if(!isLoad())
+		return;
+
 	CRect rect(0,0,m_loadImage->GetWidth(),m_loadImage->GetHeight());
 	HDC hdc=m_loadImage->GetDC();
 	m_backUpImage->Draw(hdc,rect,rect);		//重置为原图
@@ -371,6 +399,9 @@ void CCreateMapDlg::DlgReDraw(){
 	
 //高亮 选中条目
 void CCreateMapDlg::OnBnClickedButtonshow(){
+		if(!isLoad())
+			return;
+
 		CString strTitle;
 		GetDlgItem(IDC_BUTTONSHOW)->GetWindowTextW(strTitle);
 		if(strTitle==L"显示"){
@@ -412,6 +443,9 @@ void CCreateMapDlg::OnBnClickedButtonshow(){
 //合并按钮 生成道路信息
 void CCreateMapDlg::OnBnClickedButtonmeg()
 {
+	if(!isLoad())
+		return;
+
 	// --- Step.1 ---初始化参数
 	unsigned int i;
 	vector<int> IDIndex;
@@ -431,6 +465,9 @@ void CCreateMapDlg::OnBnClickedButtonmeg()
 //生成路口信息
 void CCreateMapDlg::OnBnClickedButtonmeg2()
 {
+	if(!isLoad())
+		return;
+
 	// --- Step.1 ---初始化参数
 	unsigned int i;
 	vector<int> IDIndex;
@@ -450,6 +487,9 @@ void CCreateMapDlg::OnBnClickedButtonmeg2()
 //显示道路
 void CCreateMapDlg::OnBnClickedButtonshowroad()
 {
+	if(!isLoad())
+		return;
+
 	unsigned int k;
 	int index=m_listMap.GetCurSel();
 	if(index!=LB_ERR){
@@ -458,6 +498,7 @@ void CCreateMapDlg::OnBnClickedButtonshowroad()
 		for(k=0;k<m_njustMap.roads[index].pInLine.size();k++)
 			pDC->SetPixel(m_njustMap.roads[index].pInLine[k],RGB(255,255,255));
 
+		m_loadImage->ReleaseDC();
 		m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect);
 	}
 }
@@ -465,6 +506,9 @@ void CCreateMapDlg::OnBnClickedButtonshowroad()
 //刷新
 void CCreateMapDlg::OnBnClickedButtonf5()
 {
+	if(!isLoad())
+		return;
+
 	//绘制图形
 	CRect rect(0,0,m_loadImage->GetWidth(),m_loadImage->GetHeight());
 	HDC hdc=m_loadImage->GetDC();
@@ -478,6 +522,9 @@ void CCreateMapDlg::OnBnClickedButtonf5()
 //删除道路
 void CCreateMapDlg::OnBnClickedButtondeline()
 {
+	if(!isLoad())
+		return;
+
 	int index=m_listMap.GetCurSel();
 	if(index!=LB_ERR){
 		int ls=m_njustMap.roads.size();
@@ -486,13 +533,16 @@ void CCreateMapDlg::OnBnClickedButtondeline()
 			int showid=m_njustMap.roads[index].road.idself-START_LINE_ID+1;
 			for(unsigned int i=0;i<m_records.size();i++){
 				if(m_records[i].id==showid&&m_records[i].type==4){
-					m_records.erase(m_records.begin()+i);
+					m_records.erase(m_records.begin()+i); //删除记录
+					m_listRecord.DeleteString(i);         //删除显示条目
+					break;
 				}
 			}
 			//地图结构删除
 			m_njustMap.roads.erase(m_njustMap.roads.begin()+index);
 			//列表中删除
 			m_listMap.DeleteString(index);
+			
 			//重绘
 			DlgReDraw();
 		}else{								//删除路口
@@ -510,17 +560,108 @@ void CCreateMapDlg::OnBnClickedButtondeline()
 //保存道路
 void CCreateMapDlg::OnBnClickedButtondelineout()
 {
+	if(!isLoad())
+		return;
+
 	CString path=L"D:\\map";
 	if(!m_njustMap.writeRoad(path)){
 		AfxMessageBox(L"保存失败",MB_OK);
 	}else{
-		//m_njustMap.writeRoadTxt(path);
+		m_njustMap.writeRoadTxt(path);
 
 		CString msg;
 		msg.Format(L"保存在%s目录下",path);
 		AfxMessageBox(msg,MB_OK);
 	}
 }
+
+
+//保存地图
+void CCreateMapDlg::OnBnClickedButtonsavemap()
+{
+	if(!isLoad())
+		return;
+
+	 // --- Step.1 ---选择保存位置	
+	 CString fileName;
+	 CFileDialog dlg(FALSE, 
+        NULL, 
+        NULL,
+        OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
+        (LPCTSTR)_TEXT("定义地图名 |All Files (*.*)|*.*||"),
+        NULL);
+	if(dlg.DoModal()==IDOK){
+		fileName=dlg.GetPathName(); //文件名 C:\\xxx\\yyy
+		CFile file;
+		// --- Step.2 --- 保存m_njustmap(.map)
+		if(file.Open(fileName+L".map",CFile::modeCreate|CFile::modeWrite)){
+			//保存m_njustmap
+			m_njustMap.serial(file);
+			//保存绘画记录
+			serial(file);
+			file.Close();
+		}
+		// --- Step.3 --- 保存图片
+		m_backUpImage->Save(fileName+L".bmp");
+		AfxMessageBox(L"保存成功",MB_OK);
+	    
+	}
+}
+
+//载入地图
+void CCreateMapDlg::OnBnClickedButtonloadmap()
+{
+	//根据载入的地图重绘
+	 // --- Step.1 ---选择保存位置	
+	 CString fileName;
+	 CFileDialog dlg(TRUE, 
+        NULL, 
+        NULL,
+        OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
+        (LPCTSTR)_TEXT("二进制文件 (*.map)|*.map|All Files (*.*)|*.*||"),
+        NULL);
+	if(dlg.DoModal()==IDOK){
+		fileName=dlg.GetPathName(); //文件名
+		CFile file;
+		// --- Step.2 --- 数据
+		if(file.Open(fileName,CFile::modeRead)){
+			//读取m_njustmap
+			m_njustMap.enserial(file);
+			//保存m_record
+			enserial(file);
+			file.Close();
+		}
+		int nPos= fileName.ReverseFind('.');
+		CString bmpFileName = fileName.Left(nPos); //yyy
+	    bmpFileName+=L".bmp";
+		//m_loadImage->
+		if(m_loadImage!=NULL) delete m_loadImage;
+		if(m_backUpImage!=NULL) delete m_backUpImage;
+		if(m_canvas!=NULL) delete m_canvas;
+		m_loadImage=new CImage();
+		m_loadImage->Load(bmpFileName); //根据图片路径加载图片  
+		m_backUpImage=new CImage();
+		m_backUpImage->Load(bmpFileName); //根据图片路径加载图片  
+		m_canvas=new CImage();
+		m_canvas->Create(m_loadImage->GetWidth(),m_loadImage->GetHeight(),24);
+		//重置视窗
+		m_srcRect=m_picRect;
+
+		//重绘图像
+		DlgReDraw();
+		//重置list
+		m_listRecord.ResetContent();
+		unsigned int k;
+		for(k=0;k<m_records.size();k++)
+			m_listRecord.AddString(drawmap::PrintRecord(m_records[k]));
+		m_listMap.ResetContent();
+		for(k=0;k<m_njustMap.roads.size();k++)
+				m_listMap.AddString(m_njustMap.printRoad(k));
+		for(k=0;k<m_njustMap.crosses.size();k++)
+				m_listMap.AddString(m_njustMap.printCross(k));
+	}
+}
+
 
 ///////////////////////业务逻辑代码//////////////////////////
 
@@ -607,7 +748,7 @@ void CCreateMapDlg::DlgDrawBezier(CPoint point ,CRect rect){
 		dr.drawPoints.reserve(nrect.Width()+nrect.Height());
 
 		pDC=CDC::FromHandle(m_canvas->GetDC());
-		drawmap::ResetImage(m_canvas,m_canvas1,nrect); //清除之前的后台画板上痕迹 mask
+		drawmap::ResetImage(m_canvas,m_backUpImage,nrect); //清除之前的后台画板上痕迹 mask
 		drawmap::DrawBezier(pDC,control_bezier.Points,control_bezier.index+1,RGB(255,0,0));
 		drawmap::getPointsByImage(m_canvas,nrect,dr.drawPoints);//获取绘制的点
 		m_canvas->ReleaseDC();
@@ -720,7 +861,7 @@ void CCreateMapDlg::DlgDrawMark(CPoint point,CRect rect){
 
 //************************************
 // 函数名:   OnMapSetline2id
-// 函数描述：响应 MAP_SETLINE_2ID 消息,完成道口构造信息
+// 函数描述：响应 MAP_SETLINE_2ID 消息,完成道路构造信息
 // 参数: 	 WPARAM wParam
 // 参数: 	 LPARAM lParam
 // 返回类型: LRESULT
@@ -749,6 +890,7 @@ afx_msg LRESULT CCreateMapDlg::OnMapSetline2id(WPARAM wParam, LPARAM lParam)
 			// --- Step.2.2 --- 根据两点 在图中绘制直线
 			HDC hdc=m_loadImage->GetDC();
 			CDC *pDC = CDC::FromHandle(hdc);
+			m_loadImage->ReleaseDC();
 			//填写记录
 			dr.type=4;
 			dr.id=m_njustMap.roads.back().road.idself-START_LINE_ID+1;
@@ -789,7 +931,7 @@ afx_msg LRESULT CCreateMapDlg::OnMapSetline2id(WPARAM wParam, LPARAM lParam)
 //处理合并路口信息
 //************************************
 // 函数名:   OnMapSetcross2id
-// 函数描述：响应 MAP_SETCROSS_2ID 消息,完成道口构造信息
+// 函数描述：响应 MAP_SETCROSS_2ID 消息,完成路口构造信息
 // 参数: 	 WPARAM wParam
 // 参数: 	 LPARAM lParam
 // 返回类型: LRESULT
@@ -833,7 +975,64 @@ afx_msg LRESULT CCreateMapDlg::OnMapSetcross2id(WPARAM wParam, LPARAM lParam)
 }
 
 
+//************************************
+// 函数名:   serial
+// 函数描述：序列化数据
+// 返回类型: void
+// 日期：	 2016/04/29
+//************************************
+//
+//
+//
+//
+//
+//************************************
+void CCreateMapDlg::serial(CFile &file){
+	unsigned int i,j;
+	unsigned int len= m_records.size();
+	MAP_CPOINT tp(0,0);
+	file.Write(&len,sizeof(unsigned int));
+	for(i=0;i<m_records.size();i++){
+		len=m_records[i].drawPoints.size();
+		file.Write(&len,sizeof(unsigned int));
+		for (j=0;j<len;j++){
+			 tp.x=m_records[i].drawPoints[j].x;
+			 tp.y=m_records[i].drawPoints[j].y;
+			 file.Write(&tp,sizeof(MAP_CPOINT));
+		}
+		file.Write(&(m_records[i].id),sizeof(int));
+		file.Write(&(m_records[i].type),sizeof(int));
+	}
+}
 
+//反序列化
+void CCreateMapDlg::enserial(CFile &file){
+	m_records.clear();
+
+	unsigned int i,j;
+	unsigned int len1,len2;
+	MAP_CPOINT tp(0,0);
+	file.Read(&len1,sizeof(unsigned int));
+	for(i=0;i<len1;i++){
+		DRAW_RECORD trecord;
+		file.Read(&len2,sizeof(unsigned int));
+		for (j=0;j<len2;j++){
+			 file.Read(&tp,sizeof(MAP_CPOINT));
+			 trecord.drawPoints.push_back(CPoint(tp.x,tp.y));
+		}
+		file.Read(&(trecord.id),sizeof(int));
+		file.Read(&(trecord.type),sizeof(int));
+		m_records.push_back(trecord);
+	}
+}
+
+bool CCreateMapDlg::isLoad(){
+	if(m_loadImage==NULL){
+		AfxMessageBox(L"请先新建或载入地图",MB_OK);
+		return false;
+	}
+	return true;
+}
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -855,6 +1054,9 @@ void CCreateMapDlg::OnBnClickedCancel()
 
 void CCreateMapDlg::OnBnClickedButtonshowgps()
 {
+	if(!isLoad())
+		return;
+
 	CString FilePathName;
     CFileDialog dlg(TRUE, //TRUE为OPEN对话框，FALSE为SAVE AS对话框
         NULL, 
@@ -915,3 +1117,7 @@ void CCreateMapDlg::OnTimer(UINT_PTR nIDEvent)
 //////////////////////////////////////////////////////////////////////////
 //GPS序列动态显示在图中 e
 //////////////////////////////////////////////////////////////////////////
+
+
+
+

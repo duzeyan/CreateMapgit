@@ -106,8 +106,28 @@ public:
 	void GPS2pexel(COMPUTE_GPS &p2g);
 
 	
+	//************************************
+	// 函数名:   serial
+	// 函数描述：在指定文件持久化类
+	// 参数: 	 CFile
+	// 返回类型: void
+	// 日期：	 2016/04/29
+	//************************************
+	//[文件结构]
+	//... //其他部分内容
+	//road大小 (uint)
+	//road[i]的点对个数 (uint)
+	//road[i]的n个点对 (CPoint)
+	//road[i]的图中坐标 (CPoint)
+	//road[i]的MAP_ROAD信息 (MAP_ROAD)
+	//nodes和crosses类似
+	//buildGPS scaleX scaleY
+	//..//其他部分内容
+	//************************************
+	void serial(CFile&);
 
-	
+	//反序列化类
+	void enserial(CFile& file);
 };
 
 #endif

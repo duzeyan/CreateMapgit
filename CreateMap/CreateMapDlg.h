@@ -44,9 +44,9 @@ public:
 	CImage *m_loadImage;   //最新绘制的图片
 	CImage *m_backUpImage; //原始图像备份
 	CImage *m_canvas;	   //画布 为了记录绘制点集 
-	CImage *m_canvas1;	   //画布 为了记录绘制点集 
+	//CImage *m_canvas1;	   //画布 为了记录绘制点集 
 
-	CRect m_srcRect;       //原图上的视窗
+	CRect m_srcRect;       //原图上的视窗 
 	CRect m_picRect;       //图片控件大小
 	bool m_isDrawLine;     //是否进入画状态
 	CPoint m_lineP;			//画线的起始点和终点
@@ -63,7 +63,7 @@ public:
 	CreateCrossDlg *m_crossDlg;  //路口子窗口s
 	CPoint m_Line2ID ;				//x y为直线两边的ID
 
-
+	CString m_curMapName;      //当前打开地图的名字
 
 	////////////////////////////////////////////////////////////////////////// 反向操作变量
 	vector<MAP_DOUBLE_POINT> m_Show_GPSList; //读取的GFS
@@ -107,6 +107,15 @@ private :
 	//显示窗体重绘
 	void DlgReDraw();
 
+	//序列化数据
+	void serial(CFile &file);
+
+	//反序列化
+	void enserial(CFile &file);
+
+	//检查是否载入地图
+	bool isLoad();
+
 public:
 	afx_msg void OnBnClickedButnpoints();
 	afx_msg void OnBnClickedButtondel();
@@ -128,4 +137,7 @@ public:
 	afx_msg void OnBnClickedButtonmeg2();
 protected:
 	afx_msg LRESULT OnMapSetcross2id(WPARAM wParam, LPARAM lParam);
+public:
+	afx_msg void OnBnClickedButtonsavemap();
+	afx_msg void OnBnClickedButtonloadmap();
 };
