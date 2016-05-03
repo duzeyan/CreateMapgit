@@ -70,7 +70,6 @@ public:
 	int m_Show_cur; //当前读到的序列位置
 	//////////////////////////////////////////////////////////////////////////
 
-	afx_msg void OnBnClickedButton1();
 	CStatic m_picMain;
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
@@ -83,8 +82,11 @@ public:
 	afx_msg void OnBnClickedButton2();
 
 	afx_msg void OnBnClickedButnbezier();
-	CListBox m_listRecord;
-	CListBox m_listMap;
+	CListBox m_listRecord;  //绘画记录列表
+	CListBox m_listMap;    //地图结构列表
+
+	CStatusBarCtrl* m_statusBar;
+
 
 //业务逻辑 功能函数
 private :
@@ -115,6 +117,8 @@ private :
 
 	//检查是否载入地图
 	bool isLoad();
+	//初始化状态栏
+	void initStatusBar();
 
 public:
 	afx_msg void OnBnClickedButnpoints();
@@ -132,7 +136,7 @@ public:
 	afx_msg void OnBnClickedButtondeline();
 	afx_msg void OnBnClickedButtondelineout();
 	afx_msg void OnBnClickedCancel();
-	afx_msg void OnBnClickedButtonshowgps();
+	//afx_msg void OnBnClickedButtonshowgps();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnBnClickedButtonmeg2();
 protected:
@@ -140,4 +144,8 @@ protected:
 public:
 	afx_msg void OnBnClickedButtonsavemap();
 	afx_msg void OnBnClickedButtonloadmap();
+	afx_msg void OnMenuBuildMap();
+	afx_msg void OnOpenMap();
+	afx_msg void OnSaveMap();
+	afx_msg void OnMenuShowGPS();
 };

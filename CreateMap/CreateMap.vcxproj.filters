@@ -13,15 +13,27 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="对话框">
+      <UniqueIdentifier>{3b860aa6-a3af-4c47-8d3d-a7d130ae5730}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="对话框\主对话框">
+      <UniqueIdentifier>{43dc253a-7511-4b5f-a523-7d4ebb2e5071}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="对话框\附属对话框">
+      <UniqueIdentifier>{8c6c7c38-90c7-4a45-a074-5688d1d3ee3b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="绘图模块">
+      <UniqueIdentifier>{d64b7ae8-fcf7-4423-b775-62d93631cec5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="地图结构">
+      <UniqueIdentifier>{7ae54f8a-2731-428e-8ebb-eb343eea5a45}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CreateMap.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="CreateMapDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="stdafx.h">
@@ -36,35 +48,35 @@
     <ClInclude Include="DIBAPI.H">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="DrawMapMark.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="GDITest.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="MapDrawControl.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="QDib.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="MAP__BASIC_data.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="NJUSTMap.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="CreateCrossDlg.h">
+      <Filter>对话框\附属对话框</Filter>
     </ClInclude>
     <ClInclude Include="CreateLineDlg.h">
-      <Filter>头文件</Filter>
+      <Filter>对话框\附属对话框</Filter>
     </ClInclude>
-    <ClInclude Include="CreateCrossDlg.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="CreateMapDlg.h">
+      <Filter>对话框\主对话框</Filter>
+    </ClInclude>
+    <ClInclude Include="DrawMapMark.h">
+      <Filter>绘图模块</Filter>
+    </ClInclude>
+    <ClInclude Include="NJUSTMap.h">
+      <Filter>地图结构</Filter>
+    </ClInclude>
+    <ClInclude Include="MAP__BASIC_data.h">
+      <Filter>地图结构</Filter>
+    </ClInclude>
+    <ClInclude Include="MapDrawControl.h">
+      <Filter>对话框\主对话框</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CreateMapDlg.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -77,20 +89,23 @@
     <ClCompile Include="DIBAPI.CPP">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="DrawMapMark.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="QDib.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="NJUSTMap.cpp">
-      <Filter>源文件</Filter>
+    <ClCompile Include="CreateCrossDlg.cpp">
+      <Filter>对话框\附属对话框</Filter>
     </ClCompile>
     <ClCompile Include="CreateLineDlg.cpp">
-      <Filter>源文件</Filter>
+      <Filter>对话框\附属对话框</Filter>
     </ClCompile>
-    <ClCompile Include="CreateCrossDlg.cpp">
-      <Filter>源文件</Filter>
+    <ClCompile Include="CreateMapDlg.cpp">
+      <Filter>对话框\主对话框</Filter>
+    </ClCompile>
+    <ClCompile Include="DrawMapMark.cpp">
+      <Filter>绘图模块</Filter>
+    </ClCompile>
+    <ClCompile Include="NJUSTMap.cpp">
+      <Filter>地图结构</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -105,6 +120,9 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\CreateMap.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\toolbar1.bmp">
       <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>

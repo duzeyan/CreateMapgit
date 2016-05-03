@@ -89,3 +89,6 @@ BOOL CCreateMapApp::InitInstance()
 	return FALSE;
 }
 
+
+
+

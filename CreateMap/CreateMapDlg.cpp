@@ -39,7 +39,6 @@ void CCreateMapDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CCreateMapDlg, CDialog)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
-	ON_BN_CLICKED(IDC_BUTTON1, &CCreateMapDlg::OnBnClickedButton1)
 	ON_WM_LBUTTONDOWN()
 	ON_WM_MOUSEMOVE()
 	ON_WM_LBUTTONUP()
@@ -64,12 +63,15 @@ ON_BN_CLICKED(IDC_BUTTONF5, &CCreateMapDlg::OnBnClickedButtonf5)
 ON_BN_CLICKED(IDC_BUTTONDELINE, &CCreateMapDlg::OnBnClickedButtondeline)
 ON_BN_CLICKED(IDC_BUTTONDELINEOUT, &CCreateMapDlg::OnBnClickedButtondelineout)
 ON_BN_CLICKED(IDCANCEL, &CCreateMapDlg::OnBnClickedCancel)
-ON_BN_CLICKED(IDC_BUTTONSHOWGPS, &CCreateMapDlg::OnBnClickedButtonshowgps)
+
 ON_WM_TIMER()
 ON_BN_CLICKED(IDC_BUTTONMEG2, &CCreateMapDlg::OnBnClickedButtonmeg2)
 ON_MESSAGE(MAP_SETCROSS_2ID, &CCreateMapDlg::OnMapSetcross2id)
-ON_BN_CLICKED(IDC_BUTTONSAVEMAP, &CCreateMapDlg::OnBnClickedButtonsavemap)
-ON_BN_CLICKED(IDC_BUTTONLOADMAP, &CCreateMapDlg::OnBnClickedButtonloadmap)
+
+ON_COMMAND(ID_32775, &CCreateMapDlg::OnMenuBuildMap)
+ON_COMMAND(ID_32776, &CCreateMapDlg::OnOpenMap)
+ON_COMMAND(ID_32777, &CCreateMapDlg::OnSaveMap)
+ON_COMMAND(ID_32778, &CCreateMapDlg::OnMenuShowGPS)
 END_MESSAGE_MAP()
 
 //手动注册事件响应
@@ -103,7 +105,7 @@ BOOL CCreateMapDlg::OnInitDialog()
 	m_crossDlg=NULL;
 	m_curMapName="";
 	m_Show_cur=0;
-	
+	initStatusBar();
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -148,66 +150,6 @@ HCURSOR CCreateMapDlg::OnQueryDragIcon()
 //////////////////////////////////////////////////////////////////////////
 /// 控件事件响应
 //////////////////////////////////////////////////////////////////////////
-
-//打开 图片文件(新建地图)
-void CCreateMapDlg::OnBnClickedButton1()
-{
-	//已经有数据
-	if(m_loadImage!=NULL){
-		INT_PTR re=AfxMessageBox(L"是否放弃当前工作空间,新建地图?",MB_OKCANCEL);
-		if(re!=IDOK)
-			return;
-	}
-
-	CString FilePathName;
-    CFileDialog dlg(TRUE, //TRUE为OPEN对话框，FALSE为SAVE AS对话框
-        NULL, 
-        NULL,
-        OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
-        (LPCTSTR)_TEXT("BMP Files (*.bmp)|*.bmp|All Files (*.*)|*.*||"),
-        NULL);
-    if(dlg.DoModal()==IDOK)
-    {
-        FilePathName=dlg.GetPathName(); //文件名
-		m_loadImage=new CImage();
-		m_loadImage->Load(FilePathName); //根据图片路径加载图片  
-
-		m_backUpImage=new CImage();
-		m_backUpImage->Load(FilePathName); //根据图片路径加载图片  
-
-
-		m_canvas=new CImage();
-		m_canvas->Create(m_loadImage->GetWidth(),m_loadImage->GetHeight(),24);
-
-
-
-		CWnd *pWnd=GetDlgItem(IDC_PIC_MAIN);//获得pictrue控件窗口的句柄      
-    
-
-		//初始化地图结构
-		COMPUTE_GPS gps2[2];
-		/*gps2[0]=COMPUTE_GPS(484,311,118.8559087276,32.0303230959);
-		gps2[1]=COMPUTE_GPS(m_loadImage->GetWidth()-1
-							,m_loadImage->GetHeight()-1
-							,118.8583817276
-							,32.0258740959);*/
-		gps2[0]=COMPUTE_GPS(484,311,118.8558887276,32.0302730959); //5- 2 ;5-5
-		gps2[1]=COMPUTE_GPS(m_loadImage->GetWidth()-1
-							,m_loadImage->GetHeight()-1
-							,118.8583617276
-							,32.0258240959);
-		m_njustMap.init(gps2); //重新初始化
-		m_records.clear();    //删除已有地图
-		//清除列表
-		m_listMap.ResetContent();
-		m_listRecord.ResetContent();
-
-
-		m_srcRect=m_picRect;
-		m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect); //将图片画到Picture控件表示的矩形区域  
-	}
-}
-
 
 
 
@@ -576,92 +518,6 @@ void CCreateMapDlg::OnBnClickedButtondelineout()
 }
 
 
-//保存地图
-void CCreateMapDlg::OnBnClickedButtonsavemap()
-{
-	if(!isLoad())
-		return;
-
-	 // --- Step.1 ---选择保存位置	
-	 CString fileName;
-	 CFileDialog dlg(FALSE, 
-        NULL, 
-        NULL,
-        OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
-        (LPCTSTR)_TEXT("定义地图名 |All Files (*.*)|*.*||"),
-        NULL);
-	if(dlg.DoModal()==IDOK){
-		fileName=dlg.GetPathName(); //文件名 C:\\xxx\\yyy
-		CFile file;
-		// --- Step.2 --- 保存m_njustmap(.map)
-		if(file.Open(fileName+L".map",CFile::modeCreate|CFile::modeWrite)){
-			//保存m_njustmap
-			m_njustMap.serial(file);
-			//保存绘画记录
-			serial(file);
-			file.Close();
-		}
-		// --- Step.3 --- 保存图片
-		m_backUpImage->Save(fileName+L".bmp");
-		AfxMessageBox(L"保存成功",MB_OK);
-	    
-	}
-}
-
-//载入地图
-void CCreateMapDlg::OnBnClickedButtonloadmap()
-{
-	//根据载入的地图重绘
-	 // --- Step.1 ---选择保存位置	
-	 CString fileName;
-	 CFileDialog dlg(TRUE, 
-        NULL, 
-        NULL,
-        OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
-        (LPCTSTR)_TEXT("二进制文件 (*.map)|*.map|All Files (*.*)|*.*||"),
-        NULL);
-	if(dlg.DoModal()==IDOK){
-		fileName=dlg.GetPathName(); //文件名
-		CFile file;
-		// --- Step.2 --- 数据
-		if(file.Open(fileName,CFile::modeRead)){
-			//读取m_njustmap
-			m_njustMap.enserial(file);
-			//保存m_record
-			enserial(file);
-			file.Close();
-		}
-		int nPos= fileName.ReverseFind('.');
-		CString bmpFileName = fileName.Left(nPos); //yyy
-	    bmpFileName+=L".bmp";
-		//m_loadImage->
-		if(m_loadImage!=NULL) delete m_loadImage;
-		if(m_backUpImage!=NULL) delete m_backUpImage;
-		if(m_canvas!=NULL) delete m_canvas;
-		m_loadImage=new CImage();
-		m_loadImage->Load(bmpFileName); //根据图片路径加载图片  
-		m_backUpImage=new CImage();
-		m_backUpImage->Load(bmpFileName); //根据图片路径加载图片  
-		m_canvas=new CImage();
-		m_canvas->Create(m_loadImage->GetWidth(),m_loadImage->GetHeight(),24);
-		//重置视窗
-		m_srcRect=m_picRect;
-
-		//重绘图像
-		DlgReDraw();
-		//重置list
-		m_listRecord.ResetContent();
-		unsigned int k;
-		for(k=0;k<m_records.size();k++)
-			m_listRecord.AddString(drawmap::PrintRecord(m_records[k]));
-		m_listMap.ResetContent();
-		for(k=0;k<m_njustMap.roads.size();k++)
-				m_listMap.AddString(m_njustMap.printRoad(k));
-		for(k=0;k<m_njustMap.crosses.size();k++)
-				m_listMap.AddString(m_njustMap.printCross(k));
-	}
-}
-
 
 ///////////////////////业务逻辑代码//////////////////////////
 
@@ -904,6 +760,7 @@ afx_msg LRESULT CCreateMapDlg::OnMapSetline2id(WPARAM wParam, LPARAM lParam)
 			m_listRecord.AddString(drawmap::PrintRecord(dr));  
 
 			// --- Step.2.5 --- 绘制,重置
+			DlgReDraw();
 			m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect); 
 
 
@@ -1035,6 +892,21 @@ bool CCreateMapDlg::isLoad(){
 }
 
 
+
+void CCreateMapDlg::initStatusBar(){
+	m_statusBar=new CStatusBarCtrl;
+	RECT m_Rect; 
+	GetClientRect(&m_Rect); //获取对话框的矩形区域
+	m_Rect.top=m_Rect.bottom-20; //设置状态栏的矩形区域
+	m_statusBar->Create(WS_BORDER|WS_VISIBLE|CBRS_BOTTOM,m_Rect,this,3);
+	int nParts[4]= {500, 200, 300,-1}; //分割尺寸
+	m_statusBar->SetParts(4, nParts); //分割状态栏
+	m_statusBar->SetText(L"当前地图:【未打开地图】",0,0); //第一个分栏加入"这是第一个指示器"
+	//m_statusBar->SetText(L"这是第二个指示器",1,0); //以下类似
+}
+
+
+
 //////////////////////////////////////////////////////////////////////////
 //GPS序列动态显示在图中  s
 //////////////////////////////////////////////////////////////////////////
@@ -1052,7 +924,210 @@ void CCreateMapDlg::OnBnClickedCancel()
 }
 
 
-void CCreateMapDlg::OnBnClickedButtonshowgps()
+
+void CCreateMapDlg::OnTimer(UINT_PTR nIDEvent)
+{
+	if(m_Show_cur!=m_Show_GPSList.size()){
+		// 计算
+		COMPUTE_GPS gps;
+		gps.lng=m_Show_GPSList[m_Show_cur].x/60.0; //文件中是分 
+		gps.lat=m_Show_GPSList[m_Show_cur].y/60.0;
+		m_Show_cur++;
+		m_njustMap.GPS2pexel(gps);
+
+		//Draw
+		HDC hdc=m_loadImage->GetDC();
+		CDC *pDC = CDC::FromHandle(hdc);
+		//pDC->SelectObject()
+
+		CPoint p=CPoint(gps.x,gps.y);int r=4;
+		pDC->MoveTo(p);
+		pDC->Ellipse(p.x-r,p.y-r,p.x+r,p.y+r);
+		m_loadImage->ReleaseDC();
+		//更新
+		m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect);
+
+	}else{
+		CWnd::KillTimer(1);
+		m_Show_cur=0;
+		if(m_Show_GPSList.size()!=0)
+		AfxMessageBox(L"绘制完成",MB_OK);
+	}
+	CDialog::OnTimer(nIDEvent);
+}
+
+//////////////////////////////////////////////////////////////////////////
+//GPS序列动态显示在图中 e
+//////////////////////////////////////////////////////////////////////////
+
+
+
+
+//////////////////////////////////////////////////////////////////////////
+//菜单栏操作
+//////////////////////////////////////////////////////////////////////////
+
+//新建地图
+void CCreateMapDlg::OnMenuBuildMap()
+{
+	//已经有数据
+	if(m_loadImage!=NULL){
+		INT_PTR re=AfxMessageBox(L"是否放弃当前工作空间,新建地图?",MB_OKCANCEL);
+		if(re!=IDOK)
+			return;
+	}
+
+	CString FilePathName;
+    CFileDialog dlg(TRUE, //TRUE为OPEN对话框，FALSE为SAVE AS对话框
+        NULL, 
+        NULL,
+        OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
+        (LPCTSTR)_TEXT("BMP Files (*.bmp)|*.bmp|All Files (*.*)|*.*||"),
+        NULL);
+    if(dlg.DoModal()==IDOK)
+    {
+        FilePathName=dlg.GetPathName(); //文件名
+		m_loadImage=new CImage();
+		m_loadImage->Load(FilePathName); //根据图片路径加载图片  
+
+		m_backUpImage=new CImage();
+		m_backUpImage->Load(FilePathName); //根据图片路径加载图片  
+
+
+		m_canvas=new CImage();
+		m_canvas->Create(m_loadImage->GetWidth(),m_loadImage->GetHeight(),24);
+
+
+
+		CWnd *pWnd=GetDlgItem(IDC_PIC_MAIN);//获得pictrue控件窗口的句柄      
+    
+
+		//初始化地图结构
+		COMPUTE_GPS gps2[2];
+		/*gps2[0]=COMPUTE_GPS(484,311,118.8559087276,32.0303230959);
+		gps2[1]=COMPUTE_GPS(m_loadImage->GetWidth()-1
+							,m_loadImage->GetHeight()-1
+							,118.8583817276
+							,32.0258740959);*/
+		gps2[0]=COMPUTE_GPS(484,311,118.8558887276,32.0302730959); //5- 2 ;5-5
+		gps2[1]=COMPUTE_GPS(m_loadImage->GetWidth()-1
+							,m_loadImage->GetHeight()-1
+							,118.8583617276
+							,32.0258240959);
+		m_njustMap.init(gps2); //重新初始化
+		m_records.clear();    //删除已有地图
+		//清除列表
+		m_listMap.ResetContent();
+		m_listRecord.ResetContent();
+		//修改状态栏
+		CString strbar;
+		strbar.Format(L"当前地图:【%s】",L"*未命名");
+		m_statusBar->SetText(strbar,0,0);
+
+		m_srcRect=m_picRect;
+		m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect); //将图片画到Picture控件表示的矩形区域  
+	}
+}
+
+//打开地图
+void CCreateMapDlg::OnOpenMap()
+{
+	//根据载入的地图重绘
+	 // --- Step.1 ---选择保存位置	
+	 CString fileName;
+	 CFileDialog dlg(TRUE, 
+        NULL, 
+        NULL,
+        OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
+        (LPCTSTR)_TEXT("二进制文件 (*.map)|*.map|All Files (*.*)|*.*||"),
+        NULL);
+	if(dlg.DoModal()==IDOK){
+		fileName=dlg.GetPathName(); //文件名
+		CFile file;
+		// --- Step.2 --- 数据
+		if(file.Open(fileName,CFile::modeRead)){
+			//读取m_njustmap
+			m_njustMap.enserial(file);
+			//保存m_record
+			enserial(file);
+			file.Close();
+		}
+		int nPos= fileName.ReverseFind('.');
+		CString bmpFileName = fileName.Left(nPos); //yyy
+	    bmpFileName+=L".bmp";
+		//m_loadImage->
+		if(m_loadImage!=NULL) delete m_loadImage;
+		if(m_backUpImage!=NULL) delete m_backUpImage;
+		if(m_canvas!=NULL) delete m_canvas;
+		m_loadImage=new CImage();
+		m_loadImage->Load(bmpFileName); //根据图片路径加载图片  
+		m_backUpImage=new CImage();
+		m_backUpImage->Load(bmpFileName); //根据图片路径加载图片  
+		m_canvas=new CImage();
+		m_canvas->Create(m_loadImage->GetWidth(),m_loadImage->GetHeight(),24);
+		//重置视窗
+		m_srcRect=m_picRect;
+
+		//重绘图像
+		DlgReDraw();
+		//重置list
+		m_listRecord.ResetContent();
+		unsigned int k;
+		for(k=0;k<m_records.size();k++)
+			m_listRecord.AddString(drawmap::PrintRecord(m_records[k]));
+		m_listMap.ResetContent();
+		for(k=0;k<m_njustMap.roads.size();k++)
+				m_listMap.AddString(m_njustMap.printRoad(k));
+		for(k=0;k<m_njustMap.crosses.size();k++)
+				m_listMap.AddString(m_njustMap.printCross(k));
+
+		//修改状态栏
+		int nPos1=fileName.ReverseFind('\\');
+		CString strbar=fileName.Right(fileName.GetLength()-nPos1-1);
+		strbar=strbar.Left(strbar.GetLength()-4); //.map(4)
+		m_statusBar->SetText(L"当前地图:【"+strbar+L"】",0,0);
+	}
+}
+
+//保存地图
+void CCreateMapDlg::OnSaveMap()
+{
+	if(!isLoad())
+		return;
+	 // --- Step.1 ---选择保存位置	
+	 CString fileName;
+	 CFileDialog dlg(FALSE, 
+        NULL, 
+        NULL,
+        OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
+        (LPCTSTR)_TEXT("定义地图名 |All Files (*.*)|*.*||"),
+        NULL);
+	if(dlg.DoModal()==IDOK){
+		fileName=dlg.GetPathName(); //文件名 C:\\xxx\\yyy
+		CFile file;
+		// --- Step.2 --- 保存m_njustmap(.map)
+		if(file.Open(fileName+L".map",CFile::modeCreate|CFile::modeWrite)){
+			//保存m_njustmap
+			m_njustMap.serial(file);
+			//保存绘画记录
+			serial(file);
+			file.Close();
+		}
+		// --- Step.3 --- 保存图片
+		m_backUpImage->Save(fileName+L".bmp");
+
+		//修改状态栏
+		int nPos1=fileName.ReverseFind('\\');
+		CString strbar=fileName.Right(fileName.GetLength()-nPos1-1);
+		m_statusBar->SetText(L"当前地图:【"+strbar+L"】",0,0);
+		AfxMessageBox(L"保存成功",MB_OK);	    
+	}
+}
+
+
+
+
+void CCreateMapDlg::OnMenuShowGPS()
 {
 	if(!isLoad())
 		return;
@@ -1082,42 +1157,3 @@ void CCreateMapDlg::OnBnClickedButtonshowgps()
 	}
 	CWnd::SetTimer(1,100,NULL);
 }
-
-
-void CCreateMapDlg::OnTimer(UINT_PTR nIDEvent)
-{
-	if(m_Show_cur!=m_Show_GPSList.size()){
-		// 计算
-		COMPUTE_GPS gps;
-		gps.lng=m_Show_GPSList[m_Show_cur].x/60.0; //文件中是分 
-		gps.lat=m_Show_GPSList[m_Show_cur].y/60.0;
-		m_Show_cur++;
-		m_njustMap.GPS2pexel(gps);
-
-		//Draw
-		HDC hdc=m_loadImage->GetDC();
-		CDC *pDC = CDC::FromHandle(hdc);
-		//pDC->SelectObject()
-
-		CPoint p=CPoint(gps.x,gps.y);int r=4;
-		pDC->MoveTo(p);
-		pDC->Ellipse(p.x-r,p.y-r,p.x+r,p.y+r);
-		m_loadImage->ReleaseDC();
-		//更新
-		m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect);
-
-	}else{
-		CWnd::KillTimer(1);
-		m_Show_cur=0;
-		AfxMessageBox(L"绘制完成",MB_OK);
-	}
-	CDialog::OnTimer(nIDEvent);
-}
-
-//////////////////////////////////////////////////////////////////////////
-//GPS序列动态显示在图中 e
-//////////////////////////////////////////////////////////////////////////
-
-
-
-
