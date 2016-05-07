@@ -65,6 +65,12 @@ public:
 
 	CString m_curMapName;      //当前打开地图的名字
 
+	//控件相关
+	CListBox m_listRecord;  //绘画记录列表
+	CListBox m_listMap;    //地图结构列表
+	CStatusBarCtrl* m_statusBar;  //状态栏
+	CList<CRect, CRect> m_listRect;  //控件大小调整
+
 	////////////////////////////////////////////////////////////////////////// 反向操作变量
 	vector<MAP_DOUBLE_POINT> m_Show_GPSList; //读取的GFS
 	int m_Show_cur; //当前读到的序列位置
@@ -82,10 +88,7 @@ public:
 	afx_msg void OnBnClickedButton2();
 
 	afx_msg void OnBnClickedButnbezier();
-	CListBox m_listRecord;  //绘画记录列表
-	CListBox m_listMap;    //地图结构列表
 
-	CStatusBarCtrl* m_statusBar;
 
 
 //业务逻辑 功能函数
@@ -120,6 +123,8 @@ private :
 	//初始化状态栏
 	void initStatusBar();
 
+	
+
 public:
 	afx_msg void OnBnClickedButnpoints();
 	afx_msg void OnBnClickedButtondel();
@@ -148,4 +153,6 @@ public:
 	afx_msg void OnOpenMap();
 	afx_msg void OnSaveMap();
 	afx_msg void OnMenuShowGPS();
+	afx_msg void OnContextMenu(CWnd* /*pWnd*/, CPoint /*point*/);
+	afx_msg void OnSize(UINT nType, int cx, int cy);
 };

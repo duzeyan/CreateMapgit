@@ -53,25 +53,35 @@ ON_BN_CLICKED(IDC_BUTNBEZIER, &CCreateMapDlg::OnBnClickedButnbezier)
 
 ON_BN_CLICKED(IDC_BUTNPOINTS, &CCreateMapDlg::OnBnClickedButnpoints)
 ON_BN_CLICKED(IDC_BUTTONDEL, &CCreateMapDlg::OnBnClickedButtondel)
+ON_COMMAND(ID_MENU_DELDRAW, &CCreateMapDlg::OnBnClickedButtondel)
 ON_BN_CLICKED(IDC_BUTTONSHOW, &CCreateMapDlg::OnBnClickedButtonshow)
+ON_COMMAND(ID_MENU_SHOWDRAW, &CCreateMapDlg::OnBnClickedButtonshow)
 ON_BN_CLICKED(IDC_BUTNMARKNODE, &CCreateMapDlg::OnBnClickedButnmarknode)
-ON_BN_CLICKED(IDC_BUTTONMEG, &CCreateMapDlg::OnBnClickedButtonmeg)
+ON_BN_CLICKED(IDC_BUTTONMEG, &CCreateMapDlg::OnBnClickedButtonmeg)      //生成道路
+ON_COMMAND(ID_MENU_MEGROAD, &CCreateMapDlg::OnBnClickedButtonmeg)  
 ON_MESSAGE(MAP_SETLINE_2ID, &CCreateMapDlg::OnMapSetline2id)
 ON_LBN_SELCHANGE(IDC_LISTRECORD, &CCreateMapDlg::OnLbnSelchangeListrecord)
-ON_BN_CLICKED(IDC_BUTTONSHOWROAD, &CCreateMapDlg::OnBnClickedButtonshowroad)
+ON_BN_CLICKED(IDC_BUTTONSHOWROAD, &CCreateMapDlg::OnBnClickedButtonshowroad)//显示道路
+ON_COMMAND(ID_MENU_SHOW1, &CCreateMapDlg::OnBnClickedButtonshowroad)
+ON_COMMAND(ID_MENU_REFRESH1, &CCreateMapDlg::OnBnClickedButtonf5)
 ON_BN_CLICKED(IDC_BUTTONF5, &CCreateMapDlg::OnBnClickedButtonf5)
-ON_BN_CLICKED(IDC_BUTTONDELINE, &CCreateMapDlg::OnBnClickedButtondeline)
-ON_BN_CLICKED(IDC_BUTTONDELINEOUT, &CCreateMapDlg::OnBnClickedButtondelineout)
+ON_BN_CLICKED(IDC_BUTTONDELINE, &CCreateMapDlg::OnBnClickedButtondeline) //删除道路
+ON_COMMAND(ID_MENU_DEL1, &CCreateMapDlg::OnBnClickedButtondeline)
+ON_BN_CLICKED(IDC_BUTTONDELINEOUT, &CCreateMapDlg::OnBnClickedButtondelineout) //保存道路
+ON_COMMAND(ID_MENU_SAVE1, &CCreateMapDlg::OnBnClickedButtondelineout)
 ON_BN_CLICKED(IDCANCEL, &CCreateMapDlg::OnBnClickedCancel)
 
 ON_WM_TIMER()
 ON_BN_CLICKED(IDC_BUTTONMEG2, &CCreateMapDlg::OnBnClickedButtonmeg2)
+ON_COMMAND(ID_MENU_MEGCROSS, &CCreateMapDlg::OnBnClickedButtonmeg2)
 ON_MESSAGE(MAP_SETCROSS_2ID, &CCreateMapDlg::OnMapSetcross2id)
 
 ON_COMMAND(ID_32775, &CCreateMapDlg::OnMenuBuildMap)
 ON_COMMAND(ID_32776, &CCreateMapDlg::OnOpenMap)
 ON_COMMAND(ID_32777, &CCreateMapDlg::OnSaveMap)
 ON_COMMAND(ID_32778, &CCreateMapDlg::OnMenuShowGPS)
+ON_WM_CONTEXTMENU()
+ON_WM_SIZE()
 END_MESSAGE_MAP()
 
 //手动注册事件响应
@@ -106,6 +116,17 @@ BOOL CCreateMapDlg::OnInitDialog()
 	m_curMapName="";
 	m_Show_cur=0;
 	initStatusBar();
+
+	CRect rect;
+	GetWindowRect(&rect);
+	m_listRect.AddTail(rect);//对话框的区域
+	pWnd = GetWindow(GW_CHILD);//获取子窗体
+	while (pWnd)
+	{
+		pWnd->GetWindowRect(rect);//子窗体的区域
+		m_listRect.AddTail(rect);           //CList<CRect,CRect> m_listRect成员变量
+		pWnd = pWnd->GetNextWindow();//取下一个子窗体
+	}
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -964,7 +985,7 @@ void CCreateMapDlg::OnTimer(UINT_PTR nIDEvent)
 
 
 //////////////////////////////////////////////////////////////////////////
-//菜单栏操作
+//主菜单栏操作
 //////////////////////////////////////////////////////////////////////////
 
 //新建地图
@@ -1156,4 +1177,68 @@ void CCreateMapDlg::OnMenuShowGPS()
 		}
 	}
 	CWnd::SetTimer(1,100,NULL);
+}
+
+//////////////////////////////////////////////////////////////////////////
+//上下文菜单栏操作
+//////////////////////////////////////////////////////////////////////////
+
+
+void CCreateMapDlg::OnContextMenu(CWnd* /*pWnd*/, CPoint /*point*/)
+{
+   CRect rectDraw,rectMap;
+   m_listRecord.GetWindowRect(&rectDraw);
+   m_listMap.GetWindowRect(&rectMap);
+   CPoint p;
+   GetCursorPos(&p);
+   //绘画记录点击
+   if (rectDraw.PtInRect(p)||rectMap.PtInRect(p))
+    {
+       CMenu m_Menu;
+       m_Menu.LoadMenu(IDR_MENUPOP);//编辑好的菜单资源
+	   CMenu *m_SubMenu=NULL;
+	   if(rectDraw.PtInRect(p))
+		  m_SubMenu= m_Menu.GetSubMenu(0);
+	   else
+		  m_SubMenu= m_Menu.GetSubMenu(1);
+       m_SubMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, p.x, p.y, this);
+   }
+
+}
+
+
+void CCreateMapDlg::OnSize(UINT nType, int cx, int cy)
+{
+	CDialog::OnSize(nType, cx, cy);
+
+	if (m_listRect.GetCount() > 0){
+		CRect dlgNow;
+		GetWindowRect(&dlgNow);
+		POSITION pos = m_listRect.GetHeadPosition();//第一个保存的是对话框的Rect
+		CRect dlgSaved;
+		dlgSaved = m_listRect.GetNext(pos);
+		ScreenToClient(dlgNow);
+		double x = dlgNow.Width() * 1.0 / dlgSaved.Width();//根据当前和之前保存的对话框的宽高求比例
+		double y = dlgNow.Height()  *1.0 / dlgSaved.Height();
+		ClientToScreen(dlgNow);
+		CRect childSaved;
+		CWnd* pWnd = GetWindow(GW_CHILD);
+		while (pWnd)
+		{
+			childSaved = m_listRect.GetNext(pos);//依次获取子窗体的Rect
+			childSaved.left = (LONG)(dlgNow.left + (childSaved.left - dlgSaved.left)*x);//根据比例调整控件上下左右距离对话框的距离
+			childSaved.right = (LONG)(dlgNow.right + (childSaved.right - dlgSaved.right)*x);
+			childSaved.top = (LONG)(dlgNow.top + (childSaved.top - dlgSaved.top)*y);
+			childSaved.bottom = (LONG)(dlgNow.bottom + (childSaved.bottom - dlgSaved.bottom)*y);
+			ScreenToClient(childSaved);
+			pWnd->MoveWindow(childSaved);
+ 
+
+			InvalidateRect(childSaved);  //立即重绘 避免残影
+			pWnd = pWnd->GetNextWindow();
+		}
+
+	}
+
+	
 }

@@ -89,7 +89,5 @@ void WriteGPS(){
 
 
 void main(){
-	
-	ReadMapGPS(1,2,gpslist,false);
-	WriteGPS();
+
 }
