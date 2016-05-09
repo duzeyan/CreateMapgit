@@ -104,6 +104,7 @@
     <ClInclude Include="CreateCrossDlg.h" />
     <ClInclude Include="CreateLineDlg.h" />
     <ClInclude Include="CreateMap.h" />
+    <ClInclude Include="CreateMapCommunication.h" />
     <ClInclude Include="CreateMapDlg.h" />
     <ClInclude Include="DIBAPI.H" />
     <ClInclude Include="DrawMapMark.h" />
@@ -111,15 +112,19 @@
     <ClInclude Include="MapDrawControl.h" />
     <ClInclude Include="MAP__BASIC_data.h" />
     <ClInclude Include="NJUSTMap.h" />
+    <ClInclude Include="NJUST_MAP_data.h" />
+    <ClInclude Include="NJUST_MC_typedef.h" />
     <ClInclude Include="QDib.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="UDP.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CreateCrossDlg.cpp" />
     <ClCompile Include="CreateLineDlg.cpp" />
     <ClCompile Include="CreateMap.cpp" />
+    <ClCompile Include="CreateMapCommunication.cpp" />
     <ClCompile Include="CreateMapDlg.cpp" />
     <ClCompile Include="DIBAPI.CPP" />
     <ClCompile Include="DrawMapMark.cpp" />
@@ -130,6 +135,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="UDP.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="CreateMap.rc" />

@@ -6,6 +6,7 @@
 #include "CreateMap.h"
 #include "CreateMapDlg.h"
 #include "afxdialogex.h"
+
 #include <stdio.h>
 
 //#include"GDITest.h"
@@ -128,6 +129,8 @@ BOOL CCreateMapDlg::OnInitDialog()
 		pWnd = pWnd->GetNextWindow();//取下一个子窗体
 	}
 
+
+	m_getMCInfo.StartUdpCommunication(this);
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -1241,4 +1244,12 @@ void CCreateMapDlg::OnSize(UINT nType, int cx, int cy)
 	}
 
 	
+}
+
+void CCreateMapDlg::showNowGPS(char *buff,long len){
+	CString latlong[2];
+	m_getMCInfo.getGPSAndPostion(buff,len,latlong);
+	CString strShow;
+	strShow.Format(L"%s %s",latlong[0],latlong[1]);
+	m_statusBar->SetText(strShow,1,0); //以下类似
 }

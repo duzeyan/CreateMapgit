@@ -28,6 +28,9 @@
     <Filter Include="地图结构">
       <UniqueIdentifier>{7ae54f8a-2731-428e-8ebb-eb343eea5a45}</UniqueIdentifier>
     </Filter>
+    <Filter Include="通信模块">
+      <UniqueIdentifier>{15d51410-42d5-42ca-888b-5621060b5ae3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -75,6 +78,18 @@
     <ClInclude Include="MapDrawControl.h">
       <Filter>对话框\主对话框</Filter>
     </ClInclude>
+    <ClInclude Include="CreateMapCommunication.h">
+      <Filter>通信模块</Filter>
+    </ClInclude>
+    <ClInclude Include="UDP.h">
+      <Filter>通信模块</Filter>
+    </ClInclude>
+    <ClInclude Include="NJUST_MAP_data.h">
+      <Filter>通信模块</Filter>
+    </ClInclude>
+    <ClInclude Include="NJUST_MC_typedef.h">
+      <Filter>通信模块</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -106,6 +121,12 @@
     </ClCompile>
     <ClCompile Include="NJUSTMap.cpp">
       <Filter>地图结构</Filter>
+    </ClCompile>
+    <ClCompile Include="UDP.cpp">
+      <Filter>通信模块</Filter>
+    </ClCompile>
+    <ClCompile Include="CreateMapCommunication.cpp">
+      <Filter>通信模块</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

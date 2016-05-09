@@ -4,6 +4,7 @@
 #include"DrawMapMark.h"
 #include "afxwin.h"
 #include <iostream>
+#include "resource.h"
 using namespace std;
 
 // CreateLineDlg ¶Ô»°¿ò

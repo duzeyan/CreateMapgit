@@ -10,7 +10,8 @@
 #include"DrawMapMark.h"
 #include "CreateLineDlg.h"
 #include"CreateCrossDlg.h"
-
+#include "CreateMapCommunication.h"
+#include "resource.h"
 #include<math.h>
 
 // CCreateMapDlg 对话框
@@ -71,6 +72,8 @@ public:
 	CStatusBarCtrl* m_statusBar;  //状态栏
 	CList<CRect, CRect> m_listRect;  //控件大小调整
 
+	CreateMapCommunication m_getMCInfo;  //GPS通信
+
 	////////////////////////////////////////////////////////////////////////// 反向操作变量
 	vector<MAP_DOUBLE_POINT> m_Show_GPSList; //读取的GFS
 	int m_Show_cur; //当前读到的序列位置
@@ -123,6 +126,8 @@ private :
 	//初始化状态栏
 	void initStatusBar();
 
+public:
+	void showNowGPS(char *buff,long len);
 	
 
 public:
