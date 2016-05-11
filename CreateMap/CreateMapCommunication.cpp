@@ -149,7 +149,8 @@ int CreateMapCommunication::NJUST_MC_Decode_Drive(const void* pIPData, const int
 	return errCode;
 }
 
-void CreateMapCommunication::blh2xy(double x,double y,int &earthx,int &earthy)//纬度，经度，单位是度,单位是厘米
+//纬度，经度，单位是度,单位是厘米
+void CreateMapCommunication::blh2xy(double x,double y,int &earthx,int &earthy)
 {
 	int n,L0;
 	double X,N54,W54,t,m,a54,e54,e_54;
@@ -260,17 +261,23 @@ void CreateMapCommunication::StartUdpCommunication(CCreateMapDlg *dlg)
 	m_Udp.StartReceiving();
 }
 
+void CreateMapCommunication::ShutDownCommunication()
+{
+	m_Udp.DeleteReceiver();
+	m_Udp.StopReceiving();
+}
 
 
 
 //回调实现功能
-void  CreateMapCommunication::getGPSAndPostion(char * buff, int len,CString latlong[2])
+void  CreateMapCommunication::getGPSAndPostion(char * buff, int len,double longlat[2])
 {
     
-	double   m_longtitude;
-	double   m_latitude;
-	int      m_earthx;
-	int      m_earthy;
+	double   m_longtitude=0;
+	double   m_latitude=0;
+	//int      m_earthx;
+	//int      m_earthy;
+	longlat[0]=longlat[1]=0.0;
 
 	NJUST_MC_STATE_INFO  *pState; //当不是状态数据时,值为NULL
     NJUST_MC_NAV_INFO    *pNav; //当不是导航信息时,值为NULL
@@ -286,11 +293,8 @@ void  CreateMapCommunication::getGPSAndPostion(char * buff, int len,CString latl
             m_latitude=pNav->Latitude_degree*60;
 	        m_longtitude=pNav->Longitude_degree*60;
 
-            CString str1,str2;
-			str1.Format(_T("%lf"),m_longtitude);
-			str2.Format(_T("%lf"),m_latitude);
-			latlong[0]=str1;
-			latlong[1]=str2;
-		}		
+			longlat[0]=m_longtitude;
+			longlat[1]=m_latitude;
+		}
 }
 

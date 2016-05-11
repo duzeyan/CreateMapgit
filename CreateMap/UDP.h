@@ -10,8 +10,8 @@
 
 #define TARGET_UDP_PORT  8000
 //#define TARGET_UDP_PORT  6000
-//#define  LOCAL_UDP_PORT  50000
-#define  LOCAL_UDP_PORT  6000
+#define  LOCAL_UDP_PORT  50000
+//#define  LOCAL_UDP_PORT  6000
 
 //³¬Ç°ÒýÓÃ
 class CCreateMapDlg;

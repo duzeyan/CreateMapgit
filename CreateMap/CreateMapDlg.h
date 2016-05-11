@@ -56,7 +56,7 @@ public:
 	vector<DRAW_RECORD> m_records; //绘图操作记录表
 	NJUSTMap m_njustMap;     //最后使用的地图拓扑结构(计算和存储)
 
-	CONTROL_CASE m_nowCase;
+	CONTROL_CASE m_nowCase;         //鼠标点击当前状态
 	CONTROL_BEZIER control_bezier; //绘制贝塞尔曲线时 记录鼠标状态
 	CONTORL_POINTS control_points;//绘制孤立点时 记录鼠标状态
 
@@ -73,6 +73,7 @@ public:
 	CList<CRect, CRect> m_listRect;  //控件大小调整
 
 	CreateMapCommunication m_getMCInfo;  //GPS通信
+	MAP_DOUBLE_POINT m_RealGPS;         //从惯导获取的GPS
 
 	////////////////////////////////////////////////////////////////////////// 反向操作变量
 	vector<MAP_DOUBLE_POINT> m_Show_GPSList; //读取的GFS
@@ -121,10 +122,19 @@ private :
 	//反序列化
 	void enserial(CFile &file);
 
-	//检查是否载入地图
-	bool isLoad();
+	
+	
+	//设置标定数据 
+	void setCalibration(CPoint p,CRect rect,int index);
+	//计算误差
+	void coumputerDevication(CPoint p,CRect rect);
+
+	//动态调整控件位置 
+	void initCtlPosition();
 	//初始化状态栏
 	void initStatusBar();
+	//检查是否载入地图
+	bool isLoad();
 
 public:
 	void showNowGPS(char *buff,long len);
@@ -160,4 +170,9 @@ public:
 	afx_msg void OnMenuShowGPS();
 	afx_msg void OnContextMenu(CWnd* /*pWnd*/, CPoint /*point*/);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnMenuP1();
+	afx_msg void OnMenuP2();
+	afx_msg void OnMenuDeviation();
+	afx_msg void OnDestroy();
+	afx_msg void OnResolution();
 };

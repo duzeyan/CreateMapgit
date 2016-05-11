@@ -83,6 +83,11 @@ ON_COMMAND(ID_32777, &CCreateMapDlg::OnSaveMap)
 ON_COMMAND(ID_32778, &CCreateMapDlg::OnMenuShowGPS)
 ON_WM_CONTEXTMENU()
 ON_WM_SIZE()
+ON_COMMAND(ID_MENU_P1, &CCreateMapDlg::OnMenuP1)
+ON_COMMAND(ID_MENU_P2, &CCreateMapDlg::OnMenuP2)
+ON_COMMAND(ID_MENU_DEVIATION, &CCreateMapDlg::OnMenuDeviation)
+ON_WM_DESTROY()
+ON_COMMAND(ID_RESOLUTION, &CCreateMapDlg::OnResolution)
 END_MESSAGE_MAP()
 
 //手动注册事件响应
@@ -101,7 +106,6 @@ BOOL CCreateMapDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// 设置大图标
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
-	// TODO: 在此添加额外的初始化代码
 	m_isMove=false;
 	m_loadImage=NULL;
 	m_canvas=NULL;
@@ -116,20 +120,13 @@ BOOL CCreateMapDlg::OnInitDialog()
 	m_crossDlg=NULL;
 	m_curMapName="";
 	m_Show_cur=0;
+
+	//初始化控件
 	initStatusBar();
+	initCtlPosition();
 
-	CRect rect;
-	GetWindowRect(&rect);
-	m_listRect.AddTail(rect);//对话框的区域
-	pWnd = GetWindow(GW_CHILD);//获取子窗体
-	while (pWnd)
-	{
-		pWnd->GetWindowRect(rect);//子窗体的区域
-		m_listRect.AddTail(rect);           //CList<CRect,CRect> m_listRect成员变量
-		pWnd = pWnd->GetNextWindow();//取下一个子窗体
-	}
-
-
+	//初始化标定相关
+	m_RealGPS.x=m_RealGPS.y=0.0f;
 	m_getMCInfo.StartUdpCommunication(this);
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -170,13 +167,63 @@ HCURSOR CCreateMapDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
+void CCreateMapDlg::OnSize(UINT nType, int cx, int cy)
+{
+	CDialog::OnSize(nType, cx, cy);
+
+	if (m_listRect.GetCount() > 0){
+		CRect dlgNow;
+		GetWindowRect(&dlgNow);
+		POSITION pos = m_listRect.GetHeadPosition();//第一个保存的是对话框的Rect
+		CRect dlgSaved;
+		dlgSaved = m_listRect.GetNext(pos);
+		ScreenToClient(dlgNow);
+		double x = dlgNow.Width() * 1.0 / dlgSaved.Width();//根据当前和之前保存的对话框的宽高求比例
+		double y = dlgNow.Height()  *1.0 / dlgSaved.Height();
+		ClientToScreen(dlgNow);
+		CRect childSaved;
+		CWnd* pWnd = GetWindow(GW_CHILD);
+		while (pWnd)
+		{
+			childSaved = m_listRect.GetNext(pos);//依次获取子窗体的Rect
+			childSaved.left = (LONG)(dlgNow.left + (childSaved.left - dlgSaved.left)*x);//根据比例调整控件上下左右距离对话框的距离
+			childSaved.right = (LONG)(dlgNow.right + (childSaved.right - dlgSaved.right)*x);
+			childSaved.top = (LONG)(dlgNow.top + (childSaved.top - dlgSaved.top)*y);
+			childSaved.bottom = (LONG)(dlgNow.bottom + (childSaved.bottom - dlgSaved.bottom)*y);
+			ScreenToClient(childSaved);
+			pWnd->MoveWindow(childSaved);
+ 
+
+			InvalidateRect(childSaved);  //立即重绘 避免残影
+			pWnd = pWnd->GetNextWindow();
+		}
+
+	}
+}
+
+//善后处理
+void CCreateMapDlg::OnDestroy()
+{
+	//关闭特定端口监听
+	m_getMCInfo.ShutDownCommunication();
+
+	//释放内存
+	 if(m_statusBar!=NULL) delete m_statusBar;
+	if(m_lineDlg!=NULL) delete m_lineDlg;
+	if(m_crossDlg!=NULL) delete m_crossDlg; 
+	if(m_loadImage!=NULL) delete m_loadImage; 
+	if(m_backUpImage!=NULL) delete m_backUpImage; 
+	if(m_canvas!=NULL) delete m_canvas; 
+	CDialog::OnDestroy();
+
+	// TODO: 在此处添加消息处理程序代码
+}
+
+
 
 //////////////////////////////////////////////////////////////////////////
 /// 控件事件响应
 //////////////////////////////////////////////////////////////////////////
-
-
-
 
 //鼠标左键落下
 void CCreateMapDlg::OnLButtonDown(UINT nFlags, CPoint point)
@@ -209,6 +256,22 @@ void CCreateMapDlg::OnLButtonDown(UINT nFlags, CPoint point)
 									DlgDrawMark(point,rect);
 									break;
 							   }
+			case Case_getP1:{
+									
+									setCalibration(point,rect,0);
+									m_nowCase=Case_None;
+									break;
+							}
+			case Case_getP2 :{     
+									setCalibration(point,rect,1);
+									m_nowCase=Case_None;
+									break;
+							 }
+			case Case_Deviation:{
+									coumputerDevication(point,rect);
+									m_nowCase=Case_None;
+									break;
+								}
 			//默认移动
 			default:{
 							m_isMove=true;
@@ -528,6 +591,11 @@ void CCreateMapDlg::OnBnClickedButtondelineout()
 {
 	if(!isLoad())
 		return;
+
+	if(!m_njustMap.CheckIsCali()){
+		AfxMessageBox(L"地图未标定，请先标定",MB_OK);
+		return;
+	}
 
 	CString path=L"D:\\map";
 	if(!m_njustMap.writeRoad(path)){
@@ -915,25 +983,44 @@ bool CCreateMapDlg::isLoad(){
 	return true;
 }
 
+////////////////////////////////////控件初始化//////////////////////////////////////
 
+
+
+//动态调整控件位置 
+void CCreateMapDlg::initCtlPosition(){
+	CRect rect;
+	GetWindowRect(&rect);
+	m_listRect.AddTail(rect);//对话框的区域
+	CWnd *pWnd = GetWindow(GW_CHILD);//获取子窗体
+	while (pWnd)
+	{
+		pWnd->GetWindowRect(rect);//子窗体的区域
+		m_listRect.AddTail(rect);           //CList<CRect,CRect> m_listRect成员变量
+		pWnd = pWnd->GetNextWindow();//取下一个子窗体
+	}
+}
 
 void CCreateMapDlg::initStatusBar(){
 	m_statusBar=new CStatusBarCtrl;
-	RECT m_Rect; 
+	CRect m_Rect; 
 	GetClientRect(&m_Rect); //获取对话框的矩形区域
 	m_Rect.top=m_Rect.bottom-20; //设置状态栏的矩形区域
 	m_statusBar->Create(WS_BORDER|WS_VISIBLE|CBRS_BOTTOM,m_Rect,this,3);
-	int nParts[4]= {500, 200, 300,-1}; //分割尺寸
-	m_statusBar->SetParts(4, nParts); //分割状态栏
+	int nParts[2]= {m_Rect.Width()/2,-1}; //分割尺寸
+	m_statusBar->SetParts(2, nParts); //分割状态栏
 	m_statusBar->SetText(L"当前地图:【未打开地图】",0,0); //第一个分栏加入"这是第一个指示器"
-	//m_statusBar->SetText(L"这是第二个指示器",1,0); //以下类似
+	
+	
 }
 
 
 
-//////////////////////////////////////////////////////////////////////////
-//GPS序列动态显示在图中  s
-//////////////////////////////////////////////////////////////////////////
+
+
+////////////////////////////GPS序列动态显示在图中//////////////////////////////////////////////
+
+
 
 void CCreateMapDlg::OnLbnSelchangeListrecord()
 {
@@ -946,8 +1033,6 @@ void CCreateMapDlg::OnBnClickedCancel()
 	CDialog::OnCancel();
 	
 }
-
-
 
 void CCreateMapDlg::OnTimer(UINT_PTR nIDEvent)
 {
@@ -962,7 +1047,7 @@ void CCreateMapDlg::OnTimer(UINT_PTR nIDEvent)
 		//Draw
 		HDC hdc=m_loadImage->GetDC();
 		CDC *pDC = CDC::FromHandle(hdc);
-		//pDC->SelectObject()
+		pDC->SelectStockObject(WHITE_BRUSH);
 
 		CPoint p=CPoint(gps.x,gps.y);int r=4;
 		pDC->MoveTo(p);
@@ -980,16 +1065,9 @@ void CCreateMapDlg::OnTimer(UINT_PTR nIDEvent)
 	CDialog::OnTimer(nIDEvent);
 }
 
-//////////////////////////////////////////////////////////////////////////
-//GPS序列动态显示在图中 e
-//////////////////////////////////////////////////////////////////////////
 
 
-
-
-//////////////////////////////////////////////////////////////////////////
-//主菜单栏操作
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////主菜单栏操作//////////////////////////////////////////////
 
 //新建地图
 void CCreateMapDlg::OnMenuBuildMap()
@@ -1033,13 +1111,14 @@ void CCreateMapDlg::OnMenuBuildMap()
 							,m_loadImage->GetHeight()-1
 							,118.8583817276
 							,32.0258740959);*/
-		gps2[0]=COMPUTE_GPS(484,311,118.8558887276,32.0302730959); //5- 2 ;5-5
-		gps2[1]=COMPUTE_GPS(m_loadImage->GetWidth()-1
-							,m_loadImage->GetHeight()-1
-							,118.8583617276
-							,32.0258240959);
-		m_njustMap.init(gps2); //重新初始化
+		//gps2[0]=COMPUTE_GPS(484,311,118.8558887276,32.0302730959); //5- 2 ;5-5
+		//gps2[1]=COMPUTE_GPS(m_loadImage->GetWidth()-1
+		//					,m_loadImage->GetHeight()-1
+		//					,118.8583617276
+		//					,32.0258240959);
+		m_njustMap.init();  //重新初始化 reset
 		m_records.clear();    //删除已有地图
+
 		//清除列表
 		m_listMap.ResetContent();
 		m_listRecord.ResetContent();
@@ -1148,13 +1227,15 @@ void CCreateMapDlg::OnSaveMap()
 	}
 }
 
-
-
-
+//读取显示GPS序列
 void CCreateMapDlg::OnMenuShowGPS()
 {
 	if(!isLoad())
 		return;
+	if(!m_njustMap.CheckIsCali()){
+		AfxMessageBox(L"地图未标定，请先标定",MB_OK);
+		return;
+	}
 
 	CString FilePathName;
     CFileDialog dlg(TRUE, //TRUE为OPEN对话框，FALSE为SAVE AS对话框
@@ -1182,10 +1263,7 @@ void CCreateMapDlg::OnMenuShowGPS()
 	CWnd::SetTimer(1,100,NULL);
 }
 
-//////////////////////////////////////////////////////////////////////////
-//上下文菜单栏操作
-//////////////////////////////////////////////////////////////////////////
-
+/////////////////////////////上下文菜单栏操作/////////////////////////////////////////////
 
 void CCreateMapDlg::OnContextMenu(CWnd* /*pWnd*/, CPoint /*point*/)
 {
@@ -1210,46 +1288,123 @@ void CCreateMapDlg::OnContextMenu(CWnd* /*pWnd*/, CPoint /*point*/)
 }
 
 
-void CCreateMapDlg::OnSize(UINT nType, int cx, int cy)
+
+
+
+/////////////////////////////标定相关操作/////////////////////////////////////////////
+void CCreateMapDlg::showNowGPS(char *buff,long len){
+	double longlat[2];
+	m_getMCInfo.getGPSAndPostion(buff,len,longlat);
+	///Test 118.85644481,32.02762140
+	longlat[0]=118.85690144;
+	longlat[1]=32.02764064;
+	///
+
+	CString strShow;
+	strShow.Format(L"经度(°):%.8lf 纬度(°):%.8lf",longlat[0],longlat[1]);
+
+	m_RealGPS.x=longlat[0];
+	m_RealGPS.y=longlat[1];
+
+	m_statusBar->SetText(strShow,1,0); 
+}
+
+
+//获取第一个点
+void CCreateMapDlg::OnMenuP1()
 {
-	CDialog::OnSize(nType, cx, cy);
-
-	if (m_listRect.GetCount() > 0){
-		CRect dlgNow;
-		GetWindowRect(&dlgNow);
-		POSITION pos = m_listRect.GetHeadPosition();//第一个保存的是对话框的Rect
-		CRect dlgSaved;
-		dlgSaved = m_listRect.GetNext(pos);
-		ScreenToClient(dlgNow);
-		double x = dlgNow.Width() * 1.0 / dlgSaved.Width();//根据当前和之前保存的对话框的宽高求比例
-		double y = dlgNow.Height()  *1.0 / dlgSaved.Height();
-		ClientToScreen(dlgNow);
-		CRect childSaved;
-		CWnd* pWnd = GetWindow(GW_CHILD);
-		while (pWnd)
-		{
-			childSaved = m_listRect.GetNext(pos);//依次获取子窗体的Rect
-			childSaved.left = (LONG)(dlgNow.left + (childSaved.left - dlgSaved.left)*x);//根据比例调整控件上下左右距离对话框的距离
-			childSaved.right = (LONG)(dlgNow.right + (childSaved.right - dlgSaved.right)*x);
-			childSaved.top = (LONG)(dlgNow.top + (childSaved.top - dlgSaved.top)*y);
-			childSaved.bottom = (LONG)(dlgNow.bottom + (childSaved.bottom - dlgSaved.bottom)*y);
-			ScreenToClient(childSaved);
-			pWnd->MoveWindow(childSaved);
- 
-
-			InvalidateRect(childSaved);  //立即重绘 避免残影
-			pWnd = pWnd->GetNextWindow();
-		}
-
-	}
-
+	 m_nowCase=Case_getP1;
 	
 }
 
-void CCreateMapDlg::showNowGPS(char *buff,long len){
-	CString latlong[2];
-	m_getMCInfo.getGPSAndPostion(buff,len,latlong);
-	CString strShow;
-	strShow.Format(L"%s %s",latlong[0],latlong[1]);
-	m_statusBar->SetText(strShow,1,0); //以下类似
+//获取第二个点
+void CCreateMapDlg::OnMenuP2()
+{
+	m_nowCase=Case_getP2;
+}
+
+//计算误差
+void CCreateMapDlg::OnMenuDeviation()
+{
+	m_nowCase=Case_Deviation;
+}
+
+//设置标定数据 鼠标点击位置(客户区) 图片控件大小(rect) 标定点索引
+void CCreateMapDlg::setCalibration(CPoint point,CRect rect,int index){
+		if(!isLoad())
+			return;
+
+		if(abs(m_RealGPS.x-.0l)<0.001)
+			AfxMessageBox(L"未能获取GPS信息",MB_OK);
+		else{
+			point.x-=rect.left; point.y-=rect.top;
+			point.x+=m_srcRect.left; point.y+=m_srcRect.top;
+			m_njustMap.buildGPS[index].x=point.x;
+			m_njustMap.buildGPS[index].y=point.y;
+			m_njustMap.buildGPS[index].lng=m_RealGPS.x;
+			m_njustMap.buildGPS[index].lat=m_RealGPS.y;
+			CString strShow;
+			strShow.Format(L"P%d 设置完成:px(%d,%d) GPS(%.8lf ,%.8lf)",
+				index+1,point.x,point.y,m_RealGPS.x,m_RealGPS.y);
+			AfxMessageBox(strShow,MB_OK);
+		}
+}
+
+//计算误差
+void CCreateMapDlg::coumputerDevication(CPoint point,CRect rect){
+	if(!isLoad())
+		return;
+
+	point.x-=rect.left; point.y-=rect.top;
+	point.x+=m_srcRect.left; point.y+=m_srcRect.top;
+	if(m_njustMap.CheckIsCali()){
+		m_njustMap.computeScale();//计算尺度
+		COMPUTE_GPS cGPS;
+		cGPS.x=point.x;cGPS.y=point.y;
+		m_njustMap.pixel2GPS(cGPS);
+
+		CString strShow;
+		//计算距离
+		int cx,cy;
+		int rx,ry;
+		m_getMCInfo.blh2xy(cGPS.lat,cGPS.lng,cx,cy);
+		m_getMCInfo.blh2xy(m_RealGPS.y,m_RealGPS.x,rx,ry);
+		double delta=(cx-rx)*(cx-rx)+(cy-ry)*(cy-ry);
+		delta=sqrt(delta);
+		strShow.Format(L"计算GPS:(%.8lf,%.8lf) 距离为%.5lfcm",cGPS.lng,cGPS.lat,delta);
+		AfxMessageBox(strShow,MB_OK);
+	}else{
+		AfxMessageBox(L"地图未标定，请先标定",MB_OK);
+	}
+}
+
+
+
+void CCreateMapDlg::OnResolution()
+{
+	if(m_njustMap.CheckIsCali()){
+		COMPUTE_GPS cGPS,cGPS1;  //设置两个坐标
+		cGPS.x=0;cGPS.y=0;
+		cGPS1.x=1;cGPS1.y=0;
+
+		m_njustMap.pixel2GPS(cGPS);  //根据标定结果换算成GPS
+		m_njustMap.pixel2GPS(cGPS1);
+
+		int x,y;
+		int x1,y1; 
+		m_getMCInfo.blh2xy(cGPS.lat,cGPS.lng,x,y);   //换算成cm
+		m_getMCInfo.blh2xy(cGPS1.lat,cGPS1.lng,x1,y1);
+		double delta1=(x1-x)*(x1-x)+(y1-y)*(y1-y);
+		delta1=sqrt(delta1);
+
+		//同样步骤计算Y方向上的分辨率
+		cGPS1.x=0;cGPS1.y=1;
+		m_getMCInfo.blh2xy(cGPS1.lat,cGPS1.lng,x1,y1);
+		double delta2=(x1-x)*(x1-x)+(y1-y)*(y1-y);
+		delta2=sqrt(delta2);
+
+		CString strShow;
+		strShow.Format(L"x,y方向上分辨率为 %.5lfcm/pix %.5lfcm/pix",delta1,delta2);
+		AfxMessageBox(strShow,MB_OK);
+	}
 }

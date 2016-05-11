@@ -5,15 +5,44 @@
 #include <iomanip>
 using namespace std;
 
-void NJUSTMap::init(COMPUTE_GPS buildGPS[2]){
-	this->buildGPS[0]=buildGPS[0];
+
+
+NJUSTMap::NJUSTMap(){
+	buildGPS[0].x=buildGPS[0].y=0.0;
+	buildGPS[1].x=buildGPS[1].y=0.0;
+}
+
+
+
+void NJUSTMap::init(){
+	/*this->buildGPS[0]=buildGPS[0];
 	this->buildGPS[1]=buildGPS[1];
 
 	scaleX=(buildGPS[1].lng-buildGPS[0].lng)/(buildGPS[1].x-buildGPS[0].x);
-	scaleY=(buildGPS[1].lat-buildGPS[0].lat)/(buildGPS[1].y-buildGPS[0].y);
+	scaleY=(buildGPS[1].lat-buildGPS[0].lat)/(buildGPS[1].y-buildGPS[0].y);*/
 	roads.clear();
 	nodes.clear();
 	crosses.clear();
+}
+
+//计算尺度
+void NJUSTMap::computeScale(){
+	scaleX=(buildGPS[1].lng-buildGPS[0].lng)/(buildGPS[1].x-buildGPS[0].x);
+	scaleY=(buildGPS[1].lat-buildGPS[0].lat)/(buildGPS[1].y-buildGPS[0].y);
+}
+
+//检查是否已经设置好参数
+bool NJUSTMap::CheckIsCali(){
+	if(abs(buildGPS[0].lat-.0l)<0.001) //==0
+		return false;
+	if(abs(buildGPS[0].lng-.0l)<0.001)
+		return false;
+	if(abs(buildGPS[1].lat-.0l)<0.001)
+		return false;
+	if(abs(buildGPS[1].lng-.0l)<0.001)
+		return false;
+
+	return true;
 }
 
 void NJUSTMap::deleteEleByID(bool isNode,int id){

@@ -16,7 +16,10 @@ enum CONTROL_CASE{
 	Case_Line,
 	Case_BEZIER,
 	Case_Points,
-	Case_MarkNode
+	Case_MarkNode,
+	Case_getP1,
+	Case_getP2,
+	Case_Deviation
 	//..
 };
 

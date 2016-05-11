@@ -23,7 +23,9 @@ public:
 	
 
 public:
-	
+	NJUSTMap();
+
+
 	//************************************
 	// 函数名:   init
 	// 函数描述：初始化,需要给出图片若干点的坐标和对应的GPS
@@ -31,7 +33,7 @@ public:
 	// 返回类型: void
 	// 日期：	 2016/04/18
 	//************************************
-	void init(COMPUTE_GPS buildGPS[2]);
+	void init();
 
 	//************************************
 // 函数名:   deleteEleByID
@@ -105,6 +107,11 @@ public:
 	//像素转化为GPS
 	void GPS2pexel(COMPUTE_GPS &p2g);
 
+	//检查是否已经设置好参数
+	bool CheckIsCali();
+
+	//计算尺度
+	void computeScale();
 	
 	//************************************
 	// 函数名:   serial

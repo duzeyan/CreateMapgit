@@ -28,9 +28,11 @@ public:
      int         NJUST_MC_Decode_Drive(const void* pIPData, const int nBytes);
      int         NJUST_MC_Decode_NAV(const void* pIPData, const int nBytes);
      int         NJUST_MC_Decode_State(const void* pIPData, const int nBytes);
-	 void        blh2xy(double x,double y,int &earthx,int &earthy);
-	 void        Initial();
+	 void        blh2xy(double x,double y,int &earthx,int &earthy); //纬度，经度，单位是度,单位是厘米
+
 	 void        StartUdpCommunication(CCreateMapDlg *dlg);
-	 void  getGPSAndPostion(char * buff, int len,CString []);
+	 void        ShutDownCommunication();
+
+	 void  getGPSAndPostion(char * buff, int len,double longlat[2]);
 };
 
