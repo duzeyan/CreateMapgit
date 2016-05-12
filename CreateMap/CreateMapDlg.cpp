@@ -1294,10 +1294,13 @@ void CCreateMapDlg::OnContextMenu(CWnd* /*pWnd*/, CPoint /*point*/)
 /////////////////////////////标定相关操作/////////////////////////////////////////////
 void CCreateMapDlg::showNowGPS(char *buff,long len){
 	double longlat[2];
+
 	m_getMCInfo.getGPSAndPostion(buff,len,longlat);
+	longlat[0]/=60;
+	longlat[1]/=60;
 	///Test 118.85644481,32.02762140
-	longlat[0]=118.85690144;
-	longlat[1]=32.02764064;
+	//longlat[0]=118.85690144;
+	//longlat[1]=32.02764064;
 	///
 
 	CString strShow;
@@ -1354,6 +1357,11 @@ void CCreateMapDlg::setCalibration(CPoint point,CRect rect,int index){
 void CCreateMapDlg::coumputerDevication(CPoint point,CRect rect){
 	if(!isLoad())
 		return;
+	
+	if(abs(m_RealGPS.x-.0l)<0.001){
+			AfxMessageBox(L"未能获取GPS信息",MB_OK);
+			return;
+	}
 
 	point.x-=rect.left; point.y-=rect.top;
 	point.x+=m_srcRect.left; point.y+=m_srcRect.top;
