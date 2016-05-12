@@ -14,6 +14,9 @@
 #include "resource.h"
 #include<math.h>
 
+
+
+
 // CCreateMapDlg 对话框
 class CCreateMapDlg : public CDialog
 {
@@ -74,6 +77,8 @@ public:
 
 	CreateMapCommunication m_getMCInfo;  //GPS通信
 	MAP_DOUBLE_POINT m_RealGPS;         //从惯导获取的GPS
+	unsigned int m_clockGPS;			//控制接受频率
+	bool m_isDrawCar;                   //false
 
 	////////////////////////////////////////////////////////////////////////// 反向操作变量
 	vector<MAP_DOUBLE_POINT> m_Show_GPSList; //读取的GFS
@@ -121,8 +126,6 @@ private :
 
 	//反序列化
 	void enserial(CFile &file);
-
-	
 	
 	//设置标定数据 
 	void setCalibration(CPoint p,CRect rect,int index);
@@ -135,6 +138,8 @@ private :
 	void initStatusBar();
 	//检查是否载入地图
 	bool isLoad();
+	//绘制车体
+	void drawMyCar(double longlat[2]);
 
 public:
 	void showNowGPS(char *buff,long len);
@@ -175,4 +180,5 @@ public:
 	afx_msg void OnMenuDeviation();
 	afx_msg void OnDestroy();
 	afx_msg void OnResolution();
+	afx_msg void OnMenuDrawcar();
 };

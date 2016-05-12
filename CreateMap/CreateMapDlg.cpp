@@ -21,6 +21,8 @@
 // CCreateMapDlg 对话框
 
 
+const unsigned int RECIVE_RATE=50;
+
 
 CCreateMapDlg::CCreateMapDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CCreateMapDlg::IDD, pParent)
@@ -88,6 +90,7 @@ ON_COMMAND(ID_MENU_P2, &CCreateMapDlg::OnMenuP2)
 ON_COMMAND(ID_MENU_DEVIATION, &CCreateMapDlg::OnMenuDeviation)
 ON_WM_DESTROY()
 ON_COMMAND(ID_RESOLUTION, &CCreateMapDlg::OnResolution)
+ON_COMMAND(ID_MENU_DRAWCAR, &CCreateMapDlg::OnMenuDrawcar)
 END_MESSAGE_MAP()
 
 //手动注册事件响应
@@ -106,28 +109,30 @@ BOOL CCreateMapDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// 设置大图标
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
-	m_isMove=false;
+	m_isMove=false;                    //是否正在按下 移动
 	m_loadImage=NULL;
 	m_canvas=NULL;
 	m_backUpImage=NULL;
-	m_isDrawLine=false;
+	m_isDrawLine=false;                 //是否正在绘制直线
 	CWnd *pWnd=GetDlgItem(IDC_PIC_MAIN);//获得pictrue控件窗口的句柄   
 	pWnd->GetClientRect(&m_picRect);	//获得pictrue控件所在的矩形区域   
-	m_pPicDC=pWnd->GetDC();
-	m_nowCase=Case_None;
-	control_bezier.index=0;
-	m_lineDlg=NULL;
-	m_crossDlg=NULL;
-	m_curMapName="";
-	m_Show_cur=0;
-
+	m_pPicDC=pWnd->GetDC();				 //保持图片控件DC
+	m_nowCase=Case_None;				//设置鼠标状态
+	control_bezier.index=0;				//曲线初始化
+	m_lineDlg=NULL;						//构建道路地图框
+	m_crossDlg=NULL;					 //构建路口地图框
+	m_curMapName="";					//当前地图名字
+	m_Show_cur=0;						//反向绘制 当前索引
+	m_clockGPS=0;						//GPS接受频率
+	m_isDrawCar=false;					// 是否画出车体
 	//初始化控件
-	initStatusBar();
-	initCtlPosition();
+	initStatusBar();                    //初始化底部状态栏
+	initCtlPosition();                  //初始化记录控件位置
 
 	//初始化标定相关
-	m_RealGPS.x=m_RealGPS.y=0.0f;
-	m_getMCInfo.StartUdpCommunication(this);
+	m_RealGPS.x=m_RealGPS.y=0.0f;			 //默认接受的GPS为0  表示没有接受到数据
+	m_getMCInfo.StartUdpCommunication(this); //建立与惯导的通信
+
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -214,6 +219,9 @@ void CCreateMapDlg::OnDestroy()
 	if(m_loadImage!=NULL) delete m_loadImage; 
 	if(m_backUpImage!=NULL) delete m_backUpImage; 
 	if(m_canvas!=NULL) delete m_canvas; 
+
+	//释放图片控件DC
+	GetDlgItem(IDC_PIC_MAIN)->ReleaseDC(m_pPicDC);
 	CDialog::OnDestroy();
 
 	// TODO: 在此处添加消息处理程序代码
@@ -221,10 +229,7 @@ void CCreateMapDlg::OnDestroy()
 
 
 
-//////////////////////////////////////////////////////////////////////////
-/// 控件事件响应
-//////////////////////////////////////////////////////////////////////////
-
+///////////////////////////控件事件响应///////////////////////////////////////////////
 //鼠标左键落下
 void CCreateMapDlg::OnLButtonDown(UINT nFlags, CPoint point)
 {
@@ -611,7 +616,7 @@ void CCreateMapDlg::OnBnClickedButtondelineout()
 
 
 
-///////////////////////业务逻辑代码//////////////////////////
+///////////////////////绘图逻辑代码//////////////////////////
 
 
 //************************************
@@ -1293,9 +1298,18 @@ void CCreateMapDlg::OnContextMenu(CWnd* /*pWnd*/, CPoint /*point*/)
 
 /////////////////////////////标定相关操作/////////////////////////////////////////////
 void CCreateMapDlg::showNowGPS(char *buff,long len){
+	
+	//Step1 控制接受频率
+	m_clockGPS++;
+	m_clockGPS%=10000; //避免越界
+	if(m_clockGPS%RECIVE_RATE!=0){ //50取1
+		return ;
+	}
+
 	double longlat[2];
 
 	m_getMCInfo.getGPSAndPostion(buff,len,longlat);
+	//转化为度
 	longlat[0]/=60;
 	longlat[1]/=60;
 	///Test 118.85644481,32.02762140
@@ -1309,6 +1323,7 @@ void CCreateMapDlg::showNowGPS(char *buff,long len){
 	m_RealGPS.x=longlat[0];
 	m_RealGPS.y=longlat[1];
 
+	drawMyCar(longlat);      //在车中绘制
 	m_statusBar->SetText(strShow,1,0); 
 }
 
@@ -1387,7 +1402,7 @@ void CCreateMapDlg::coumputerDevication(CPoint point,CRect rect){
 }
 
 
-
+//计算分辨率
 void CCreateMapDlg::OnResolution()
 {
 	if(m_njustMap.CheckIsCali()){
@@ -1414,5 +1429,55 @@ void CCreateMapDlg::OnResolution()
 		CString strShow;
 		strShow.Format(L"x,y方向上分辨率为 %.5lfcm/pix %.5lfcm/pix",delta1,delta2);
 		AfxMessageBox(strShow,MB_OK);
+	}else{
+		AfxMessageBox(L"地图未标定，请先标定",MB_OK);
 	}
+}
+
+//修改绘制车体开关
+void CCreateMapDlg::OnMenuDrawcar()
+{
+	// --- Step.1 --- 检查操作合法性
+	if(!isLoad())    //检查是否载入地图
+		return;
+	
+	if(!m_njustMap.CheckIsCali()){   //检查地图是否标定
+		AfxMessageBox(L"未能获取GPS信息",MB_OK);
+			return;
+	}
+	if(abs(m_RealGPS.x-.0l)<0.001){   //检查能否活惯导GPS
+			AfxMessageBox(L"未能获取GPS信息",MB_OK);
+			return;
+	}
+	// --- Step.2---  打开/关闭
+	m_isDrawCar=m_isDrawCar?false:true;
+}
+
+//绘制车体
+void CCreateMapDlg::drawMyCar(double longlat[2]){
+
+	// --- Step.0 --- 检查开关是否打开
+	if(!m_isDrawCar)  
+		return ;
+
+
+	// --- Step.1 --- 获取图片DC
+	HDC hdc=m_loadImage->GetDC();
+	CDC *pDC = CDC::FromHandle(hdc);
+	
+
+	// --- Step.2 --- 记录点
+	pDC->SelectStockObject(WHITE_BRUSH);
+	COMPUTE_GPS cg;
+	cg.lng=longlat[0];
+	cg.lat=longlat[1];
+	m_njustMap.GPS2pexel(cg);
+	CPoint p(cg.x,cg.y);
+	pDC->MoveTo(p);
+	int r=2;  //半径
+	pDC->Ellipse(p.x-r,p.y-r,p.x+r,p.y+r);
+
+	m_loadImage->ReleaseDC();
+	// --- Step.3---  更新图示
+	m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect);
 }
