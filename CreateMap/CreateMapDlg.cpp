@@ -1,5 +1,5 @@
-
-// CreateMapDlg.cpp : ÊµÏÖÎÄ¼ş
+ï»¿
+// CreateMapDlg.cpp : å®ç°æ–‡ä»¶
 //
 
 #include "stdafx.h"
@@ -18,7 +18,7 @@
 #endif
 
 
-// CCreateMapDlg ¶Ô»°¿ò
+// CCreateMapDlg å¯¹è¯æ¡†
 
 
 const unsigned int RECIVE_RATE=50;
@@ -60,17 +60,17 @@ ON_COMMAND(ID_MENU_DELDRAW, &CCreateMapDlg::OnBnClickedButtondel)
 ON_BN_CLICKED(IDC_BUTTONSHOW, &CCreateMapDlg::OnBnClickedButtonshow)
 ON_COMMAND(ID_MENU_SHOWDRAW, &CCreateMapDlg::OnBnClickedButtonshow)
 ON_BN_CLICKED(IDC_BUTNMARKNODE, &CCreateMapDlg::OnBnClickedButnmarknode)
-ON_BN_CLICKED(IDC_BUTTONMEG, &CCreateMapDlg::OnBnClickedButtonmeg)      //Éú³ÉµÀÂ·
+ON_BN_CLICKED(IDC_BUTTONMEG, &CCreateMapDlg::OnBnClickedButtonmeg)      //ç”Ÿæˆé“è·¯
 ON_COMMAND(ID_MENU_MEGROAD, &CCreateMapDlg::OnBnClickedButtonmeg)  
 ON_MESSAGE(MAP_SETLINE_2ID, &CCreateMapDlg::OnMapSetline2id)
 ON_LBN_SELCHANGE(IDC_LISTRECORD, &CCreateMapDlg::OnLbnSelchangeListrecord)
-ON_BN_CLICKED(IDC_BUTTONSHOWROAD, &CCreateMapDlg::OnBnClickedButtonshowroad)//ÏÔÊ¾µÀÂ·
+ON_BN_CLICKED(IDC_BUTTONSHOWROAD, &CCreateMapDlg::OnBnClickedButtonshowroad)//æ˜¾ç¤ºé“è·¯
 ON_COMMAND(ID_MENU_SHOW1, &CCreateMapDlg::OnBnClickedButtonshowroad)
 ON_COMMAND(ID_MENU_REFRESH1, &CCreateMapDlg::OnBnClickedButtonf5)
 ON_BN_CLICKED(IDC_BUTTONF5, &CCreateMapDlg::OnBnClickedButtonf5)
-ON_BN_CLICKED(IDC_BUTTONDELINE, &CCreateMapDlg::OnBnClickedButtondeline) //É¾³ıµÀÂ·
+ON_BN_CLICKED(IDC_BUTTONDELINE, &CCreateMapDlg::OnBnClickedButtondeline) //åˆ é™¤é“è·¯
 ON_COMMAND(ID_MENU_DEL1, &CCreateMapDlg::OnBnClickedButtondeline)
-ON_BN_CLICKED(IDC_BUTTONDELINEOUT, &CCreateMapDlg::OnBnClickedButtondelineout) //±£´æµÀÂ·
+ON_BN_CLICKED(IDC_BUTTONDELINEOUT, &CCreateMapDlg::OnBnClickedButtondelineout) //ä¿å­˜é“è·¯
 ON_COMMAND(ID_MENU_SAVE1, &CCreateMapDlg::OnBnClickedButtondelineout)
 ON_BN_CLICKED(IDCANCEL, &CCreateMapDlg::OnBnClickedCancel)
 
@@ -93,62 +93,62 @@ ON_COMMAND(ID_RESOLUTION, &CCreateMapDlg::OnResolution)
 ON_COMMAND(ID_MENU_DRAWCAR, &CCreateMapDlg::OnMenuDrawcar)
 END_MESSAGE_MAP()
 
-//ÊÖ¶¯×¢²áÊÂ¼şÏìÓ¦
+//æ‰‹åŠ¨æ³¨å†Œäº‹ä»¶å“åº”
 //BEGIN_MESSAGE_MAP(CCreateMapDlg,CDialog)
 //	ON_BN_CLICKED(IDC_LISTRECORD, &CCreateMapDlg::OnBnClickedListBox)
 //END_MESSAGE_MAP()
 
-// CCreateMapDlg ÏûÏ¢´¦Àí³ÌĞò
+// CCreateMapDlg æ¶ˆæ¯å¤„ç†ç¨‹åº
 
 BOOL CCreateMapDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	// ÉèÖÃ´Ë¶Ô»°¿òµÄÍ¼±ê¡£µ±Ó¦ÓÃ³ÌĞòÖ÷´°¿Ú²»ÊÇ¶Ô»°¿òÊ±£¬¿ò¼Ü½«×Ô¶¯
-	//  Ö´ĞĞ´Ë²Ù×÷
-	SetIcon(m_hIcon, TRUE);			// ÉèÖÃ´óÍ¼±ê
-	SetIcon(m_hIcon, FALSE);		// ÉèÖÃĞ¡Í¼±ê
+	// è®¾ç½®æ­¤å¯¹è¯æ¡†çš„å›¾æ ‡ã€‚å½“åº”ç”¨ç¨‹åºä¸»çª—å£ä¸æ˜¯å¯¹è¯æ¡†æ—¶ï¼Œæ¡†æ¶å°†è‡ªåŠ¨
+	//  æ‰§è¡Œæ­¤æ“ä½œ
+	SetIcon(m_hIcon, TRUE);			// è®¾ç½®å¤§å›¾æ ‡
+	SetIcon(m_hIcon, FALSE);		// è®¾ç½®å°å›¾æ ‡
 
-	m_isMove=false;                    //ÊÇ·ñÕıÔÚ°´ÏÂ ÒÆ¶¯
+	m_isMove=false;                    //æ˜¯å¦æ­£åœ¨æŒ‰ä¸‹ ç§»åŠ¨
 	m_loadImage=NULL;
 	m_canvas=NULL;
 	m_backUpImage=NULL;
-	m_isDrawLine=false;                 //ÊÇ·ñÕıÔÚ»æÖÆÖ±Ïß
-	CWnd *pWnd=GetDlgItem(IDC_PIC_MAIN);//»ñµÃpictrue¿Ø¼ş´°¿ÚµÄ¾ä±ú   
-	pWnd->GetClientRect(&m_picRect);	//»ñµÃpictrue¿Ø¼şËùÔÚµÄ¾ØĞÎÇøÓò   
-	m_pPicDC=pWnd->GetDC();				 //±£³ÖÍ¼Æ¬¿Ø¼şDC
-	m_nowCase=Case_None;				//ÉèÖÃÊó±ê×´Ì¬
-	control_bezier.index=0;				//ÇúÏß³õÊ¼»¯
-	m_lineDlg=NULL;						//¹¹½¨µÀÂ·µØÍ¼¿ò
-	m_crossDlg=NULL;					 //¹¹½¨Â·¿ÚµØÍ¼¿ò
-	m_curMapName="";					//µ±Ç°µØÍ¼Ãû×Ö
-	m_Show_cur=0;						//·´Ïò»æÖÆ µ±Ç°Ë÷Òı
-	m_clockGPS=0;						//GPS½ÓÊÜÆµÂÊ
-	m_isDrawCar=false;					// ÊÇ·ñ»­³ö³µÌå
-	//³õÊ¼»¯¿Ø¼ş
-	initStatusBar();                    //³õÊ¼»¯µ×²¿×´Ì¬À¸
-	initCtlPosition();                  //³õÊ¼»¯¼ÇÂ¼¿Ø¼şÎ»ÖÃ
+	m_isDrawLine=false;                 //æ˜¯å¦æ­£åœ¨ç»˜åˆ¶ç›´çº¿
+	CWnd *pWnd=GetDlgItem(IDC_PIC_MAIN);//è·å¾—pictrueæ§ä»¶çª—å£çš„å¥æŸ„   
+	pWnd->GetClientRect(&m_picRect);	//è·å¾—pictrueæ§ä»¶æ‰€åœ¨çš„çŸ©å½¢åŒºåŸŸ   
+	m_pPicDC=pWnd->GetDC();				 //ä¿æŒå›¾ç‰‡æ§ä»¶DC
+	m_nowCase=Case_None;				//è®¾ç½®é¼ æ ‡çŠ¶æ€
+	control_bezier.index=0;				//æ›²çº¿åˆå§‹åŒ–
+	m_lineDlg=NULL;						//æ„å»ºé“è·¯åœ°å›¾æ¡†
+	m_crossDlg=NULL;					 //æ„å»ºè·¯å£åœ°å›¾æ¡†
+	m_curMapName="";					//å½“å‰åœ°å›¾åå­—
+	m_Show_cur=0;						//åå‘ç»˜åˆ¶ å½“å‰ç´¢å¼•
+	m_clockGPS=0;						//GPSæ¥å—é¢‘ç‡
+	m_isDrawCar=false;					// æ˜¯å¦ç”»å‡ºè½¦ä½“
+	//åˆå§‹åŒ–æ§ä»¶
+	initStatusBar();                    //åˆå§‹åŒ–åº•éƒ¨çŠ¶æ€æ 
+	initCtlPosition();                  //åˆå§‹åŒ–è®°å½•æ§ä»¶ä½ç½®
 
-	//³õÊ¼»¯±ê¶¨Ïà¹Ø
-	m_RealGPS.x=m_RealGPS.y=0.0f;			 //Ä¬ÈÏ½ÓÊÜµÄGPSÎª0  ±íÊ¾Ã»ÓĞ½ÓÊÜµ½Êı¾İ
-	m_getMCInfo.StartUdpCommunication(this); //½¨Á¢Óë¹ßµ¼µÄÍ¨ĞÅ
+	//åˆå§‹åŒ–æ ‡å®šç›¸å…³
+	m_RealGPS.x=m_RealGPS.y=0.0f;			 //é»˜è®¤æ¥å—çš„GPSä¸º0  è¡¨ç¤ºæ²¡æœ‰æ¥å—åˆ°æ•°æ®
+	m_getMCInfo.StartUdpCommunication(this); //å»ºç«‹ä¸æƒ¯å¯¼çš„é€šä¿¡
 
-	return TRUE;  // ³ı·Ç½«½¹µãÉèÖÃµ½¿Ø¼ş£¬·ñÔò·µ»Ø TRUE
+	return TRUE;  // é™¤éå°†ç„¦ç‚¹è®¾ç½®åˆ°æ§ä»¶ï¼Œå¦åˆ™è¿”å› TRUE
 }
 
-// Èç¹ûÏò¶Ô»°¿òÌí¼Ó×îĞ¡»¯°´Å¥£¬ÔòĞèÒªÏÂÃæµÄ´úÂë
-//  À´»æÖÆ¸ÃÍ¼±ê¡£¶ÔÓÚÊ¹ÓÃÎÄµµ/ÊÓÍ¼Ä£ĞÍµÄ MFC Ó¦ÓÃ³ÌĞò£¬
-//  Õâ½«ÓÉ¿ò¼Ü×Ô¶¯Íê³É¡£
+// å¦‚æœå‘å¯¹è¯æ¡†æ·»åŠ æœ€å°åŒ–æŒ‰é’®ï¼Œåˆ™éœ€è¦ä¸‹é¢çš„ä»£ç 
+//  æ¥ç»˜åˆ¶è¯¥å›¾æ ‡ã€‚å¯¹äºä½¿ç”¨æ–‡æ¡£/è§†å›¾æ¨¡å‹çš„ MFC åº”ç”¨ç¨‹åºï¼Œ
+//  è¿™å°†ç”±æ¡†æ¶è‡ªåŠ¨å®Œæˆã€‚
 
 void CCreateMapDlg::OnPaint()
 {
 	if (IsIconic())
 	{
-		CPaintDC dc(this); // ÓÃÓÚ»æÖÆµÄÉè±¸ÉÏÏÂÎÄ
+		CPaintDC dc(this); // ç”¨äºç»˜åˆ¶çš„è®¾å¤‡ä¸Šä¸‹æ–‡
 
 		SendMessage(WM_ICONERASEBKGND, reinterpret_cast<WPARAM>(dc.GetSafeHdc()), 0);
 
-		// Ê¹Í¼±êÔÚ¹¤×÷Çø¾ØĞÎÖĞ¾ÓÖĞ
+		// ä½¿å›¾æ ‡åœ¨å·¥ä½œåŒºçŸ©å½¢ä¸­å±…ä¸­
 		int cxIcon = GetSystemMetrics(SM_CXICON);
 		int cyIcon = GetSystemMetrics(SM_CYICON);
 		CRect rect;
@@ -156,7 +156,7 @@ void CCreateMapDlg::OnPaint()
 		int x = (rect.Width() - cxIcon + 1) / 2;
 		int y = (rect.Height() - cyIcon + 1) / 2;
 
-		// »æÖÆÍ¼±ê
+		// ç»˜åˆ¶å›¾æ ‡
 		dc.DrawIcon(x, y, m_hIcon);
 	}
 	else
@@ -165,8 +165,8 @@ void CCreateMapDlg::OnPaint()
 	}
 }
 
-//µ±ÓÃ»§ÍÏ¶¯×îĞ¡»¯´°¿ÚÊ±ÏµÍ³µ÷ÓÃ´Ëº¯ÊıÈ¡µÃ¹â±ê
-//ÏÔÊ¾¡£
+//å½“ç”¨æˆ·æ‹–åŠ¨æœ€å°åŒ–çª—å£æ—¶ç³»ç»Ÿè°ƒç”¨æ­¤å‡½æ•°å–å¾—å…‰æ ‡
+//æ˜¾ç¤ºã€‚
 HCURSOR CCreateMapDlg::OnQueryDragIcon()
 {
 	return static_cast<HCURSOR>(m_hIcon);
@@ -179,19 +179,19 @@ void CCreateMapDlg::OnSize(UINT nType, int cx, int cy)
 	if (m_listRect.GetCount() > 0){
 		CRect dlgNow;
 		GetWindowRect(&dlgNow);
-		POSITION pos = m_listRect.GetHeadPosition();//µÚÒ»¸ö±£´æµÄÊÇ¶Ô»°¿òµÄRect
+		POSITION pos = m_listRect.GetHeadPosition();//ç¬¬ä¸€ä¸ªä¿å­˜çš„æ˜¯å¯¹è¯æ¡†çš„Rect
 		CRect dlgSaved;
 		dlgSaved = m_listRect.GetNext(pos);
 		ScreenToClient(dlgNow);
-		double x = dlgNow.Width() * 1.0 / dlgSaved.Width();//¸ù¾İµ±Ç°ºÍÖ®Ç°±£´æµÄ¶Ô»°¿òµÄ¿í¸ßÇó±ÈÀı
+		double x = dlgNow.Width() * 1.0 / dlgSaved.Width();//æ ¹æ®å½“å‰å’Œä¹‹å‰ä¿å­˜çš„å¯¹è¯æ¡†çš„å®½é«˜æ±‚æ¯”ä¾‹
 		double y = dlgNow.Height()  *1.0 / dlgSaved.Height();
 		ClientToScreen(dlgNow);
 		CRect childSaved;
 		CWnd* pWnd = GetWindow(GW_CHILD);
 		while (pWnd)
 		{
-			childSaved = m_listRect.GetNext(pos);//ÒÀ´Î»ñÈ¡×Ó´°ÌåµÄRect
-			childSaved.left = (LONG)(dlgNow.left + (childSaved.left - dlgSaved.left)*x);//¸ù¾İ±ÈÀıµ÷Õû¿Ø¼şÉÏÏÂ×óÓÒ¾àÀë¶Ô»°¿òµÄ¾àÀë
+			childSaved = m_listRect.GetNext(pos);//ä¾æ¬¡è·å–å­çª—ä½“çš„Rect
+			childSaved.left = (LONG)(dlgNow.left + (childSaved.left - dlgSaved.left)*x);//æ ¹æ®æ¯”ä¾‹è°ƒæ•´æ§ä»¶ä¸Šä¸‹å·¦å³è·ç¦»å¯¹è¯æ¡†çš„è·ç¦»
 			childSaved.right = (LONG)(dlgNow.right + (childSaved.right - dlgSaved.right)*x);
 			childSaved.top = (LONG)(dlgNow.top + (childSaved.top - dlgSaved.top)*y);
 			childSaved.bottom = (LONG)(dlgNow.bottom + (childSaved.bottom - dlgSaved.bottom)*y);
@@ -199,20 +199,20 @@ void CCreateMapDlg::OnSize(UINT nType, int cx, int cy)
 			pWnd->MoveWindow(childSaved);
  
 
-			InvalidateRect(childSaved);  //Á¢¼´ÖØ»æ ±ÜÃâ²ĞÓ°
+			InvalidateRect(childSaved);  //ç«‹å³é‡ç»˜ é¿å…æ®‹å½±
 			pWnd = pWnd->GetNextWindow();
 		}
 
 	}
 }
 
-//ÉÆºó´¦Àí
+//å–„åå¤„ç†
 void CCreateMapDlg::OnDestroy()
 {
-	//¹Ø±ÕÌØ¶¨¶Ë¿Ú¼àÌı
+	//å…³é—­ç‰¹å®šç«¯å£ç›‘å¬
 	m_getMCInfo.ShutDownCommunication();
 
-	//ÊÍ·ÅÄÚ´æ
+	//é‡Šæ”¾å†…å­˜
 	 if(m_statusBar!=NULL) delete m_statusBar;
 	if(m_lineDlg!=NULL) delete m_lineDlg;
 	if(m_crossDlg!=NULL) delete m_crossDlg; 
@@ -220,35 +220,35 @@ void CCreateMapDlg::OnDestroy()
 	if(m_backUpImage!=NULL) delete m_backUpImage; 
 	if(m_canvas!=NULL) delete m_canvas; 
 
-	//ÊÍ·ÅÍ¼Æ¬¿Ø¼şDC
+	//é‡Šæ”¾å›¾ç‰‡æ§ä»¶DC
 	GetDlgItem(IDC_PIC_MAIN)->ReleaseDC(m_pPicDC);
 	CDialog::OnDestroy();
 
-	// TODO: ÔÚ´Ë´¦Ìí¼ÓÏûÏ¢´¦Àí³ÌĞò´úÂë
+	// TODO: åœ¨æ­¤å¤„æ·»åŠ æ¶ˆæ¯å¤„ç†ç¨‹åºä»£ç 
 }
 
 
 
-///////////////////////////¿Ø¼şÊÂ¼şÏìÓ¦///////////////////////////////////////////////
-//Êó±ê×ó¼üÂäÏÂ
+///////////////////////////æ§ä»¶äº‹ä»¶å“åº”///////////////////////////////////////////////
+//é¼ æ ‡å·¦é”®è½ä¸‹
 void CCreateMapDlg::OnLButtonDown(UINT nFlags, CPoint point)
 {
-	// -- Step 0 -- ³õÊ¼»¯
+	// -- Step 0 -- åˆå§‹åŒ–
 	CRect rect;
-	GetDlgItem(IDC_PIC_MAIN)->GetWindowRect(&rect);//»ñÈ¡¿Ø¼ş»ùÓÚÈ«´°ÌåµÄÎ»ÖÃ
-	ScreenToClient(rect);//×ª»»Îª¶Ô»°¿òÉÏµÄÏà¶ÔÎ»ÖÃ
+	GetDlgItem(IDC_PIC_MAIN)->GetWindowRect(&rect);//è·å–æ§ä»¶åŸºäºå…¨çª—ä½“çš„ä½ç½®
+	ScreenToClient(rect);//è½¬æ¢ä¸ºå¯¹è¯æ¡†ä¸Šçš„ç›¸å¯¹ä½ç½®
 
-	// -- Step 1 -- ÅĞ¶ÏÊó±ê¶¯×÷ÊÇ·ñÔÚ»æÍ¼ÇøÓòÄÚ
+	// -- Step 1 -- åˆ¤æ–­é¼ æ ‡åŠ¨ä½œæ˜¯å¦åœ¨ç»˜å›¾åŒºåŸŸå†…
 	if(rect.PtInRect(point)){
 		if(!isLoad())
 			return;
 		switch(m_nowCase){
-			// -- Step 1.1 -- »æÖÆÖ±Ïß
+			// -- Step 1.1 -- ç»˜åˆ¶ç›´çº¿
 			case Case_Line:   {
 								DlgDrawLine(point,rect);
 								break;		 
 							   }
-			// -- Step 1.2 -- »æÖÆÇúÏß
+			// -- Step 1.2 -- ç»˜åˆ¶æ›²çº¿
 			case Case_BEZIER:{
 								DlgDrawBezier(point,rect);
 								break;
@@ -277,7 +277,7 @@ void CCreateMapDlg::OnLButtonDown(UINT nFlags, CPoint point)
 									m_nowCase=Case_None;
 									break;
 								}
-			//Ä¬ÈÏÒÆ¶¯
+			//é»˜è®¤ç§»åŠ¨
 			default:{
 							m_isMove=true;
 							SetClassLong(this->GetSafeHwnd(),
@@ -292,63 +292,63 @@ void CCreateMapDlg::OnLButtonDown(UINT nFlags, CPoint point)
 	CDialog::OnLButtonDown(nFlags, point);
 }
 
-//¼ì²âµ½Êó±êÒÆ¶¯
+//æ£€æµ‹åˆ°é¼ æ ‡ç§»åŠ¨
 void CCreateMapDlg::OnMouseMove(UINT nFlags, CPoint point)
 {
 	
-	//×ó¼üµã»÷ ÇÒ ÒÑ¾­¼ÓÔØ¹ıÍ¼Æ¬
+	//å·¦é”®ç‚¹å‡» ä¸” å·²ç»åŠ è½½è¿‡å›¾ç‰‡
 	if(m_isMove&&m_loadImage!=NULL){
 		 SetClassLong(this->GetSafeHwnd(), GCL_HCURSOR ,(LONG)LoadCursor(NULL , IDC_HAND));
-		 //¼ÆËãÊó±êÎ»ÒÆ
+		 //è®¡ç®—é¼ æ ‡ä½ç§»
 		int dx=point.x-m_startPoint.x;
 		int dy=point.y-m_startPoint.y;
 
-		//¸üĞÂÊó±êÒÆ¶¯ÆğÊ¼µã
+		//æ›´æ–°é¼ æ ‡ç§»åŠ¨èµ·å§‹ç‚¹
 		m_startPoint.x=point.x;
 		m_startPoint.y=point.y;
 
 		int imageW=m_loadImage->GetWidth();
 		int imageH=m_loadImage->GetHeight();
 
-		//¶¨ÒåÍ¼ÏñÎ»ÖÃ¿é¾ØĞÎÀà 
-		CWnd *pWnd=GetDlgItem(IDC_PIC_MAIN);//»ñµÃpictrue¿Ø¼ş´°¿ÚµÄ¾ä±ú     
-		//CDC *pDC=pWnd->GetDC();//»ñµÃpictrue¿Ø¼şµÄDC     
+		//å®šä¹‰å›¾åƒä½ç½®å—çŸ©å½¢ç±» 
+		CWnd *pWnd=GetDlgItem(IDC_PIC_MAIN);//è·å¾—pictrueæ§ä»¶çª—å£çš„å¥æŸ„     
+		//CDC *pDC=pWnd->GetDC();//è·å¾—pictrueæ§ä»¶çš„DC     
 
-		//¸ù¾İÊó±êÎ»ÒÆ»¬¶¯ÊÓ´°	
+		//æ ¹æ®é¼ æ ‡ä½ç§»æ»‘åŠ¨è§†çª—	
 		m_srcRect.left-=dx;m_srcRect.right-=dx;
 		m_srcRect.top-=dy;m_srcRect.bottom-=dy;
 
-		////¼ì²éÊÇ·ñÔ½½ç
+		////æ£€æŸ¥æ˜¯å¦è¶Šç•Œ
 		drawmap::CheckViewInImage(m_srcRect,imageW,imageH,m_picRect.Width(),m_picRect.Height());
 
-		m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect); //½«Í¼Æ¬»­µ½Picture¿Ø¼ş±íÊ¾µÄ¾ØĞÎÇøÓò  
+		m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect); //å°†å›¾ç‰‡ç”»åˆ°Pictureæ§ä»¶è¡¨ç¤ºçš„çŸ©å½¢åŒºåŸŸ  
 
 	}
 	CDialog::OnMouseMove(nFlags, point);
 }
 
-//Êó±ê×ó¼üÌ§Æğ
+//é¼ æ ‡å·¦é”®æŠ¬èµ·
 void CCreateMapDlg::OnLButtonUp(UINT nFlags, CPoint point)
 {
-	// TODO: ÔÚ´ËÌí¼ÓÏûÏ¢´¦Àí³ÌĞò´úÂëºÍ/»òµ÷ÓÃÄ¬ÈÏÖµ
-	//½áÊøÒÆ¶¯¸ú×Ù
+	// TODO: åœ¨æ­¤æ·»åŠ æ¶ˆæ¯å¤„ç†ç¨‹åºä»£ç å’Œ/æˆ–è°ƒç”¨é»˜è®¤å€¼
+	//ç»“æŸç§»åŠ¨è·Ÿè¸ª
 	m_isMove=false;
-	//Êó±êÊÖÊÆ¸Ä»Ø¼ıÍ·
+	//é¼ æ ‡æ‰‹åŠ¿æ”¹å›ç®­å¤´
 	SetClassLong(this->GetSafeHwnd(),
                              GCL_HCURSOR , 
                              (LONG)LoadCursor(NULL , IDC_ARROW));
 	CDialog::OnLButtonUp(nFlags, point);
 }
 
-//»æÖ±Ïß
+//ç»˜ç›´çº¿
 void CCreateMapDlg::OnBnClickedButton2()
 {
 	if(!isLoad())
 		return;
-	m_nowCase=Case_Line;			//¸Ä±ä»æÍ¼×´Ì¬
+	m_nowCase=Case_Line;			//æ”¹å˜ç»˜å›¾çŠ¶æ€
 }
 
-//±´Èû¶ûÇúÏßtest
+//è´å¡å°”æ›²çº¿test
 void CCreateMapDlg::OnBnClickedButnbezier()
 {
 	if(!isLoad())
@@ -357,7 +357,7 @@ void CCreateMapDlg::OnBnClickedButnbezier()
 }
 
 
-//mark×´Ì¬
+//markçŠ¶æ€
 void CCreateMapDlg::OnBnClickedButnmarknode()
 {
 	if(!isLoad())
@@ -366,15 +366,15 @@ void CCreateMapDlg::OnBnClickedButnmarknode()
 }
 
 
-//¹ÂÁ¢µã¼¯ºÏ
+//å­¤ç«‹ç‚¹é›†åˆ
 void CCreateMapDlg::OnBnClickedButnpoints()
 {
 	if(!isLoad())
 		return;
-	if(Case_None==m_nowCase) // µÚÒ»´Îµã
+	if(Case_None==m_nowCase) // ç¬¬ä¸€æ¬¡ç‚¹
 		m_nowCase=Case_Points;
 	else if(Case_Points==m_nowCase){
-		//¼ÇÂ¼µ½ »æ»­¶¯×÷±íÖĞ
+		//è®°å½•åˆ° ç»˜ç”»åŠ¨ä½œè¡¨ä¸­
 		DRAW_RECORD dr;
 		dr.type=2;
 		dr.drawPoints=control_points.points;
@@ -387,31 +387,31 @@ void CCreateMapDlg::OnBnClickedButnpoints()
 		
 }
 
-//É¾³ıÑ¡ÖĞµÄ»æ»­ÌõÄ¿
+//åˆ é™¤é€‰ä¸­çš„ç»˜ç”»æ¡ç›®
 void CCreateMapDlg::OnBnClickedButtondel()
 {
 	int i;
 	int nItemCount = m_listRecord.GetSelCount();
 	
     if (0 != nItemCount){
-		// --- Step.1 --- É¾³ıÑ¡ÖĞµÄÌõÄ¿ºÍ¶ÔÓ¦µÄ¶¯×÷¼ÇÂ¼Ïî
+		// --- Step.1 --- åˆ é™¤é€‰ä¸­çš„æ¡ç›®å’Œå¯¹åº”çš„åŠ¨ä½œè®°å½•é¡¹
         int* indexBuf = new int[nItemCount];
         memset(indexBuf,0,nItemCount*sizeof(int));
         m_listRecord.GetSelItems(nItemCount,indexBuf);
         for (i = nItemCount-1 ;i >-1;i--)
         {
-			if(m_records[indexBuf[i]].type==4){ //crossĞÅÏ¢²»ÔÚ»æ»­±íÖĞÉ¾³ı
+			if(m_records[indexBuf[i]].type==4){ //crossä¿¡æ¯ä¸åœ¨ç»˜ç”»è¡¨ä¸­åˆ é™¤
 				continue;
 			}
-            m_listRecord.DeleteString(indexBuf[i]);           //É¾³ıÏÔÊ¾ÌõÄ¿
-			if(m_records[indexBuf[i]].type==3){						//É¾³ıÂ·¿Ú µØÍ¼½á¹¹
+            m_listRecord.DeleteString(indexBuf[i]);           //åˆ é™¤æ˜¾ç¤ºæ¡ç›®
+			if(m_records[indexBuf[i]].type==3){						//åˆ é™¤è·¯å£ åœ°å›¾ç»“æ„
 				m_njustMap.deleteEleByID(true,m_records[indexBuf[i]].id+START_NODE_ID);
 			}
-			m_records.erase(m_records.begin()+indexBuf[i]);	  //É¾³ı¶¯×÷¼ÇÂ¼±í
+			m_records.erase(m_records.begin()+indexBuf[i]);	  //åˆ é™¤åŠ¨ä½œè®°å½•è¡¨
         }
         delete[]indexBuf;
 
-		// --- Step.2 --- ¸ù¾İ¶¯×÷¼ÇÂ¼±íÖØ»æ
+		// --- Step.2 --- æ ¹æ®åŠ¨ä½œè®°å½•è¡¨é‡ç»˜
 		DlgReDraw();
     }
 }
@@ -422,72 +422,72 @@ void CCreateMapDlg::DlgReDraw(){
 
 	CRect rect(0,0,m_loadImage->GetWidth(),m_loadImage->GetHeight());
 	HDC hdc=m_loadImage->GetDC();
-	m_backUpImage->Draw(hdc,rect,rect);		//ÖØÖÃÎªÔ­Í¼
+	m_backUpImage->Draw(hdc,rect,rect);		//é‡ç½®ä¸ºåŸå›¾
 	m_loadImage->ReleaseDC();
 
-	//»æÖÆÍ¼ĞÎ
+	//ç»˜åˆ¶å›¾å½¢
 	drawmap::DrawByRecord(m_loadImage,m_records,RGB(255,0,0));
-	//Ë¢ĞÂ
+	//åˆ·æ–°
 	m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect); 
 }
 	
-//¸ßÁÁ Ñ¡ÖĞÌõÄ¿
+//é«˜äº® é€‰ä¸­æ¡ç›®
 void CCreateMapDlg::OnBnClickedButtonshow(){
 		if(!isLoad())
 			return;
 
 		CString strTitle;
 		GetDlgItem(IDC_BUTTONSHOW)->GetWindowTextW(strTitle);
-		if(strTitle==L"ÏÔÊ¾"){
-			// --- Step.1 --- »æÖÆÑ¡ÖĞµÄÌõÄ¿ÎªÀ¶É«
+		if(strTitle==L"æ˜¾ç¤º"){
+			// --- Step.1 --- ç»˜åˆ¶é€‰ä¸­çš„æ¡ç›®ä¸ºè“è‰²
 			int i;
 			int nItemCount = m_listRecord.GetSelCount();
 			if (0 != nItemCount){
 				int* indexBuf = new int[nItemCount];
 				memset(indexBuf,0,nItemCount*sizeof(int));
 				m_listRecord.GetSelItems(nItemCount,indexBuf);
-				vector<DRAW_RECORD> tempRecord;			//ÁÙÊ±¼ÇÂ¼Ñ¡ÖĞÌõÄ¿
+				vector<DRAW_RECORD> tempRecord;			//ä¸´æ—¶è®°å½•é€‰ä¸­æ¡ç›®
 				for (i = nItemCount-1 ;i >-1;i--)
 				{
 					tempRecord.push_back(m_records[indexBuf[i]]);
 				}
 				delete[]indexBuf;
 	
-				// --- Step.2 --- ¸ù¾İÑ¡ÖĞÁĞ±í»æÖÆ¸ßÁÁ
+				// --- Step.2 --- æ ¹æ®é€‰ä¸­åˆ—è¡¨ç»˜åˆ¶é«˜äº®
 				drawmap::DrawByRecord(m_loadImage,tempRecord,RGB(0,255,255));
-				//Ë¢ĞÂ
+				//åˆ·æ–°
 				m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect);
 	
-				GetDlgItem(IDC_BUTTONSHOW)->SetWindowTextW(L"¸´Ô­");
+				GetDlgItem(IDC_BUTTONSHOW)->SetWindowTextW(L"å¤åŸ");
 			}
 		}else{
-				//¸ù¾İ¶¯×÷±í»Ö¸´Ô­ÏÈ»æÖÆµÄÍ¼
+				//æ ¹æ®åŠ¨ä½œè¡¨æ¢å¤åŸå…ˆç»˜åˆ¶çš„å›¾
 				CRect rect(0,0,m_loadImage->GetWidth(),m_loadImage->GetHeight());
 				HDC hdc=m_loadImage->GetDC();
-				m_backUpImage->Draw(hdc,rect,rect);		//ÖØÖÃÎªÔ­Í¼
+				m_backUpImage->Draw(hdc,rect,rect);		//é‡ç½®ä¸ºåŸå›¾
 				m_loadImage->ReleaseDC();
 				drawmap::DrawByRecord(m_loadImage,m_records,RGB(255,0,0));
-				//Ë¢ĞÂ
+				//åˆ·æ–°
 				m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect);
-				GetDlgItem(IDC_BUTTONSHOW)->SetWindowTextW(L"ÏÔÊ¾");
+				GetDlgItem(IDC_BUTTONSHOW)->SetWindowTextW(L"æ˜¾ç¤º");
 		}
 }
 
 
-//ºÏ²¢°´Å¥ Éú³ÉµÀÂ·ĞÅÏ¢
+//åˆå¹¶æŒ‰é’® ç”Ÿæˆé“è·¯ä¿¡æ¯
 void CCreateMapDlg::OnBnClickedButtonmeg()
 {
 	if(!isLoad())
 		return;
 
-	// --- Step.1 ---³õÊ¼»¯²ÎÊı
+	// --- Step.1 ---åˆå§‹åŒ–å‚æ•°
 	unsigned int i;
 	vector<int> IDIndex;
 	for(i=0;i<m_njustMap.nodes.size();i++)
 		IDIndex.push_back(m_njustMap.nodes[i].node.idself-START_NODE_ID);
 
-	// --- Step.2 --- ¹¹½¨×Ó¶Ô»°¿ò
-	if(m_lineDlg==NULL){   //µÚÒ»´Î´´½¨
+	// --- Step.2 --- æ„å»ºå­å¯¹è¯æ¡†
+	if(m_lineDlg==NULL){   //ç¬¬ä¸€æ¬¡åˆ›å»º
 		m_lineDlg=new CreateLineDlg();
 		m_lineDlg->Create(IDD_CREATELINE_DIALOG,this);
 	}
@@ -496,20 +496,20 @@ void CCreateMapDlg::OnBnClickedButtonmeg()
 }
 
 
-//Éú³ÉÂ·¿ÚĞÅÏ¢
+//ç”Ÿæˆè·¯å£ä¿¡æ¯
 void CCreateMapDlg::OnBnClickedButtonmeg2()
 {
 	if(!isLoad())
 		return;
 
-	// --- Step.1 ---³õÊ¼»¯²ÎÊı
+	// --- Step.1 ---åˆå§‹åŒ–å‚æ•°
 	unsigned int i;
 	vector<int> IDIndex;
 	for(i=0;i<m_njustMap.roads.size();i++)
 		IDIndex.push_back(m_njustMap.roads[i].road.idself-START_LINE_ID);
 
-	// --- Step.2 --- ¹¹½¨×Ó¶Ô»°¿ò
-	if(m_crossDlg==NULL){   //µÚÒ»´Î´´½¨
+	// --- Step.2 --- æ„å»ºå­å¯¹è¯æ¡†
+	if(m_crossDlg==NULL){   //ç¬¬ä¸€æ¬¡åˆ›å»º
 		m_crossDlg=new CreateCrossDlg();
 		m_crossDlg->Create(IDD_CREATECROSS_DIALOG,this);
 	}
@@ -518,7 +518,7 @@ void CCreateMapDlg::OnBnClickedButtonmeg2()
 }
 
 
-//ÏÔÊ¾µÀÂ·
+//æ˜¾ç¤ºé“è·¯
 void CCreateMapDlg::OnBnClickedButtonshowroad()
 {
 	if(!isLoad())
@@ -537,23 +537,23 @@ void CCreateMapDlg::OnBnClickedButtonshowroad()
 	}
 }
 
-//Ë¢ĞÂ
+//åˆ·æ–°
 void CCreateMapDlg::OnBnClickedButtonf5()
 {
 	if(!isLoad())
 		return;
 
-	//»æÖÆÍ¼ĞÎ
+	//ç»˜åˆ¶å›¾å½¢
 	CRect rect(0,0,m_loadImage->GetWidth(),m_loadImage->GetHeight());
 	HDC hdc=m_loadImage->GetDC();
-	m_backUpImage->Draw(hdc,rect,rect);		//ÖØÖÃÎªÔ­Í¼
+	m_backUpImage->Draw(hdc,rect,rect);		//é‡ç½®ä¸ºåŸå›¾
 	m_loadImage->ReleaseDC();
 	drawmap::DrawByRecord(m_loadImage,m_records,RGB(255,0,0));
-	//Ë¢ĞÂ
+	//åˆ·æ–°
 	m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect); 
 }
 
-//É¾³ıµÀÂ·
+//åˆ é™¤é“è·¯
 void CCreateMapDlg::OnBnClickedButtondeline()
 {
 	if(!isLoad())
@@ -562,82 +562,82 @@ void CCreateMapDlg::OnBnClickedButtondeline()
 	int index=m_listMap.GetCurSel();
 	if(index!=LB_ERR){
 		int ls=m_njustMap.roads.size();
-		if(index<ls){						//É¾³ıµÀÂ·
-			//É¾³ı»æ»­ÁĞ±íÖĞµÄ±ê×¢
+		if(index<ls){						//åˆ é™¤é“è·¯
+			//åˆ é™¤ç»˜ç”»åˆ—è¡¨ä¸­çš„æ ‡æ³¨
 			int showid=m_njustMap.roads[index].road.idself-START_LINE_ID+1;
 			for(unsigned int i=0;i<m_records.size();i++){
 				if(m_records[i].id==showid&&m_records[i].type==4){
-					m_records.erase(m_records.begin()+i); //É¾³ı¼ÇÂ¼
-					m_listRecord.DeleteString(i);         //É¾³ıÏÔÊ¾ÌõÄ¿
+					m_records.erase(m_records.begin()+i); //åˆ é™¤è®°å½•
+					m_listRecord.DeleteString(i);         //åˆ é™¤æ˜¾ç¤ºæ¡ç›®
 					break;
 				}
 			}
-			//µØÍ¼½á¹¹É¾³ı
+			//åœ°å›¾ç»“æ„åˆ é™¤
 			m_njustMap.roads.erase(m_njustMap.roads.begin()+index);
-			//ÁĞ±íÖĞÉ¾³ı
+			//åˆ—è¡¨ä¸­åˆ é™¤
 			m_listMap.DeleteString(index);
 			
-			//ÖØ»æ
+			//é‡ç»˜
 			DlgReDraw();
-		}else{								//É¾³ıÂ·¿Ú
-			//µØÍ¼½á¹¹É¾³ı Â·¿Ú
+		}else{								//åˆ é™¤è·¯å£
+			//åœ°å›¾ç»“æ„åˆ é™¤ è·¯å£
 			m_njustMap.crosses.erase(m_njustMap.crosses.begin()+index-ls);
-			//ÁĞ±íÖĞÉ¾³ı
+			//åˆ—è¡¨ä¸­åˆ é™¤
 			m_listMap.DeleteString(index);
 		}
-		//Ë¢ĞÂ
+		//åˆ·æ–°
 		OnBnClickedButtonf5();
 
 	}
 }
 
-//±£´æµÀÂ·
+//ä¿å­˜é“è·¯
 void CCreateMapDlg::OnBnClickedButtondelineout()
 {
 	if(!isLoad())
 		return;
 
 	if(!m_njustMap.CheckIsCali()){
-		AfxMessageBox(L"µØÍ¼Î´±ê¶¨£¬ÇëÏÈ±ê¶¨",MB_OK);
+		AfxMessageBox(L"åœ°å›¾æœªæ ‡å®šï¼Œè¯·å…ˆæ ‡å®š",MB_OK);
 		return;
 	}
 
 	CString path=L"D:\\map";
 	if(!m_njustMap.writeRoad(path)){
-		AfxMessageBox(L"±£´æÊ§°Ü",MB_OK);
+		AfxMessageBox(L"ä¿å­˜å¤±è´¥",MB_OK);
 	}else{
 		m_njustMap.writeRoadTxt(path);
 
 		CString msg;
-		msg.Format(L"±£´æÔÚ%sÄ¿Â¼ÏÂ",path);
+		msg.Format(L"ä¿å­˜åœ¨%sç›®å½•ä¸‹",path);
 		AfxMessageBox(msg,MB_OK);
 	}
 }
 
 
 
-///////////////////////»æÍ¼Âß¼­´úÂë//////////////////////////
+///////////////////////ç»˜å›¾é€»è¾‘ä»£ç //////////////////////////
 
 
 //************************************
-// º¯ÊıÃû:   DlgDrawLine
-// º¯ÊıÃèÊö£º¶ÔÖ±Ïß»æÍ¼µÄ¾ßÌå²Ù×÷
-// ²ÎÊı: 	 CPoint point µ±Ç°µã×ø±ê(È«´°Ìå)
-// ²ÎÊı: 	 CRect rect   rect:¿Ø¼ş×ø±ê
-// ·µ»ØÀàĞÍ: void
-// ÈÕÆÚ£º	 2016/04/04
+// å‡½æ•°å:   DlgDrawLine
+// å‡½æ•°æè¿°ï¼šå¯¹ç›´çº¿ç»˜å›¾çš„å…·ä½“æ“ä½œ
+// å‚æ•°: 	 CPoint point å½“å‰ç‚¹åæ ‡(å…¨çª—ä½“)
+// å‚æ•°: 	 CRect rect   rect:æ§ä»¶åæ ‡
+// è¿”å›ç±»å‹: void
+// æ—¥æœŸï¼š	 2016/04/04
 //************************************
 void CCreateMapDlg::DlgDrawLine(CPoint point,CRect rect){
-		// ---Step.1--- ÅĞ¶Ïµ±Ç°µãÊÇÖ±ÏßµÄÊ×¶Ë»¹ÊÇÎ²¶Ë
+		// ---Step.1--- åˆ¤æ–­å½“å‰ç‚¹æ˜¯ç›´çº¿çš„é¦–ç«¯è¿˜æ˜¯å°¾ç«¯
 		if(m_lineP.x==0&&m_lineP.y==0){	  
-			// --- Step.2.1 --- ¼ÇÂ¼µÚÒ»¸öµã
+			// --- Step.2.1 --- è®°å½•ç¬¬ä¸€ä¸ªç‚¹
 			point.x-=rect.left; point.y-=rect.top;
 			point.x+=m_srcRect.left; point.y+=m_srcRect.top;
 			m_lineP=point;
 		}else{
 			DRAW_RECORD dr;
 
-			// --- Step.2.2 --- ¸ù¾İÁ½µã ÔÚÍ¼ÖĞ»æÖÆÖ±Ïß
+			// --- Step.2.2 --- æ ¹æ®ä¸¤ç‚¹ åœ¨å›¾ä¸­ç»˜åˆ¶ç›´çº¿
 			HDC hdc=m_loadImage->GetDC();
 			CDC *pDC = CDC::FromHandle(hdc);
 			point.x-=rect.left; point.y-=rect.top;
@@ -646,45 +646,45 @@ void CCreateMapDlg::DlgDrawLine(CPoint point,CRect rect){
 			drawmap::DrawLineBresenham(pDC,m_lineP,point,RGB(255,0,0));
 			m_loadImage->ReleaseDC();
 
-			// --- Step.2.3 --- ¼ÇÂ¼ÇúÏßÉÏËùÓĞµÄµã
-			//drawmap::getPointsByImage(m_canvas,nrect,dr.drawPoints);//»ñÈ¡»æÖÆµÄµã
+			// --- Step.2.3 --- è®°å½•æ›²çº¿ä¸Šæ‰€æœ‰çš„ç‚¹
+			//drawmap::getPointsByImage(m_canvas,nrect,dr.drawPoints);//è·å–ç»˜åˆ¶çš„ç‚¹
 			drawmap::LogLineBresenham(m_lineP,point,dr.drawPoints);
 			/*m_canvas->ReleaseDC();*/
 
-			// --- Step.2.4 --- ¼ÇÂ¼µ½"»æ»­¶¯×÷±í"ÖĞ	
+			// --- Step.2.4 --- è®°å½•åˆ°"ç»˜ç”»åŠ¨ä½œè¡¨"ä¸­	
 			dr.type=0;
 			m_records.push_back(dr);
 			m_listRecord.AddString(drawmap::PrintRecord(dr));
 
-			// --- Step.2.5 --- »æÖÆ,ÖØÖÃÆğµã
+			// --- Step.2.5 --- ç»˜åˆ¶,é‡ç½®èµ·ç‚¹
 			m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect); 
 			
 			m_lineP.SetPoint(0,0);
 		}
-		// --- Step.3 --- ÖØÖÃ»­±Ê×´Ì¬
+		// --- Step.3 --- é‡ç½®ç”»ç¬”çŠ¶æ€
 		m_nowCase=Case_None;
 }
 
 
 //************************************
-// º¯ÊıÃû:   DlgDrawBezier
-// º¯ÊıÃèÊö£º»æÖÆÇúÏßµÄ¾ßÌå²Ù×÷
-// ²ÎÊı: 	 CPoint piont µ±Ç°µã×ø±ê(È«´°Ìå)
-// ²ÎÊı: 	 CRect rect	  rect:¿Ø¼ş×ø±ê
-// ·µ»ØÀàĞÍ: void
-// ÈÕÆÚ£º	 2016/04/04
+// å‡½æ•°å:   DlgDrawBezier
+// å‡½æ•°æè¿°ï¼šç»˜åˆ¶æ›²çº¿çš„å…·ä½“æ“ä½œ
+// å‚æ•°: 	 CPoint piont å½“å‰ç‚¹åæ ‡(å…¨çª—ä½“)
+// å‚æ•°: 	 CRect rect	  rect:æ§ä»¶åæ ‡
+// è¿”å›ç±»å‹: void
+// æ—¥æœŸï¼š	 2016/04/04
 //************************************
 void CCreateMapDlg::DlgDrawBezier(CPoint point ,CRect rect){
-	// --- Step.1 --- ÅĞ¶ÏÒÑ¾­»æÖÆµÄµãÊı
+	// --- Step.1 --- åˆ¤æ–­å·²ç»ç»˜åˆ¶çš„ç‚¹æ•°
 	if(control_bezier.index<3){
-		// --- Step.2 --- ×ª»¯µ½Í¼Æ¬×ø±ê£¬²¢¼ÇÂ¼
+		// --- Step.2 --- è½¬åŒ–åˆ°å›¾ç‰‡åæ ‡ï¼Œå¹¶è®°å½•
 		point.x-=rect.left; point.y-=rect.top;
 		point.x+=m_srcRect.left; point.y+=m_srcRect.top;
 
 		control_bezier.Points[control_bezier.index++]=point;
 	}else if(control_bezier.index == 3){
 		DRAW_RECORD dr;
-		// --- Step.3.1 --- ¼ÇÂ¼×îºóÒ»¸ö(4)µãµÄ×ø±ê£¬²¢»æÖÆ
+		// --- Step.3.1 --- è®°å½•æœ€åä¸€ä¸ª(4)ç‚¹çš„åæ ‡ï¼Œå¹¶ç»˜åˆ¶
 		point.x-=rect.left; point.y-=rect.top;
 		point.x+=m_srcRect.left; point.y+=m_srcRect.top;
 		control_bezier.Points[control_bezier.index]=point;
@@ -692,27 +692,27 @@ void CCreateMapDlg::DlgDrawBezier(CPoint point ,CRect rect){
 		HDC hdc=m_loadImage->GetDC();
 		CDC *pDC = CDC::FromHandle(hdc);
 		drawmap::DrawBezier(pDC,control_bezier.Points,control_bezier.index+1,RGB(255,0,0));
-		m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect); //¸üĞÂpicture control
+		m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect); //æ›´æ–°picture control
 		m_loadImage->ReleaseDC();
 
-		// --- Step.3.2 --- ¼ÇÂ¼ÇúÏßÉÏµÄµã
-		CRect nrect(0,0,m_loadImage->GetWidth(),m_loadImage->GetHeight());		//TODO: ´óÍ¼´Ë´¦¿ÉÓÅ»¯Îª¾Ö²¿ÖØÖÃ
+		// --- Step.3.2 --- è®°å½•æ›²çº¿ä¸Šçš„ç‚¹
+		CRect nrect(0,0,m_loadImage->GetWidth(),m_loadImage->GetHeight());		//TODO: å¤§å›¾æ­¤å¤„å¯ä¼˜åŒ–ä¸ºå±€éƒ¨é‡ç½®
 		nrect.NormalizeRect();
 		dr.drawPoints.reserve(nrect.Width()+nrect.Height());
 
 		pDC=CDC::FromHandle(m_canvas->GetDC());
-		drawmap::ResetImage(m_canvas,m_backUpImage,nrect); //Çå³ıÖ®Ç°µÄºóÌ¨»­°åÉÏºÛ¼£ mask
+		drawmap::ResetImage(m_canvas,m_backUpImage,nrect); //æ¸…é™¤ä¹‹å‰çš„åå°ç”»æ¿ä¸Šç—•è¿¹ mask
 		drawmap::DrawBezier(pDC,control_bezier.Points,control_bezier.index+1,RGB(255,0,0));
-		drawmap::getPointsByImage(m_canvas,nrect,dr.drawPoints);//»ñÈ¡»æÖÆµÄµã
+		drawmap::getPointsByImage(m_canvas,nrect,dr.drawPoints);//è·å–ç»˜åˆ¶çš„ç‚¹
 		m_canvas->ReleaseDC();
 
-		// --- Step.3.3 --- ¼ÇÂ¼µ½"»æ»­¶¯×÷±í"ÖĞ	
+		// --- Step.3.3 --- è®°å½•åˆ°"ç»˜ç”»åŠ¨ä½œè¡¨"ä¸­	
 		dr.type=1;
 		m_records.push_back(dr);
 		m_listRecord.AddString(drawmap::PrintRecord(dr));
 
 
-		// --- Step.3.4 --- ÖØÖÃ»­±Ê×´Ì¬,ÇúÏß×´Ì¬
+		// --- Step.3.4 --- é‡ç½®ç”»ç¬”çŠ¶æ€,æ›²çº¿çŠ¶æ€
 		m_nowCase=Case_None;
 		control_bezier.index=0;
 	}
@@ -720,15 +720,15 @@ void CCreateMapDlg::DlgDrawBezier(CPoint point ,CRect rect){
 
 
 //************************************
-// º¯ÊıÃû:   DlgDrawPoints
-// º¯ÊıÃèÊö£º»æÖÆÒ»ÏµÁĞµã¼¯ Ö÷ÒªÓÃÓÚ±ê×¢ÇúÏßÂ·¾¶ºÍÂ·¿Ú
-// ²ÎÊı: 	 CPoint point µ±Ç°µã×ø±ê(È«´°Ìå)
-// ²ÎÊı: 	 CRect rect rect:¿Ø¼ş×ø±ê
-// ·µ»ØÀàĞÍ: void
-// ÈÕÆÚ£º	 2016/04/06
+// å‡½æ•°å:   DlgDrawPoints
+// å‡½æ•°æè¿°ï¼šç»˜åˆ¶ä¸€ç³»åˆ—ç‚¹é›† ä¸»è¦ç”¨äºæ ‡æ³¨æ›²çº¿è·¯å¾„å’Œè·¯å£
+// å‚æ•°: 	 CPoint point å½“å‰ç‚¹åæ ‡(å…¨çª—ä½“)
+// å‚æ•°: 	 CRect rect rect:æ§ä»¶åæ ‡
+// è¿”å›ç±»å‹: void
+// æ—¥æœŸï¼š	 2016/04/06
 //************************************
 void CCreateMapDlg::DlgDrawPoints(CPoint point ,CRect rect){
-	// --- Step.1 »æÖÆ ---
+	// --- Step.1 ç»˜åˆ¶ ---
 	point.x-=rect.left; point.y-=rect.top;
 	point.x+=m_srcRect.left; point.y+=m_srcRect.top;
 
@@ -736,44 +736,44 @@ void CCreateMapDlg::DlgDrawPoints(CPoint point ,CRect rect){
 	CDC *pDC = CDC::FromHandle(hdc);
 	pDC->SetPixel(point,RGB(255,0,0));
 
-	// --- Step.2 --- ¼ÇÂ¼µã
+	// --- Step.2 --- è®°å½•ç‚¹
 	control_points.points.push_back(point);
 
-	// --- Step.3---  ¸üĞÂÍ¼Ê¾
+	// --- Step.3---  æ›´æ–°å›¾ç¤º
 	m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect);
 }
 
 
 //************************************
-// º¯ÊıÃû:   DlgDrawMark
-// º¯ÊıÃèÊö£º»æÖÆÂ·¿Ú
-// ²ÎÊı: 	 CPoint point
-// ²ÎÊı: 	 CRect rect
-// ·µ»ØÀàĞÍ: void
-// ÈÕÆÚ£º	 2016/04/12
+// å‡½æ•°å:   DlgDrawMark
+// å‡½æ•°æè¿°ï¼šç»˜åˆ¶è·¯å£
+// å‚æ•°: 	 CPoint point
+// å‚æ•°: 	 CRect rect
+// è¿”å›ç±»å‹: void
+// æ—¥æœŸï¼š	 2016/04/12
 //************************************
 void CCreateMapDlg::DlgDrawMark(CPoint point,CRect rect){
-	// --- Step.1 --- ÅĞ¶ÏµÚ¼¸¸öµã
+	// --- Step.1 --- åˆ¤æ–­ç¬¬å‡ ä¸ªç‚¹
 	if(m_nodeP.x==0&&m_nodeP.y==0){
-		// --- Step.2.1 --- ¼ÇÂ¼µÚÒ»¸öµã
+		// --- Step.2.1 --- è®°å½•ç¬¬ä¸€ä¸ªç‚¹
 			point.x-=rect.left; point.y-=rect.top;
 			point.x+=m_srcRect.left; point.y+=m_srcRect.top;
 			m_nodeP=point;
 	}else{
-		// --- Step.2.2 --- »æÖÆ
+		// --- Step.2.2 --- ç»˜åˆ¶
 			DRAW_RECORD dr;
 
 
-			// --- Step.2.3 --- ¼ÇÂ¼µ½µØÍ¼½á¹¹ÖĞ  TODO ²ğ·Ö³Éº¯Êı
+			// --- Step.2.3 --- è®°å½•åˆ°åœ°å›¾ç»“æ„ä¸­  TODO æ‹†åˆ†æˆå‡½æ•°
 			CREATE_MAP_NODE tNode;
 			if(m_njustMap.nodes.size()==0){
 				
-				tNode.position.SetPoint(m_nodeP.x,m_nodeP.y); //Â·¿ÚÖĞĞÄÎ»ÖÃÏñËØ×ø±ê
-				tNode.node.idself=START_NODE_ID;				//ID´ÓSTART_NODE_ID¿ªÊ¼
+				tNode.position.SetPoint(m_nodeP.x,m_nodeP.y); //è·¯å£ä¸­å¿ƒä½ç½®åƒç´ åæ ‡
+				tNode.node.idself=START_NODE_ID;				//IDä»START_NODE_IDå¼€å§‹
 				m_njustMap.nodes.push_back(tNode);           
 			}else{
-				tNode.position.SetPoint(m_nodeP.x,m_nodeP.y); //Â·¿ÚÖĞĞÄÎ»ÖÃÏñËØ×ø±ê
-				int lastID=m_njustMap.nodes.back().node.idself+1;	//ID´ÓÉÏÒ»¸ö½Úµã+1 ²»»áÖØ¸´
+				tNode.position.SetPoint(m_nodeP.x,m_nodeP.y); //è·¯å£ä¸­å¿ƒä½ç½®åƒç´ åæ ‡
+				int lastID=m_njustMap.nodes.back().node.idself+1;	//IDä»ä¸Šä¸€ä¸ªèŠ‚ç‚¹+1 ä¸ä¼šé‡å¤
 				tNode.node.idself=lastID;
 				m_njustMap.nodes.push_back(tNode);
 			}
@@ -788,11 +788,11 @@ void CCreateMapDlg::DlgDrawMark(CPoint point,CRect rect){
 			drawmap::DrawNodeMark(pDC,m_nodeP,int(r),RGB(255,0,0),tNode.node.idself-START_NODE_ID);
 			m_loadImage->ReleaseDC();
 
-			// --- Step.2.4 --- ¼ÇÂ¼Ô²ĞÄºÍ±ßÉÏµÄÒ»µã
+			// --- Step.2.4 --- è®°å½•åœ†å¿ƒå’Œè¾¹ä¸Šçš„ä¸€ç‚¹
             dr.drawPoints.push_back(m_nodeP);
 			dr.drawPoints.push_back(point);
 
-			// --- Step.2.5 --- ¼ÇÂ¼µ½"»æ»­¶¯×÷±í"ÖĞ	
+			// --- Step.2.5 --- è®°å½•åˆ°"ç»˜ç”»åŠ¨ä½œè¡¨"ä¸­	
 			dr.type=3;
 			dr.id=tNode.node.idself-START_NODE_ID;
 			m_records.push_back(dr);
@@ -800,7 +800,7 @@ void CCreateMapDlg::DlgDrawMark(CPoint point,CRect rect){
 			//m_listMap.AddString(drawmap::PrintRecord(dr));
 			
 
-			// --- Step.3 --- »æÖÆºÍÖØÖÃ×´Ì¬
+			// --- Step.3 --- ç»˜åˆ¶å’Œé‡ç½®çŠ¶æ€
 			m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect); 	
 			m_nodeP.SetPoint(0,0);
 			m_nowCase=Case_None;
@@ -813,67 +813,67 @@ void CCreateMapDlg::DlgDrawMark(CPoint point,CRect rect){
 
 
 //************************************
-// º¯ÊıÃû:   OnMapSetline2id
-// º¯ÊıÃèÊö£ºÏìÓ¦ MAP_SETLINE_2ID ÏûÏ¢,Íê³ÉµÀÂ·¹¹ÔìĞÅÏ¢
-// ²ÎÊı: 	 WPARAM wParam
-// ²ÎÊı: 	 LPARAM lParam
-// ·µ»ØÀàĞÍ: LRESULT
-// ÈÕÆÚ£º	 2016/04/15
+// å‡½æ•°å:   OnMapSetline2id
+// å‡½æ•°æè¿°ï¼šå“åº” MAP_SETLINE_2ID æ¶ˆæ¯,å®Œæˆé“è·¯æ„é€ ä¿¡æ¯
+// å‚æ•°: 	 WPARAM wParam
+// å‚æ•°: 	 LPARAM lParam
+// è¿”å›ç±»å‹: LRESULT
+// æ—¥æœŸï¼š	 2016/04/15
 //************************************
 afx_msg LRESULT CCreateMapDlg::OnMapSetline2id(WPARAM wParam, LPARAM lParam)
 {
-	//AfxMessageBox(L"»ñÈ¡ÏûÏ¢",MB_OK);
+	//AfxMessageBox(L"è·å–æ¶ˆæ¯",MB_OK);
 	unsigned int i,k;
 	int nItemCount = m_listRecord.GetSelCount();
 	if (0 != nItemCount){
 		int* indexBuf = new int[nItemCount];
 		memset(indexBuf,0,nItemCount*sizeof(int));
 		m_listRecord.GetSelItems(nItemCount,indexBuf);
-		vector<DRAW_RECORD> tempRecord;			//ÁÙÊ±¼ÇÂ¼Ñ¡ÖĞÌõÄ¿
+		vector<DRAW_RECORD> tempRecord;			//ä¸´æ—¶è®°å½•é€‰ä¸­æ¡ç›®
 		for (i = 0 ;i<nItemCount;i++)
 		{
 			tempRecord.push_back(m_records[indexBuf[i]]);
 		}
 		delete[]indexBuf;
-		//ºÏ²¢µ½½Úµã
+		//åˆå¹¶åˆ°èŠ‚ç‚¹
 		CPoint *p=(CPoint*)lParam;
 		if(m_njustMap.merge2Line(tempRecord,*p)){
-			//»æ»­¶¯×÷ÁĞ±íÌí¼Ó¶¯×÷
+			//ç»˜ç”»åŠ¨ä½œåˆ—è¡¨æ·»åŠ åŠ¨ä½œ
 			DRAW_RECORD dr;
-			// --- Step.2.2 --- ¸ù¾İÁ½µã ÔÚÍ¼ÖĞ»æÖÆÖ±Ïß
+			// --- Step.2.2 --- æ ¹æ®ä¸¤ç‚¹ åœ¨å›¾ä¸­ç»˜åˆ¶ç›´çº¿
 			HDC hdc=m_loadImage->GetDC();
 			CDC *pDC = CDC::FromHandle(hdc);
 			m_loadImage->ReleaseDC();
-			//ÌîĞ´¼ÇÂ¼
+			//å¡«å†™è®°å½•
 			dr.type=4;
 			dr.id=m_njustMap.roads.back().road.idself-START_LINE_ID+1;
 			dr.drawPoints=m_njustMap.roads.back().pInLine;
-			//»æÖÆÍ¼ĞÎ
+			//ç»˜åˆ¶å›¾å½¢
 			//drawmap::DrawByRecord(m_loadImage,m_records,RGB(255,0,0));
 			drawmap::DrawRoadMark(pDC,dr.drawPoints,dr.id);
 		
 			m_records.push_back(dr);
-			//ÕâÀï¼ÇÂ¼ºÍµÀÂ·ÁĞ±íÍ¬²½ ÇĞ¼Ç
+			//è¿™é‡Œè®°å½•å’Œé“è·¯åˆ—è¡¨åŒæ­¥ åˆ‡è®°
 			m_listRecord.AddString(drawmap::PrintRecord(dr));  
 
-			// --- Step.2.5 --- »æÖÆ,ÖØÖÃ
+			// --- Step.2.5 --- ç»˜åˆ¶,é‡ç½®
 			DlgReDraw();
 			m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect); 
 
 
 
-			//ÖØÌîµÀÂ·ÁĞ±í
+			//é‡å¡«é“è·¯åˆ—è¡¨
 			m_listMap.ResetContent();
 			for(k=0;k<m_njustMap.roads.size();k++)
 				m_listMap.AddString(m_njustMap.printRoad(k));
 			for(k=0;k<m_njustMap.crosses.size();k++)
 				m_listMap.AddString(m_njustMap.printCross(k));
 		}else{
-			AfxMessageBox(L"ºÏ²¢ÓĞÎó£¬¼ì²éÊÇ·ñÌí¼Ó·Ç·¨¶¯×÷",MB_OK);
+			AfxMessageBox(L"åˆå¹¶æœ‰è¯¯ï¼Œæ£€æŸ¥æ˜¯å¦æ·»åŠ éæ³•åŠ¨ä½œ",MB_OK);
 		}
-		delete[] p; //ÓÃÍêÊÍ·ÅÄÚ´æ
+		delete[] p; //ç”¨å®Œé‡Šæ”¾å†…å­˜
 	}else{
-		AfxMessageBox(L"Î´Ñ¡È¡»æÍ¼¶¯×÷",MB_OK);
+		AfxMessageBox(L"æœªé€‰å–ç»˜å›¾åŠ¨ä½œ",MB_OK);
 	}
 	
 	return 0;
@@ -882,35 +882,35 @@ afx_msg LRESULT CCreateMapDlg::OnMapSetline2id(WPARAM wParam, LPARAM lParam)
 
 
 
-//´¦ÀíºÏ²¢Â·¿ÚĞÅÏ¢
+//å¤„ç†åˆå¹¶è·¯å£ä¿¡æ¯
 //************************************
-// º¯ÊıÃû:   OnMapSetcross2id
-// º¯ÊıÃèÊö£ºÏìÓ¦ MAP_SETCROSS_2ID ÏûÏ¢,Íê³ÉÂ·¿Ú¹¹ÔìĞÅÏ¢
-// ²ÎÊı: 	 WPARAM wParam
-// ²ÎÊı: 	 LPARAM lParam
-// ·µ»ØÀàĞÍ: LRESULT
-// ÈÕÆÚ£º	 2016/04/27
+// å‡½æ•°å:   OnMapSetcross2id
+// å‡½æ•°æè¿°ï¼šå“åº” MAP_SETCROSS_2ID æ¶ˆæ¯,å®Œæˆè·¯å£æ„é€ ä¿¡æ¯
+// å‚æ•°: 	 WPARAM wParam
+// å‚æ•°: 	 LPARAM lParam
+// è¿”å›ç±»å‹: LRESULT
+// æ—¥æœŸï¼š	 2016/04/27
 //************************************
 afx_msg LRESULT CCreateMapDlg::OnMapSetcross2id(WPARAM wParam, LPARAM lParam)
 {
-	//AfxMessageBox(L"»ñÈ¡ÏûÏ¢",MB_OK);
+	//AfxMessageBox(L"è·å–æ¶ˆæ¯",MB_OK);
 	unsigned int i,k;
 	int nItemCount = m_listRecord.GetSelCount();
 	if (0 != nItemCount){
 		int* indexBuf = new int[nItemCount];
 		memset(indexBuf,0,nItemCount*sizeof(int));
 		m_listRecord.GetSelItems(nItemCount,indexBuf);
-		vector<DRAW_RECORD> tempRecord;			//ÁÙÊ±¼ÇÂ¼Ñ¡ÖĞÌõÄ¿
+		vector<DRAW_RECORD> tempRecord;			//ä¸´æ—¶è®°å½•é€‰ä¸­æ¡ç›®
 		for (i = 0 ;i<nItemCount;i++)
 		{
 			tempRecord.push_back(m_records[indexBuf[i]]);
 		}
 		delete[]indexBuf;
-		//ºÏ²¢µ½½Úµã
+		//åˆå¹¶åˆ°èŠ‚ç‚¹
 		CPoint *p=(CPoint*)lParam;
 		if(m_njustMap.merge2Cross(tempRecord,*p)){
 
-		//ÖØÌîµÀÂ·ÁĞ±í
+		//é‡å¡«é“è·¯åˆ—è¡¨
 		m_listMap.ResetContent();
 		for(k=0;k<m_njustMap.roads.size();k++)
 			m_listMap.AddString(m_njustMap.printRoad(k));
@@ -918,11 +918,11 @@ afx_msg LRESULT CCreateMapDlg::OnMapSetcross2id(WPARAM wParam, LPARAM lParam)
 			m_listMap.AddString(m_njustMap.printCross(k));
 
 		}else{
-			AfxMessageBox(L"ºÏ²¢ÓĞÎó£¬¼ì²éÊÇ·ñÌí¼Ó·Ç·¨¶¯×÷",MB_OK);
+			AfxMessageBox(L"åˆå¹¶æœ‰è¯¯ï¼Œæ£€æŸ¥æ˜¯å¦æ·»åŠ éæ³•åŠ¨ä½œ",MB_OK);
 		}
 		delete[] p; 
 	}else{
-		AfxMessageBox(L"Î´Ñ¡È¡»æÍ¼¶¯×÷",MB_OK);
+		AfxMessageBox(L"æœªé€‰å–ç»˜å›¾åŠ¨ä½œ",MB_OK);
 	}
 	
 	return 0;
@@ -930,10 +930,10 @@ afx_msg LRESULT CCreateMapDlg::OnMapSetcross2id(WPARAM wParam, LPARAM lParam)
 
 
 //************************************
-// º¯ÊıÃû:   serial
-// º¯ÊıÃèÊö£ºĞòÁĞ»¯Êı¾İ
-// ·µ»ØÀàĞÍ: void
-// ÈÕÆÚ£º	 2016/04/29
+// å‡½æ•°å:   serial
+// å‡½æ•°æè¿°ï¼šåºåˆ—åŒ–æ•°æ®
+// è¿”å›ç±»å‹: void
+// æ—¥æœŸï¼š	 2016/04/29
 //************************************
 //
 //
@@ -959,7 +959,7 @@ void CCreateMapDlg::serial(CFile &file){
 	}
 }
 
-//·´ĞòÁĞ»¯
+//ååºåˆ—åŒ–
 void CCreateMapDlg::enserial(CFile &file){
 	m_records.clear();
 
@@ -982,39 +982,39 @@ void CCreateMapDlg::enserial(CFile &file){
 
 bool CCreateMapDlg::isLoad(){
 	if(m_loadImage==NULL){
-		AfxMessageBox(L"ÇëÏÈĞÂ½¨»òÔØÈëµØÍ¼",MB_OK);
+		AfxMessageBox(L"è¯·å…ˆæ–°å»ºæˆ–è½½å…¥åœ°å›¾",MB_OK);
 		return false;
 	}
 	return true;
 }
 
-////////////////////////////////////¿Ø¼ş³õÊ¼»¯//////////////////////////////////////
+////////////////////////////////////æ§ä»¶åˆå§‹åŒ–//////////////////////////////////////
 
 
 
-//¶¯Ì¬µ÷Õû¿Ø¼şÎ»ÖÃ 
+//åŠ¨æ€è°ƒæ•´æ§ä»¶ä½ç½® 
 void CCreateMapDlg::initCtlPosition(){
 	CRect rect;
 	GetWindowRect(&rect);
-	m_listRect.AddTail(rect);//¶Ô»°¿òµÄÇøÓò
-	CWnd *pWnd = GetWindow(GW_CHILD);//»ñÈ¡×Ó´°Ìå
+	m_listRect.AddTail(rect);//å¯¹è¯æ¡†çš„åŒºåŸŸ
+	CWnd *pWnd = GetWindow(GW_CHILD);//è·å–å­çª—ä½“
 	while (pWnd)
 	{
-		pWnd->GetWindowRect(rect);//×Ó´°ÌåµÄÇøÓò
-		m_listRect.AddTail(rect);           //CList<CRect,CRect> m_listRect³ÉÔ±±äÁ¿
-		pWnd = pWnd->GetNextWindow();//È¡ÏÂÒ»¸ö×Ó´°Ìå
+		pWnd->GetWindowRect(rect);//å­çª—ä½“çš„åŒºåŸŸ
+		m_listRect.AddTail(rect);           //CList<CRect,CRect> m_listRectæˆå‘˜å˜é‡
+		pWnd = pWnd->GetNextWindow();//å–ä¸‹ä¸€ä¸ªå­çª—ä½“
 	}
 }
 
 void CCreateMapDlg::initStatusBar(){
 	m_statusBar=new CStatusBarCtrl;
 	CRect m_Rect; 
-	GetClientRect(&m_Rect); //»ñÈ¡¶Ô»°¿òµÄ¾ØĞÎÇøÓò
-	m_Rect.top=m_Rect.bottom-20; //ÉèÖÃ×´Ì¬À¸µÄ¾ØĞÎÇøÓò
+	GetClientRect(&m_Rect); //è·å–å¯¹è¯æ¡†çš„çŸ©å½¢åŒºåŸŸ
+	m_Rect.top=m_Rect.bottom-20; //è®¾ç½®çŠ¶æ€æ çš„çŸ©å½¢åŒºåŸŸ
 	m_statusBar->Create(WS_BORDER|WS_VISIBLE|CBRS_BOTTOM,m_Rect,this,3);
-	int nParts[2]= {m_Rect.Width()/2,-1}; //·Ö¸î³ß´ç
-	m_statusBar->SetParts(2, nParts); //·Ö¸î×´Ì¬À¸
-	m_statusBar->SetText(L"µ±Ç°µØÍ¼:¡¾Î´´ò¿ªµØÍ¼¡¿",0,0); //µÚÒ»¸ö·ÖÀ¸¼ÓÈë"ÕâÊÇµÚÒ»¸öÖ¸Ê¾Æ÷"
+	int nParts[2]= {m_Rect.Width()/2,-1}; //åˆ†å‰²å°ºå¯¸
+	m_statusBar->SetParts(2, nParts); //åˆ†å‰²çŠ¶æ€æ 
+	m_statusBar->SetText(L"å½“å‰åœ°å›¾:ã€æœªæ‰“å¼€åœ°å›¾ã€‘",0,0); //ç¬¬ä¸€ä¸ªåˆ†æ åŠ å…¥"è¿™æ˜¯ç¬¬ä¸€ä¸ªæŒ‡ç¤ºå™¨"
 	
 	
 }
@@ -1023,18 +1023,18 @@ void CCreateMapDlg::initStatusBar(){
 
 
 
-////////////////////////////GPSĞòÁĞ¶¯Ì¬ÏÔÊ¾ÔÚÍ¼ÖĞ//////////////////////////////////////////////
+////////////////////////////GPSåºåˆ—åŠ¨æ€æ˜¾ç¤ºåœ¨å›¾ä¸­//////////////////////////////////////////////
 
 
 
 void CCreateMapDlg::OnLbnSelchangeListrecord()
 {
-	// TODO: ÔÚ´ËÌí¼Ó¿Ø¼şÍ¨Öª´¦Àí³ÌĞò´úÂë
+	// TODO: åœ¨æ­¤æ·»åŠ æ§ä»¶é€šçŸ¥å¤„ç†ç¨‹åºä»£ç 
 }
 
 void CCreateMapDlg::OnBnClickedCancel()
 {
-	// TODO: ÔÚ´ËÌí¼Ó¿Ø¼şÍ¨Öª´¦Àí³ÌĞò´úÂë
+	// TODO: åœ¨æ­¤æ·»åŠ æ§ä»¶é€šçŸ¥å¤„ç†ç¨‹åºä»£ç 
 	CDialog::OnCancel();
 	
 }
@@ -1042,9 +1042,9 @@ void CCreateMapDlg::OnBnClickedCancel()
 void CCreateMapDlg::OnTimer(UINT_PTR nIDEvent)
 {
 	if(m_Show_cur!=m_Show_GPSList.size()){
-		// ¼ÆËã
+		// è®¡ç®—
 		COMPUTE_GPS gps;
-		gps.lng=m_Show_GPSList[m_Show_cur].x/60.0; //ÎÄ¼şÖĞÊÇ·Ö 
+		gps.lng=m_Show_GPSList[m_Show_cur].x/60.0; //æ–‡ä»¶ä¸­æ˜¯åˆ† 
 		gps.lat=m_Show_GPSList[m_Show_cur].y/60.0;
 		m_Show_cur++;
 		m_njustMap.GPS2pexel(gps);
@@ -1058,34 +1058,34 @@ void CCreateMapDlg::OnTimer(UINT_PTR nIDEvent)
 		pDC->MoveTo(p);
 		pDC->Ellipse(p.x-r,p.y-r,p.x+r,p.y+r);
 		m_loadImage->ReleaseDC();
-		//¸üĞÂ
+		//æ›´æ–°
 		m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect);
 
 	}else{
 		CWnd::KillTimer(1);
 		m_Show_cur=0;
 		if(m_Show_GPSList.size()!=0)
-		AfxMessageBox(L"»æÖÆÍê³É",MB_OK);
+		AfxMessageBox(L"ç»˜åˆ¶å®Œæˆ",MB_OK);
 	}
 	CDialog::OnTimer(nIDEvent);
 }
 
 
 
-////////////////////////////Ö÷²Ëµ¥À¸²Ù×÷//////////////////////////////////////////////
+////////////////////////////ä¸»èœå•æ æ“ä½œ//////////////////////////////////////////////
 
-//ĞÂ½¨µØÍ¼
+//æ–°å»ºåœ°å›¾
 void CCreateMapDlg::OnMenuBuildMap()
 {
-	//ÒÑ¾­ÓĞÊı¾İ
+	//å·²ç»æœ‰æ•°æ®
 	if(m_loadImage!=NULL){
-		INT_PTR re=AfxMessageBox(L"ÊÇ·ñ·ÅÆúµ±Ç°¹¤×÷¿Õ¼ä,ĞÂ½¨µØÍ¼?",MB_OKCANCEL);
+		INT_PTR re=AfxMessageBox(L"æ˜¯å¦æ”¾å¼ƒå½“å‰å·¥ä½œç©ºé—´,æ–°å»ºåœ°å›¾?",MB_OKCANCEL);
 		if(re!=IDOK)
 			return;
 	}
 
 	CString FilePathName;
-    CFileDialog dlg(TRUE, //TRUEÎªOPEN¶Ô»°¿ò£¬FALSEÎªSAVE AS¶Ô»°¿ò
+    CFileDialog dlg(TRUE, //TRUEä¸ºOPENå¯¹è¯æ¡†ï¼ŒFALSEä¸ºSAVE ASå¯¹è¯æ¡†
         NULL, 
         NULL,
         OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
@@ -1093,12 +1093,12 @@ void CCreateMapDlg::OnMenuBuildMap()
         NULL);
     if(dlg.DoModal()==IDOK)
     {
-        FilePathName=dlg.GetPathName(); //ÎÄ¼şÃû
+        FilePathName=dlg.GetPathName(); //æ–‡ä»¶å
 		m_loadImage=new CImage();
-		m_loadImage->Load(FilePathName); //¸ù¾İÍ¼Æ¬Â·¾¶¼ÓÔØÍ¼Æ¬  
+		m_loadImage->Load(FilePathName); //æ ¹æ®å›¾ç‰‡è·¯å¾„åŠ è½½å›¾ç‰‡  
 
 		m_backUpImage=new CImage();
-		m_backUpImage->Load(FilePathName); //¸ù¾İÍ¼Æ¬Â·¾¶¼ÓÔØÍ¼Æ¬  
+		m_backUpImage->Load(FilePathName); //æ ¹æ®å›¾ç‰‡è·¯å¾„åŠ è½½å›¾ç‰‡  
 
 
 		m_canvas=new CImage();
@@ -1106,10 +1106,10 @@ void CCreateMapDlg::OnMenuBuildMap()
 
 
 
-		CWnd *pWnd=GetDlgItem(IDC_PIC_MAIN);//»ñµÃpictrue¿Ø¼ş´°¿ÚµÄ¾ä±ú      
+		CWnd *pWnd=GetDlgItem(IDC_PIC_MAIN);//è·å¾—pictrueæ§ä»¶çª—å£çš„å¥æŸ„      
     
 
-		//³õÊ¼»¯µØÍ¼½á¹¹
+		//åˆå§‹åŒ–åœ°å›¾ç»“æ„
 		COMPUTE_GPS gps2[2];
 		/*gps2[0]=COMPUTE_GPS(484,311,118.8559087276,32.0303230959);
 		gps2[1]=COMPUTE_GPS(m_loadImage->GetWidth()-1
@@ -1121,42 +1121,42 @@ void CCreateMapDlg::OnMenuBuildMap()
 		//					,m_loadImage->GetHeight()-1
 		//					,118.8583617276
 		//					,32.0258240959);
-		m_njustMap.init();  //ÖØĞÂ³õÊ¼»¯ reset
-		m_records.clear();    //É¾³ıÒÑÓĞµØÍ¼
+		m_njustMap.init();  //é‡æ–°åˆå§‹åŒ– reset
+		m_records.clear();    //åˆ é™¤å·²æœ‰åœ°å›¾
 
-		//Çå³ıÁĞ±í
+		//æ¸…é™¤åˆ—è¡¨
 		m_listMap.ResetContent();
 		m_listRecord.ResetContent();
-		//ĞŞ¸Ä×´Ì¬À¸
+		//ä¿®æ”¹çŠ¶æ€æ 
 		CString strbar;
-		strbar.Format(L"µ±Ç°µØÍ¼:¡¾%s¡¿",L"*Î´ÃüÃû");
+		strbar.Format(L"å½“å‰åœ°å›¾:ã€%sã€‘",L"*æœªå‘½å");
 		m_statusBar->SetText(strbar,0,0);
 
 		m_srcRect=m_picRect;
-		m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect); //½«Í¼Æ¬»­µ½Picture¿Ø¼ş±íÊ¾µÄ¾ØĞÎÇøÓò  
+		m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect); //å°†å›¾ç‰‡ç”»åˆ°Pictureæ§ä»¶è¡¨ç¤ºçš„çŸ©å½¢åŒºåŸŸ  
 	}
 }
 
-//´ò¿ªµØÍ¼
+//æ‰“å¼€åœ°å›¾
 void CCreateMapDlg::OnOpenMap()
 {
-	//¸ù¾İÔØÈëµÄµØÍ¼ÖØ»æ
-	 // --- Step.1 ---Ñ¡Ôñ±£´æÎ»ÖÃ	
+	//æ ¹æ®è½½å…¥çš„åœ°å›¾é‡ç»˜
+	 // --- Step.1 ---é€‰æ‹©ä¿å­˜ä½ç½®	
 	 CString fileName;
 	 CFileDialog dlg(TRUE, 
         NULL, 
         NULL,
         OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
-        (LPCTSTR)_TEXT("¶ş½øÖÆÎÄ¼ş (*.map)|*.map|All Files (*.*)|*.*||"),
+        (LPCTSTR)_TEXT("äºŒè¿›åˆ¶æ–‡ä»¶ (*.map)|*.map|All Files (*.*)|*.*||"),
         NULL);
 	if(dlg.DoModal()==IDOK){
-		fileName=dlg.GetPathName(); //ÎÄ¼şÃû
+		fileName=dlg.GetPathName(); //æ–‡ä»¶å
 		CFile file;
-		// --- Step.2 --- Êı¾İ
+		// --- Step.2 --- æ•°æ®
 		if(file.Open(fileName,CFile::modeRead)){
-			//¶ÁÈ¡m_njustmap
+			//è¯»å–m_njustmap
 			m_njustMap.enserial(file);
-			//±£´æm_record
+			//ä¿å­˜m_record
 			enserial(file);
 			file.Close();
 		}
@@ -1168,17 +1168,17 @@ void CCreateMapDlg::OnOpenMap()
 		if(m_backUpImage!=NULL) delete m_backUpImage;
 		if(m_canvas!=NULL) delete m_canvas;
 		m_loadImage=new CImage();
-		m_loadImage->Load(bmpFileName); //¸ù¾İÍ¼Æ¬Â·¾¶¼ÓÔØÍ¼Æ¬  
+		m_loadImage->Load(bmpFileName); //æ ¹æ®å›¾ç‰‡è·¯å¾„åŠ è½½å›¾ç‰‡  
 		m_backUpImage=new CImage();
-		m_backUpImage->Load(bmpFileName); //¸ù¾İÍ¼Æ¬Â·¾¶¼ÓÔØÍ¼Æ¬  
+		m_backUpImage->Load(bmpFileName); //æ ¹æ®å›¾ç‰‡è·¯å¾„åŠ è½½å›¾ç‰‡  
 		m_canvas=new CImage();
 		m_canvas->Create(m_loadImage->GetWidth(),m_loadImage->GetHeight(),24);
-		//ÖØÖÃÊÓ´°
+		//é‡ç½®è§†çª—
 		m_srcRect=m_picRect;
 
-		//ÖØ»æÍ¼Ïñ
+		//é‡ç»˜å›¾åƒ
 		DlgReDraw();
-		//ÖØÖÃlist
+		//é‡ç½®list
 		m_listRecord.ResetContent();
 		unsigned int k;
 		for(k=0;k<m_records.size();k++)
@@ -1189,86 +1189,86 @@ void CCreateMapDlg::OnOpenMap()
 		for(k=0;k<m_njustMap.crosses.size();k++)
 				m_listMap.AddString(m_njustMap.printCross(k));
 
-		//ĞŞ¸Ä×´Ì¬À¸
+		//ä¿®æ”¹çŠ¶æ€æ 
 		int nPos1=fileName.ReverseFind('\\');
 		CString strbar=fileName.Right(fileName.GetLength()-nPos1-1);
 		strbar=strbar.Left(strbar.GetLength()-4); //.map(4)
-		m_statusBar->SetText(L"µ±Ç°µØÍ¼:¡¾"+strbar+L"¡¿",0,0);
+		m_statusBar->SetText(L"å½“å‰åœ°å›¾:ã€"+strbar+L"ã€‘",0,0);
 	}
 }
 
-//±£´æµØÍ¼
+//ä¿å­˜åœ°å›¾
 void CCreateMapDlg::OnSaveMap()
 {
 	if(!isLoad())
 		return;
-	 // --- Step.1 ---Ñ¡Ôñ±£´æÎ»ÖÃ	
+	 // --- Step.1 ---é€‰æ‹©ä¿å­˜ä½ç½®	
 	 CString fileName;
 	 CFileDialog dlg(FALSE, 
         NULL, 
         NULL,
         OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
-        (LPCTSTR)_TEXT("¶¨ÒåµØÍ¼Ãû |All Files (*.*)|*.*||"),
+        (LPCTSTR)_TEXT("å®šä¹‰åœ°å›¾å |All Files (*.*)|*.*||"),
         NULL);
 	if(dlg.DoModal()==IDOK){
-		fileName=dlg.GetPathName(); //ÎÄ¼şÃû C:\\xxx\\yyy
+		fileName=dlg.GetPathName(); //æ–‡ä»¶å C:\\xxx\\yyy
 		CFile file;
-		// --- Step.2 --- ±£´æm_njustmap(.map)
+		// --- Step.2 --- ä¿å­˜m_njustmap(.map)
 		if(file.Open(fileName+L".map",CFile::modeCreate|CFile::modeWrite)){
-			//±£´æm_njustmap
+			//ä¿å­˜m_njustmap
 			m_njustMap.serial(file);
-			//±£´æ»æ»­¼ÇÂ¼
+			//ä¿å­˜ç»˜ç”»è®°å½•
 			serial(file);
 			file.Close();
 		}
-		// --- Step.3 --- ±£´æÍ¼Æ¬
+		// --- Step.3 --- ä¿å­˜å›¾ç‰‡
 		m_backUpImage->Save(fileName+L".bmp");
 
-		//ĞŞ¸Ä×´Ì¬À¸
+		//ä¿®æ”¹çŠ¶æ€æ 
 		int nPos1=fileName.ReverseFind('\\');
 		CString strbar=fileName.Right(fileName.GetLength()-nPos1-1);
-		m_statusBar->SetText(L"µ±Ç°µØÍ¼:¡¾"+strbar+L"¡¿",0,0);
-		AfxMessageBox(L"±£´æ³É¹¦",MB_OK);	    
+		m_statusBar->SetText(L"å½“å‰åœ°å›¾:ã€"+strbar+L"ã€‘",0,0);
+		AfxMessageBox(L"ä¿å­˜æˆåŠŸ",MB_OK);	    
 	}
 }
 
-//¶ÁÈ¡ÏÔÊ¾GPSĞòÁĞ
+//è¯»å–æ˜¾ç¤ºGPSåºåˆ—
 void CCreateMapDlg::OnMenuShowGPS()
 {
 	if(!isLoad())
 		return;
 	if(!m_njustMap.CheckIsCali()){
-		AfxMessageBox(L"µØÍ¼Î´±ê¶¨£¬ÇëÏÈ±ê¶¨",MB_OK);
+		AfxMessageBox(L"åœ°å›¾æœªæ ‡å®šï¼Œè¯·å…ˆæ ‡å®š",MB_OK);
 		return;
 	}
 
 	CString FilePathName;
-    CFileDialog dlg(TRUE, //TRUEÎªOPEN¶Ô»°¿ò£¬FALSEÎªSAVE AS¶Ô»°¿ò
+    CFileDialog dlg(TRUE, //TRUEä¸ºOPENå¯¹è¯æ¡†ï¼ŒFALSEä¸ºSAVE ASå¯¹è¯æ¡†
         NULL, 
         NULL,
         OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
         (LPCTSTR)_TEXT("DB Files (*.db)|*.db|All Files (*.*)|*.*||"),
         NULL);
 	if(dlg.DoModal()==IDOK){
-		FilePathName=dlg.GetPathName(); //ÎÄ¼şÃû
+		FilePathName=dlg.GetPathName(); //æ–‡ä»¶å
 		m_Show_GPSList.clear();
 
 		CFile pf;
-		MAP_DOUBLE_POINT tPoint;  //¶Ádb
+		MAP_DOUBLE_POINT tPoint;  //è¯»db
 		if(pf.Open(FilePathName,CFile::modeRead|CFile::modeNoTruncate)){
 			int GPSnum = pf.GetLength() / sizeof(MAP_DOUBLE_POINT);
 			for(int i=0;i<GPSnum;i++){
 					pf.Read(&tPoint,sizeof(MAP_DOUBLE_POINT)); //fread(&tPoint, sizeof(MAP_DOUBLE_POINT), 1, pf);
-					m_Show_GPSList.push_back(tPoint);  //¼ÇÂ¼
+					m_Show_GPSList.push_back(tPoint);  //è®°å½•
 			}
 		}else{
-			AfxMessageBox(L"¶ÁÈ¡DBÎÄ¼şÊ§°Ü",MB_OK);
+			AfxMessageBox(L"è¯»å–DBæ–‡ä»¶å¤±è´¥",MB_OK);
 		}
 	}
 	CWnd::SetTimer(1,100,NULL);
 }
 
-/////////////////////////////ÉÏÏÂÎÄ²Ëµ¥À¸²Ù×÷/////////////////////////////////////////////
+/////////////////////////////ä¸Šä¸‹æ–‡èœå•æ æ“ä½œ/////////////////////////////////////////////
 
 void CCreateMapDlg::OnContextMenu(CWnd* /*pWnd*/, CPoint /*point*/)
 {
@@ -1277,11 +1277,11 @@ void CCreateMapDlg::OnContextMenu(CWnd* /*pWnd*/, CPoint /*point*/)
    m_listMap.GetWindowRect(&rectMap);
    CPoint p;
    GetCursorPos(&p);
-   //»æ»­¼ÇÂ¼µã»÷
+   //ç»˜ç”»è®°å½•ç‚¹å‡»
    if (rectDraw.PtInRect(p)||rectMap.PtInRect(p))
     {
        CMenu m_Menu;
-       m_Menu.LoadMenu(IDR_MENUPOP);//±à¼­ºÃµÄ²Ëµ¥×ÊÔ´
+       m_Menu.LoadMenu(IDR_MENUPOP);//ç¼–è¾‘å¥½çš„èœå•èµ„æº
 	   CMenu *m_SubMenu=NULL;
 	   if(rectDraw.PtInRect(p))
 		  m_SubMenu= m_Menu.GetSubMenu(0);
@@ -1296,20 +1296,22 @@ void CCreateMapDlg::OnContextMenu(CWnd* /*pWnd*/, CPoint /*point*/)
 
 
 
-/////////////////////////////±ê¶¨Ïà¹Ø²Ù×÷/////////////////////////////////////////////
+/////////////////////////////æ ‡å®šç›¸å…³æ“ä½œ/////////////////////////////////////////////
 void CCreateMapDlg::showNowGPS(char *buff,long len){
 	
-	//Step1 ¿ØÖÆ½ÓÊÜÆµÂÊ
+	//Step1 æ§åˆ¶æ¥å—é¢‘ç‡
 	m_clockGPS++;
-	m_clockGPS%=10000; //±ÜÃâÔ½½ç
-	if(m_clockGPS%RECIVE_RATE!=0){ //50È¡1
+	m_clockGPS%=10000; //é¿å…è¶Šç•Œ
+	if(m_clockGPS%RECIVE_RATE!=0){ //50å–1
 		return ;
 	}
 
 	double longlat[2];
 
 	m_getMCInfo.getGPSAndPostion(buff,len,longlat);
-	//×ª»¯Îª¶È
+	if((longlat[0]-0)<0.001f) //è·å–0   ä¸æ›´æ–°
+		return;
+	//è½¬åŒ–ä¸ºåº¦
 	longlat[0]/=60;
 	longlat[1]/=60;
 	///Test 118.85644481,32.02762140
@@ -1318,42 +1320,42 @@ void CCreateMapDlg::showNowGPS(char *buff,long len){
 	///
 
 	CString strShow;
-	strShow.Format(L"¾­¶È(¡ã):%.8lf Î³¶È(¡ã):%.8lf",longlat[0],longlat[1]);
+	strShow.Format(L"ç»åº¦(Â°):%.8lf çº¬åº¦(Â°):%.8lf",longlat[0],longlat[1]);
 
 	m_RealGPS.x=longlat[0];
 	m_RealGPS.y=longlat[1];
 
-	drawMyCar(longlat);      //ÔÚ³µÖĞ»æÖÆ
+	drawMyCar(longlat);      //åœ¨è½¦ä¸­ç»˜åˆ¶
 	m_statusBar->SetText(strShow,1,0); 
 }
 
 
-//»ñÈ¡µÚÒ»¸öµã
+//è·å–ç¬¬ä¸€ä¸ªç‚¹
 void CCreateMapDlg::OnMenuP1()
 {
 	 m_nowCase=Case_getP1;
 	
 }
 
-//»ñÈ¡µÚ¶ş¸öµã
+//è·å–ç¬¬äºŒä¸ªç‚¹
 void CCreateMapDlg::OnMenuP2()
 {
 	m_nowCase=Case_getP2;
 }
 
-//¼ÆËãÎó²î
+//è®¡ç®—è¯¯å·®
 void CCreateMapDlg::OnMenuDeviation()
 {
 	m_nowCase=Case_Deviation;
 }
 
-//ÉèÖÃ±ê¶¨Êı¾İ Êó±êµã»÷Î»ÖÃ(¿Í»§Çø) Í¼Æ¬¿Ø¼ş´óĞ¡(rect) ±ê¶¨µãË÷Òı
+//è®¾ç½®æ ‡å®šæ•°æ® é¼ æ ‡ç‚¹å‡»ä½ç½®(å®¢æˆ·åŒº) å›¾ç‰‡æ§ä»¶å¤§å°(rect) æ ‡å®šç‚¹ç´¢å¼•
 void CCreateMapDlg::setCalibration(CPoint point,CRect rect,int index){
 		if(!isLoad())
 			return;
 
 		if(abs(m_RealGPS.x-.0l)<0.001)
-			AfxMessageBox(L"Î´ÄÜ»ñÈ¡GPSĞÅÏ¢",MB_OK);
+			AfxMessageBox(L"æœªèƒ½è·å–GPSä¿¡æ¯",MB_OK);
 		else{
 			point.x-=rect.left; point.y-=rect.top;
 			point.x+=m_srcRect.left; point.y+=m_srcRect.top;
@@ -1362,111 +1364,110 @@ void CCreateMapDlg::setCalibration(CPoint point,CRect rect,int index){
 			m_njustMap.buildGPS[index].lng=m_RealGPS.x;
 			m_njustMap.buildGPS[index].lat=m_RealGPS.y;
 			CString strShow;
-			strShow.Format(L"P%d ÉèÖÃÍê³É:px(%d,%d) GPS(%.8lf ,%.8lf)",
+			strShow.Format(L"P%d è®¾ç½®å®Œæˆ:px(%d,%d) GPS(%.8lf ,%.8lf)",
 				index+1,point.x,point.y,m_RealGPS.x,m_RealGPS.y);
 			AfxMessageBox(strShow,MB_OK);
 		}
 }
 
-//¼ÆËãÎó²î
+//è®¡ç®—è¯¯å·®
 void CCreateMapDlg::coumputerDevication(CPoint point,CRect rect){
 	if(!isLoad())
 		return;
-	
 	if(abs(m_RealGPS.x-.0l)<0.001){
-			AfxMessageBox(L"Î´ÄÜ»ñÈ¡GPSĞÅÏ¢",MB_OK);
+			AfxMessageBox(L"æœªèƒ½è·å–GPSä¿¡æ¯",MB_OK);
 			return;
 	}
 
 	point.x-=rect.left; point.y-=rect.top;
 	point.x+=m_srcRect.left; point.y+=m_srcRect.top;
 	if(m_njustMap.CheckIsCali()){
-		m_njustMap.computeScale();//¼ÆËã³ß¶È
+		m_njustMap.computeScale();//è®¡ç®—å°ºåº¦
 		COMPUTE_GPS cGPS;
 		cGPS.x=point.x;cGPS.y=point.y;
 		m_njustMap.pixel2GPS(cGPS);
 
 		CString strShow;
-		//¼ÆËã¾àÀë
+		//è®¡ç®—è·ç¦»
 		int cx,cy;
 		int rx,ry;
 		m_getMCInfo.blh2xy(cGPS.lat,cGPS.lng,cx,cy);
 		m_getMCInfo.blh2xy(m_RealGPS.y,m_RealGPS.x,rx,ry);
 		double delta=(cx-rx)*(cx-rx)+(cy-ry)*(cy-ry);
 		delta=sqrt(delta);
-		strShow.Format(L"¼ÆËãGPS:(%.8lf,%.8lf) ¾àÀëÎª%.5lfcm",cGPS.lng,cGPS.lat,delta);
+		strShow.Format(L"è®¡ç®—GPS:(%.8lf,%.8lf) è·ç¦»ä¸º%.5lfcm",cGPS.lng,cGPS.lat,delta);
 		AfxMessageBox(strShow,MB_OK);
 	}else{
-		AfxMessageBox(L"µØÍ¼Î´±ê¶¨£¬ÇëÏÈ±ê¶¨",MB_OK);
+		AfxMessageBox(L"åœ°å›¾æœªæ ‡å®šï¼Œè¯·å…ˆæ ‡å®š",MB_OK);
 	}
 }
 
 
-//¼ÆËã·Ö±æÂÊ
+//è®¡ç®—åˆ†è¾¨ç‡
 void CCreateMapDlg::OnResolution()
 {
 	if(m_njustMap.CheckIsCali()){
-		COMPUTE_GPS cGPS,cGPS1;  //ÉèÖÃÁ½¸ö×ø±ê
+		COMPUTE_GPS cGPS,cGPS1;  //è®¾ç½®ä¸¤ä¸ªåæ ‡
 		cGPS.x=0;cGPS.y=0;
 		cGPS1.x=1;cGPS1.y=0;
 
-		m_njustMap.pixel2GPS(cGPS);  //¸ù¾İ±ê¶¨½á¹û»»Ëã³ÉGPS
+		m_njustMap.pixel2GPS(cGPS);  //æ ¹æ®æ ‡å®šç»“æœæ¢ç®—æˆGPS
 		m_njustMap.pixel2GPS(cGPS1);
 
 		int x,y;
 		int x1,y1; 
-		m_getMCInfo.blh2xy(cGPS.lat,cGPS.lng,x,y);   //»»Ëã³Écm
+		m_getMCInfo.blh2xy(cGPS.lat,cGPS.lng,x,y);   //æ¢ç®—æˆcm
 		m_getMCInfo.blh2xy(cGPS1.lat,cGPS1.lng,x1,y1);
 		double delta1=(x1-x)*(x1-x)+(y1-y)*(y1-y);
 		delta1=sqrt(delta1);
 
-		//Í¬Ñù²½Öè¼ÆËãY·½ÏòÉÏµÄ·Ö±æÂÊ
+		//åŒæ ·æ­¥éª¤è®¡ç®—Yæ–¹å‘ä¸Šçš„åˆ†è¾¨ç‡
 		cGPS1.x=0;cGPS1.y=1;
 		m_getMCInfo.blh2xy(cGPS1.lat,cGPS1.lng,x1,y1);
 		double delta2=(x1-x)*(x1-x)+(y1-y)*(y1-y);
 		delta2=sqrt(delta2);
 
 		CString strShow;
-		strShow.Format(L"x,y·½ÏòÉÏ·Ö±æÂÊÎª %.5lfcm/pix %.5lfcm/pix",delta1,delta2);
+		strShow.Format(L"x,yæ–¹å‘ä¸Šåˆ†è¾¨ç‡ä¸º %.5lfcm/pix %.5lfcm/pix",delta1,delta2);
 		AfxMessageBox(strShow,MB_OK);
 	}else{
-		AfxMessageBox(L"µØÍ¼Î´±ê¶¨£¬ÇëÏÈ±ê¶¨",MB_OK);
+		AfxMessageBox(L"åœ°å›¾æœªæ ‡å®šï¼Œè¯·å…ˆæ ‡å®š",MB_OK);
 	}
 }
 
-//ĞŞ¸Ä»æÖÆ³µÌå¿ª¹Ø
+//ä¿®æ”¹ç»˜åˆ¶è½¦ä½“å¼€å…³
 void CCreateMapDlg::OnMenuDrawcar()
 {
-	// --- Step.1 --- ¼ì²é²Ù×÷ºÏ·¨ĞÔ
-	if(!isLoad())    //¼ì²éÊÇ·ñÔØÈëµØÍ¼
+	// --- Step.1 --- æ£€æŸ¥æ“ä½œåˆæ³•æ€§
+	if(!isLoad())    //æ£€æŸ¥æ˜¯å¦è½½å…¥åœ°å›¾
 		return;
 	
-	if(!m_njustMap.CheckIsCali()){   //¼ì²éµØÍ¼ÊÇ·ñ±ê¶¨
-		AfxMessageBox(L"Î´ÄÜ»ñÈ¡GPSĞÅÏ¢",MB_OK);
+	if(!m_njustMap.CheckIsCali()){   //æ£€æŸ¥åœ°å›¾æ˜¯å¦æ ‡å®š
+		AfxMessageBox(L"æœªèƒ½è·å–GPSä¿¡æ¯",MB_OK);
 			return;
 	}
-	if(abs(m_RealGPS.x-.0l)<0.001){   //¼ì²éÄÜ·ñ»î¹ßµ¼GPS
-			AfxMessageBox(L"Î´ÄÜ»ñÈ¡GPSĞÅÏ¢",MB_OK);
+	if(abs(m_RealGPS.x-.0l)<0.001){   //æ£€æŸ¥èƒ½å¦æ´»æƒ¯å¯¼GPS
+			AfxMessageBox(L"æœªèƒ½è·å–GPSä¿¡æ¯",MB_OK);
 			return;
 	}
-	// --- Step.2---  ´ò¿ª/¹Ø±Õ
+	// --- Step.2---  æ‰“å¼€/å…³é—­
 	m_isDrawCar=m_isDrawCar?false:true;
 }
 
-//»æÖÆ³µÌå
+//ç»˜åˆ¶è½¦ä½“
 void CCreateMapDlg::drawMyCar(double longlat[2]){
 
-	// --- Step.0 --- ¼ì²é¿ª¹ØÊÇ·ñ´ò¿ª
+	// --- Step.0 --- æ£€æŸ¥å¼€å…³æ˜¯å¦æ‰“å¼€
 	if(!m_isDrawCar)  
 		return ;
 
 
-	// --- Step.1 --- »ñÈ¡Í¼Æ¬DC
+	// --- Step.1 --- è·å–å›¾ç‰‡DC
 	HDC hdc=m_loadImage->GetDC();
 	CDC *pDC = CDC::FromHandle(hdc);
 	
 
-	// --- Step.2 --- ¼ÇÂ¼µã
+	// --- Step.2 --- è®°å½•ç‚¹
 	pDC->SelectStockObject(WHITE_BRUSH);
 	COMPUTE_GPS cg;
 	cg.lng=longlat[0];
@@ -1474,10 +1475,10 @@ void CCreateMapDlg::drawMyCar(double longlat[2]){
 	m_njustMap.GPS2pexel(cg);
 	CPoint p(cg.x,cg.y);
 	pDC->MoveTo(p);
-	int r=2;  //°ë¾¶
+	int r=2;  //åŠå¾„
 	pDC->Ellipse(p.x-r,p.y-r,p.x+r,p.y+r);
 
 	m_loadImage->ReleaseDC();
-	// --- Step.3---  ¸üĞÂÍ¼Ê¾
+	// --- Step.3---  æ›´æ–°å›¾ç¤º
 	m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect);
 }

@@ -1,5 +1,5 @@
-
-// CreateMapDlg.h : Í·ÎÄ¼ş
+ï»¿
+// CreateMapDlg.h : å¤´æ–‡ä»¶
 //
 
 #pragma once
@@ -17,72 +17,72 @@
 
 
 
-// CCreateMapDlg ¶Ô»°¿ò
+// CCreateMapDlg å¯¹è¯æ¡†
 class CCreateMapDlg : public CDialog
 {
-// ¹¹Ôì
+// æ„é€ 
 public:
-	CCreateMapDlg(CWnd* pParent = NULL);	// ±ê×¼¹¹Ôìº¯Êı
+	CCreateMapDlg(CWnd* pParent = NULL);	// æ ‡å‡†æ„é€ å‡½æ•°
 
-// ¶Ô»°¿òÊı¾İ
+// å¯¹è¯æ¡†æ•°æ®
 	enum { IDD = IDD_CREATEMAP_DIALOG };
 
 	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV Ö§³Ö
+	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV æ”¯æŒ
 
 
 private:
 	QDib qDib;
-// ÊµÏÖ
+// å®ç°
 protected:
 	HICON m_hIcon;
 
-	// Éú³ÉµÄÏûÏ¢Ó³Éäº¯Êı
+	// ç”Ÿæˆçš„æ¶ˆæ¯æ˜ å°„å‡½æ•°
 	virtual BOOL OnInitDialog();
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
 public:
-	bool m_isMove;			//Êó±êÊÇ·ñÔÚÒÆ¶¯
-	CPoint m_startPoint;   //×ó¼üÆô¶¯µã
-	CImage *m_loadImage;   //×îĞÂ»æÖÆµÄÍ¼Æ¬
-	CImage *m_backUpImage; //Ô­Ê¼Í¼Ïñ±¸·İ
-	CImage *m_canvas;	   //»­²¼ ÎªÁË¼ÇÂ¼»æÖÆµã¼¯ 
-	//CImage *m_canvas1;	   //»­²¼ ÎªÁË¼ÇÂ¼»æÖÆµã¼¯ 
+	bool m_isMove;			//é¼ æ ‡æ˜¯å¦åœ¨ç§»åŠ¨
+	CPoint m_startPoint;   //å·¦é”®å¯åŠ¨ç‚¹
+	CImage *m_loadImage;   //æœ€æ–°ç»˜åˆ¶çš„å›¾ç‰‡
+	CImage *m_backUpImage; //åŸå§‹å›¾åƒå¤‡ä»½
+	CImage *m_canvas;	   //ç”»å¸ƒ ä¸ºäº†è®°å½•ç»˜åˆ¶ç‚¹é›† 
+	//CImage *m_canvas1;	   //ç”»å¸ƒ ä¸ºäº†è®°å½•ç»˜åˆ¶ç‚¹é›† 
 
-	CRect m_srcRect;       //Ô­Í¼ÉÏµÄÊÓ´° 
-	CRect m_picRect;       //Í¼Æ¬¿Ø¼ş´óĞ¡
-	bool m_isDrawLine;     //ÊÇ·ñ½øÈë»­×´Ì¬
-	CPoint m_lineP;			//»­ÏßµÄÆğÊ¼µãºÍÖÕµã
-	CPoint m_nodeP;         //»æÖÆÂ·¿ÚÊ±ºòĞèÒªµÄµã
-	CDC *m_pPicDC;		 //Í¼Æ¬¿Ø¼şDC
-	vector<DRAW_RECORD> m_records; //»æÍ¼²Ù×÷¼ÇÂ¼±í
-	NJUSTMap m_njustMap;     //×îºóÊ¹ÓÃµÄµØÍ¼ÍØÆË½á¹¹(¼ÆËãºÍ´æ´¢)
+	CRect m_srcRect;       //åŸå›¾ä¸Šçš„è§†çª— 
+	CRect m_picRect;       //å›¾ç‰‡æ§ä»¶å¤§å°
+	bool m_isDrawLine;     //æ˜¯å¦è¿›å…¥ç”»çŠ¶æ€
+	CPoint m_lineP;			//ç”»çº¿çš„èµ·å§‹ç‚¹å’Œç»ˆç‚¹
+	CPoint m_nodeP;         //ç»˜åˆ¶è·¯å£æ—¶å€™éœ€è¦çš„ç‚¹
+	CDC *m_pPicDC;		 //å›¾ç‰‡æ§ä»¶DC
+	vector<DRAW_RECORD> m_records; //ç»˜å›¾æ“ä½œè®°å½•è¡¨
+	NJUSTMap m_njustMap;     //æœ€åä½¿ç”¨çš„åœ°å›¾æ‹“æ‰‘ç»“æ„(è®¡ç®—å’Œå­˜å‚¨)
 
-	CONTROL_CASE m_nowCase;         //Êó±êµã»÷µ±Ç°×´Ì¬
-	CONTROL_BEZIER control_bezier; //»æÖÆ±´Èû¶ûÇúÏßÊ± ¼ÇÂ¼Êó±ê×´Ì¬
-	CONTORL_POINTS control_points;//»æÖÆ¹ÂÁ¢µãÊ± ¼ÇÂ¼Êó±ê×´Ì¬
+	CONTROL_CASE m_nowCase;         //é¼ æ ‡ç‚¹å‡»å½“å‰çŠ¶æ€
+	CONTROL_BEZIER control_bezier; //ç»˜åˆ¶è´å¡å°”æ›²çº¿æ—¶ è®°å½•é¼ æ ‡çŠ¶æ€
+	CONTORL_POINTS control_points;//ç»˜åˆ¶å­¤ç«‹ç‚¹æ—¶ è®°å½•é¼ æ ‡çŠ¶æ€
 
-	CreateLineDlg *m_lineDlg;       //µÀÂ·×Ó´°¿Ú
-	CreateCrossDlg *m_crossDlg;  //Â·¿Ú×Ó´°¿Ús
-	CPoint m_Line2ID ;				//x yÎªÖ±ÏßÁ½±ßµÄID
+	CreateLineDlg *m_lineDlg;       //é“è·¯å­çª—å£
+	CreateCrossDlg *m_crossDlg;  //è·¯å£å­çª—å£s
+	CPoint m_Line2ID ;				//x yä¸ºç›´çº¿ä¸¤è¾¹çš„ID
 
-	CString m_curMapName;      //µ±Ç°´ò¿ªµØÍ¼µÄÃû×Ö
+	CString m_curMapName;      //å½“å‰æ‰“å¼€åœ°å›¾çš„åå­—
 
-	//¿Ø¼şÏà¹Ø
-	CListBox m_listRecord;  //»æ»­¼ÇÂ¼ÁĞ±í
-	CListBox m_listMap;    //µØÍ¼½á¹¹ÁĞ±í
-	CStatusBarCtrl* m_statusBar;  //×´Ì¬À¸
-	CList<CRect, CRect> m_listRect;  //¿Ø¼ş´óĞ¡µ÷Õû
+	//æ§ä»¶ç›¸å…³
+	CListBox m_listRecord;  //ç»˜ç”»è®°å½•åˆ—è¡¨
+	CListBox m_listMap;    //åœ°å›¾ç»“æ„åˆ—è¡¨
+	CStatusBarCtrl* m_statusBar;  //çŠ¶æ€æ 
+	CList<CRect, CRect> m_listRect;  //æ§ä»¶å¤§å°è°ƒæ•´
 
-	CreateMapCommunication m_getMCInfo;  //GPSÍ¨ĞÅ
-	MAP_DOUBLE_POINT m_RealGPS;         //´Ó¹ßµ¼»ñÈ¡µÄGPS
-	unsigned int m_clockGPS;			//¿ØÖÆ½ÓÊÜÆµÂÊ
+	CreateMapCommunication m_getMCInfo;  //GPSé€šä¿¡
+	MAP_DOUBLE_POINT m_RealGPS;         //ä»æƒ¯å¯¼è·å–çš„GPS
+	unsigned int m_clockGPS;			//æ§åˆ¶æ¥å—é¢‘ç‡
 	bool m_isDrawCar;                   //false
 
-	////////////////////////////////////////////////////////////////////////// ·´Ïò²Ù×÷±äÁ¿
-	vector<MAP_DOUBLE_POINT> m_Show_GPSList; //¶ÁÈ¡µÄGFS
-	int m_Show_cur; //µ±Ç°¶Áµ½µÄĞòÁĞÎ»ÖÃ
+	////////////////////////////////////////////////////////////////////////// åå‘æ“ä½œå˜é‡
+	vector<MAP_DOUBLE_POINT> m_Show_GPSList; //è¯»å–çš„GFS
+	int m_Show_cur; //å½“å‰è¯»åˆ°çš„åºåˆ—ä½ç½®
 	//////////////////////////////////////////////////////////////////////////
 
 	CStatic m_picMain;
@@ -100,45 +100,45 @@ public:
 
 
 
-//ÒµÎñÂß¼­ ¹¦ÄÜº¯Êı
+//ä¸šåŠ¡é€»è¾‘ åŠŸèƒ½å‡½æ•°
 private :
-	//¶ÔÖ±Ïß»æÍ¼µÄ¾ßÌå²Ù×÷
-	//point:µ±Ç°µã×ø±ê(È«´°Ìå)  rect:¿Ø¼ş×ø±ê
+	//å¯¹ç›´çº¿ç»˜å›¾çš„å…·ä½“æ“ä½œ
+	//point:å½“å‰ç‚¹åæ ‡(å…¨çª—ä½“)  rect:æ§ä»¶åæ ‡
 	void DlgDrawLine(CPoint point,CRect rect);
 
-	//¶ÔÇúÏß»æÍ¼µÄ¾ßÌå²Ù×÷
-	//point:µ±Ç°µã×ø±ê(È«´°Ìå)  rect:¿Ø¼ş×ø±ê
+	//å¯¹æ›²çº¿ç»˜å›¾çš„å…·ä½“æ“ä½œ
+	//point:å½“å‰ç‚¹åæ ‡(å…¨çª—ä½“)  rect:æ§ä»¶åæ ‡
 	void DlgDrawBezier(CPoint point ,CRect rect);
 
-	//¶ÔÀëÉ¢µã»æÍ¼µÄ¾ßÌå²Ù×÷
-	//point:µ±Ç°µã×ø±ê(È«´°Ìå)  rect:¿Ø¼ş×ø±ê
+	//å¯¹ç¦»æ•£ç‚¹ç»˜å›¾çš„å…·ä½“æ“ä½œ
+	//point:å½“å‰ç‚¹åæ ‡(å…¨çª—ä½“)  rect:æ§ä»¶åæ ‡
 	void DlgDrawPoints(CPoint point ,CRect rect);
 
-	//¶Ô½Úµã»æÍ¼µÄ¾ßÌå²Ù×÷
-	//point:µ±Ç°µã×ø±ê(È«´°Ìå)  rect:¿Ø¼ş×ø±ê
+	//å¯¹èŠ‚ç‚¹ç»˜å›¾çš„å…·ä½“æ“ä½œ
+	//point:å½“å‰ç‚¹åæ ‡(å…¨çª—ä½“)  rect:æ§ä»¶åæ ‡
 	void DlgDrawMark(CPoint point,CRect rect);
 
-	//ÏÔÊ¾´°ÌåÖØ»æ
+	//æ˜¾ç¤ºçª—ä½“é‡ç»˜
 	void DlgReDraw();
 
-	//ĞòÁĞ»¯Êı¾İ
+	//åºåˆ—åŒ–æ•°æ®
 	void serial(CFile &file);
 
-	//·´ĞòÁĞ»¯
+	//ååºåˆ—åŒ–
 	void enserial(CFile &file);
 	
-	//ÉèÖÃ±ê¶¨Êı¾İ 
+	//è®¾ç½®æ ‡å®šæ•°æ® 
 	void setCalibration(CPoint p,CRect rect,int index);
-	//¼ÆËãÎó²î
+	//è®¡ç®—è¯¯å·®
 	void coumputerDevication(CPoint p,CRect rect);
 
-	//¶¯Ì¬µ÷Õû¿Ø¼şÎ»ÖÃ 
+	//åŠ¨æ€è°ƒæ•´æ§ä»¶ä½ç½® 
 	void initCtlPosition();
-	//³õÊ¼»¯×´Ì¬À¸
+	//åˆå§‹åŒ–çŠ¶æ€æ 
 	void initStatusBar();
-	//¼ì²éÊÇ·ñÔØÈëµØÍ¼
+	//æ£€æŸ¥æ˜¯å¦è½½å…¥åœ°å›¾
 	bool isLoad();
-	//»æÖÆ³µÌå
+	//ç»˜åˆ¶è½¦ä½“
 	void drawMyCar(double longlat[2]);
 
 public:
