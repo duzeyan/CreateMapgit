@@ -13,6 +13,9 @@ namespace drawmap{
 	//绘制 道路标记
 	void DrawRoadMark(CDC *pdc,const vector<CPoint> &pV,int id);
 
+	//绘制 障碍物 p1圆心 p2圆上一点
+	void DrawObstacles(CDC *pdc,CPoint p1,CPoint p2,COLORREF color);
+
 	//在目标上 用bresenham直线绘法绘图
 	void DrawLineBresenham(CDC *pdc,CPoint p1,CPoint p2,COLORREF color);
 

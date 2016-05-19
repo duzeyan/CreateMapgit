@@ -111,6 +111,7 @@
     <ClInclude Include="GDITest.h" />
     <ClInclude Include="MapDrawControl.h" />
     <ClInclude Include="MAP__BASIC_data.h" />
+    <ClInclude Include="ModifyNode.h" />
     <ClInclude Include="NJUSTMap.h" />
     <ClInclude Include="NJUST_MAP_data.h" />
     <ClInclude Include="NJUST_MC_typedef.h" />
@@ -128,6 +129,7 @@
     <ClCompile Include="CreateMapDlg.cpp" />
     <ClCompile Include="DIBAPI.CPP" />
     <ClCompile Include="DrawMapMark.cpp" />
+    <ClCompile Include="ModifyNode.cpp" />
     <ClCompile Include="MYFILE.CPP" />
     <ClCompile Include="NJUSTMap.cpp" />
     <ClCompile Include="QDib.cpp" />

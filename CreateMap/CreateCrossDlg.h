@@ -6,7 +6,6 @@
 using namespace std;
 
 // CreateCrossDlg ¶Ô»°¿ò
-
 class CreateCrossDlg : public CDialogEx
 {
 	DECLARE_DYNAMIC(CreateCrossDlg)

@@ -65,7 +65,7 @@ void NJUSTMap::deleteEleByID(bool isNode,int id){
 }
 
 //为了简化过程 默认是按照顺序连接 !!!所以绘图时一定要按照头尾顺序绘制!!! ID向量也是有序的,不可错分
-bool NJUSTMap::merge2Line(const vector<DRAW_RECORD> &mergeV,CPoint line2ID){
+bool NJUSTMap::merge2Line(const vector<DRAW_RECORD> &mergeV,MAP_ROAD package){
 	unsigned int i,j;
 	CREATE_MAP_ROAD road;
 	//目前只支持直线和断点的连接 设置线上内容
@@ -91,13 +91,17 @@ bool NJUSTMap::merge2Line(const vector<DRAW_RECORD> &mergeV,CPoint line2ID){
 			break;
 		}
 	}
+	//补充设置ID
 	if(roads.empty()){
-		road.road.idself=START_LINE_ID;
+		package.idself=START_LINE_ID;
 	}else{
-		road.road.idself=roads.back().road.idself+1;
+		package.idself=roads.back().road.idself+1;
 	}
-	road.road.idstart=line2ID.x+START_NODE_ID-1;
-	road.road.idend=line2ID.y+START_NODE_ID-1;
+	package.idstart=package.idstart+START_NODE_ID-1;
+	package.idend=package.idend+START_NODE_ID-1;
+
+	//全部赋值存在地图结构中
+	road.road=package;
 
 	//更新 如果之前有相同元素则剔除
 	for(i=0;i<roads.size();i++){
@@ -107,7 +111,31 @@ bool NJUSTMap::merge2Line(const vector<DRAW_RECORD> &mergeV,CPoint line2ID){
 		}
 	}
 	roads.push_back(road);
+
+	//设置 相应节点的邻接ID
+	for( int i=0;i<nodes.size();i++){
+		if(nodes[i].node.idself==package.idstart){ //设置出发路口 
+			  int nindex=nodes[i].node.neigh;
+			  nodes[i].node.NeighLineID[nindex]=package.idself;
+			  nodes[i].node.NeighNoteID[nindex]=package.idend;
+			  nodes[i].node.neigh++;
+			  assert(nodes[i].node.neigh<4); //最多四个路口
+		}
+		if(nodes[i].node.idself==package.idend){
+			  int nindex=nodes[i].node.neigh;
+			  nodes[i].node.NeighLineID[nindex]=package.idself;
+			  nodes[i].node.NeighNoteID[nindex]=package.idstart;
+			  nodes[i].node.neigh++;
+			  assert(nodes[i].node.neigh<4); //最多四个路口
+		}
+	}
 	return true;
+}
+
+void NJUSTMap::removeObstaclesByID(int id){
+	auto it=find(obstacles.begin(),obstacles.end(),id);
+	assert(it!=obstacles.end());
+	obstacles.erase(it);
 }
 
 //生成路口

@@ -84,11 +84,14 @@
     <ClInclude Include="UDP.h">
       <Filter>通信模块</Filter>
     </ClInclude>
-    <ClInclude Include="NJUST_MAP_data.h">
-      <Filter>通信模块</Filter>
-    </ClInclude>
     <ClInclude Include="NJUST_MC_typedef.h">
       <Filter>通信模块</Filter>
+    </ClInclude>
+    <ClInclude Include="NJUST_MAP_data.h">
+      <Filter>地图结构</Filter>
+    </ClInclude>
+    <ClInclude Include="ModifyNode.h">
+      <Filter>对话框\附属对话框</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -127,6 +130,9 @@
     </ClCompile>
     <ClCompile Include="CreateMapCommunication.cpp">
       <Filter>通信模块</Filter>
+    </ClCompile>
+    <ClCompile Include="ModifyNode.cpp">
+      <Filter>对话框\附属对话框</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

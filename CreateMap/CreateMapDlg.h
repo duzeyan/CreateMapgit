@@ -10,6 +10,7 @@
 #include"DrawMapMark.h"
 #include "CreateLineDlg.h"
 #include"CreateCrossDlg.h"
+#include "ModifyNode.h"
 #include "CreateMapCommunication.h"
 #include "resource.h"
 #include<math.h>
@@ -55,6 +56,7 @@ public:
 	bool m_isDrawLine;     //是否进入画状态
 	CPoint m_lineP;			//画线的起始点和终点
 	CPoint m_nodeP;         //绘制路口时候需要的点
+	CPoint m_obP;           //绘制障碍物时候的标记点
 	CDC *m_pPicDC;		 //图片控件DC
 	vector<DRAW_RECORD> m_records; //绘图操作记录表
 	NJUSTMap m_njustMap;     //最后使用的地图拓扑结构(计算和存储)
@@ -65,6 +67,7 @@ public:
 
 	CreateLineDlg *m_lineDlg;       //道路子窗口
 	CreateCrossDlg *m_crossDlg;  //路口子窗口s
+	ModifyNode *m_nodeDlg;         //修改节点属性的子窗口
 	CPoint m_Line2ID ;				//x y为直线两边的ID
 
 	CString m_curMapName;      //当前打开地图的名字
@@ -118,6 +121,9 @@ private :
 	//point:当前点坐标(全窗体)  rect:控件坐标
 	void DlgDrawMark(CPoint point,CRect rect);
 
+	//绘制障碍物s
+	void DlgDrawObstacle(CPoint point ,CRect rect);
+
 	//显示窗体重绘
 	void DlgReDraw();
 
@@ -129,15 +135,19 @@ private :
 	
 	//设置标定数据 
 	void setCalibration(CPoint p,CRect rect,int index);
+
 	//计算误差
 	void coumputerDevication(CPoint p,CRect rect);
 
 	//动态调整控件位置 
 	void initCtlPosition();
+
 	//初始化状态栏
 	void initStatusBar();
+
 	//检查是否载入地图
 	bool isLoad();
+
 	//绘制车体
 	void drawMyCar(double longlat[2]);
 
@@ -181,4 +191,10 @@ public:
 	afx_msg void OnDestroy();
 	afx_msg void OnResolution();
 	afx_msg void OnMenuDrawcar();
+	afx_msg void OnBnClickedBtnob();
+	afx_msg void OnMenuPro1();
+protected:
+	afx_msg LRESULT OnMapModifyLine(WPARAM wParam, LPARAM lParam);
+public:
+	afx_msg void OnNodepro();
 };

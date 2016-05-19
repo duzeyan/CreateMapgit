@@ -11,15 +11,15 @@ using namespace std;
 
 //正在绘制的内容
 enum CONTROL_CASE{
-	Case_None,
-	//Case_Moveing,
-	Case_Line,
-	Case_BEZIER,
-	Case_Points,
-	Case_MarkNode,
-	Case_getP1,
-	Case_getP2,
-	Case_Deviation
+	Case_None,       //默认操作
+	Case_Line,       //画直线
+	Case_BEZIER,     //画曲线
+	Case_Points,      //画孤立点
+	Case_MarkNode,     //标注路口
+	Case_getP1,        //标定点1
+	Case_getP2,       //标定点2
+	Case_Deviation,     //计算误差
+	Case_MarkObstacle  //标记障碍物
 	//..
 };
 
@@ -37,9 +37,13 @@ typedef struct  CONTORL_POINTS{
 
 //绘图操作
 typedef struct DRAW_RECORD{
-	int type;  //0:line 1:bezier 2:points 3:node 4:road
+	int type;  //0:line 1:bezier 2:points 3:node 4:road 5:障碍物
 	int id;    //节点或道路的ID
 	vector<CPoint> drawPoints;//用于绘图的点
+	bool operator==(const int& type) // 操作运算符重载 比较类型相等
+    {
+        return this->type==type;
+    }
 }DRAW_RECORD;
 
 //绘图系统中的路口

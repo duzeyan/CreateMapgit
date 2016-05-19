@@ -83,6 +83,21 @@ void drawmap::LogLineBresenham(CPoint p1,CPoint p2,vector<CPoint> &pV){
 }
 
 
+//绘制 障碍物 
+void drawmap::DrawObstacles(CDC *pdc,CPoint p1,CPoint p2,COLORREF color){
+	CPen pen;
+	
+	CPoint pt=p2-p1;
+	int r=sqrt(pt.x*pt.x+pt.y*pt.y);
+
+	pen.CreatePen(PS_SOLID,1,color);
+	pdc->SelectStockObject(NULL_BRUSH);
+	pdc->SelectObject(pen);
+	pdc->MoveTo(p1);
+	pdc->Ellipse(p1.x-r,p1.y-r,p1.x+r,p1.y+r);
+
+}
+
 //绘制一个路口的标志
 void drawmap::DrawNodeMark(CDC *pdc,CPoint p,unsigned int r,COLORREF color,int  indexID){
 	CPen pen;
@@ -154,24 +169,15 @@ void drawmap::DrawByRecord(CImage *ptrImage,const vector<DRAW_RECORD>  &vRecord,
 			   }
 	   //road 道路
 		case 4:{
-			  //      unsigned midIndex=vRecord[i].drawPoints.size()/2;
-					//CPoint p=vRecord[i].drawPoints[midIndex];
-					//CPen pen;
-					//int r=10;
-					//CRect textRect(p.x+r,p.y-2*r,p.x+5*r,p.y-r);
-
-					//pen.CreatePen(PS_SOLID,1,color);
-					//pDC->SelectStockObject(NULL_BRUSH);
-					//pDC->SelectObject(pen);
-					//pDC->MoveTo(p);
-					//pDC->Ellipse(p.x-r,p.y-r,p.x+r,p.y+r);
-
-					//CString outStr;
-					//outStr.Format(L"道路:%d",vRecord[i].id); //ID是显示ID
-					//pDC->DrawTextEx(outStr,&textRect,DT_LEFT,NULL);
-
 					drawmap::DrawRoadMark(pDC,vRecord[i].drawPoints,vRecord[i].id);
 					break;
+			   }
+		case 5:{
+					drawmap::DrawObstacles(pDC,
+											vRecord[i].drawPoints[0],
+											vRecord[i].drawPoints[1],
+											RGB(255,255,0));
+					break;	
 			   }
 		default:
 			break;
@@ -273,6 +279,10 @@ CString drawmap::PrintRecord(DRAW_RECORD record){
 			   }
 		case 4:{
 				str.Format(L"道路:%d",record.id);
+				break;
+			   }
+		case 5:{
+				str.Format(L"障碍物|p:(%d,%d)",record.drawPoints[0].x,record.drawPoints[0].y);
 				break;
 			   }
 	default:

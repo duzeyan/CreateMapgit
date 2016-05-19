@@ -91,6 +91,10 @@ ON_COMMAND(ID_MENU_DEVIATION, &CCreateMapDlg::OnMenuDeviation)
 ON_WM_DESTROY()
 ON_COMMAND(ID_RESOLUTION, &CCreateMapDlg::OnResolution)
 ON_COMMAND(ID_MENU_DRAWCAR, &CCreateMapDlg::OnMenuDrawcar)
+ON_BN_CLICKED(IDC_BTNOB, &CCreateMapDlg::OnBnClickedBtnob)
+ON_COMMAND(ID_MENU_PRO1, &CCreateMapDlg::OnMenuPro1)
+ON_MESSAGE(MAP_MODIFY_LINE, &CCreateMapDlg::OnMapModifyLine)
+ON_COMMAND(ID_NODEPRO, &CCreateMapDlg::OnNodepro)
 END_MESSAGE_MAP()
 
 //手动注册事件响应
@@ -99,6 +103,8 @@ END_MESSAGE_MAP()
 //END_MESSAGE_MAP()
 
 // CCreateMapDlg 消息处理程序
+
+
 
 BOOL CCreateMapDlg::OnInitDialog()
 {
@@ -125,6 +131,7 @@ BOOL CCreateMapDlg::OnInitDialog()
 	m_Show_cur=0;						//反向绘制 当前索引
 	m_clockGPS=0;						//GPS接受频率
 	m_isDrawCar=false;					// 是否画出车体
+
 	//初始化控件
 	initStatusBar();                    //初始化底部状态栏
 	initCtlPosition();                  //初始化记录控件位置
@@ -230,6 +237,7 @@ void CCreateMapDlg::OnDestroy()
 
 
 ///////////////////////////控件事件响应///////////////////////////////////////////////
+
 //鼠标左键落下
 void CCreateMapDlg::OnLButtonDown(UINT nFlags, CPoint point)
 {
@@ -277,6 +285,9 @@ void CCreateMapDlg::OnLButtonDown(UINT nFlags, CPoint point)
 									m_nowCase=Case_None;
 									break;
 								}
+			case Case_MarkObstacle:{
+									DlgDrawObstacle(point,rect);
+								   }
 			//默认移动
 			default:{
 							m_isMove=true;
@@ -400,14 +411,23 @@ void CCreateMapDlg::OnBnClickedButtondel()
         m_listRecord.GetSelItems(nItemCount,indexBuf);
         for (i = nItemCount-1 ;i >-1;i--)
         {
-			if(m_records[indexBuf[i]].type==4){ //cross信息不在绘画表中删除
+			if(m_records[indexBuf[i]].type==4){ //cross信息不在绘画表中删除 pass
 				continue;
 			}
-            m_listRecord.DeleteString(indexBuf[i]);           //删除显示条目
-			if(m_records[indexBuf[i]].type==3){						//删除路口 地图结构
+
+			// --删除显示条目
+            m_listRecord.DeleteString(indexBuf[i]);  
+
+			// -- 删除路口 地图结构
+			if(m_records[indexBuf[i]].type==3){						
 				m_njustMap.deleteEleByID(true,m_records[indexBuf[i]].id+START_NODE_ID);
 			}
-			m_records.erase(m_records.begin()+indexBuf[i]);	  //删除动作记录表
+			if(m_records[indexBuf[i]].type==5){  
+				m_njustMap.removeObstaclesByID(m_records[indexBuf[i]].id);
+			}
+
+			// -- 删除动作记录表
+			m_records.erase(m_records.begin()+indexBuf[i]);	  
         }
         delete[]indexBuf;
 
@@ -615,6 +635,14 @@ void CCreateMapDlg::OnBnClickedButtondelineout()
 }
 
 
+//标记障碍物
+void CCreateMapDlg::OnBnClickedBtnob()
+{
+	if(!isLoad())
+		return;
+	m_nowCase=Case_MarkObstacle;			//改变绘图状态
+}
+
 
 ///////////////////////绘图逻辑代码//////////////////////////
 
@@ -745,6 +773,71 @@ void CCreateMapDlg::DlgDrawPoints(CPoint point ,CRect rect){
 
 
 //************************************
+// 函数名:   DlgDrawObstacle
+// 函数描述：绘制障碍物
+// 参数: 	 CPoint point 当前点坐标(全窗体)
+// 参数: 	 CRect rect rect:控件坐标
+// 返回类型: void
+// 日期：	 2016/05/17
+//************************************
+void CCreateMapDlg::DlgDrawObstacle(CPoint point ,CRect rect){
+	// --- Step.1 --- 判断第几个点
+	if(m_obP.x==0&&m_obP.y==0){
+		// --- Step.2.1 --- 记录第一个点
+			point.x-=rect.left; point.y-=rect.top;
+			point.x+=m_srcRect.left; point.y+=m_srcRect.top;
+			m_obP=point;
+	}else{
+		// --- Step.2.2 --- 绘制
+			DRAW_RECORD dr;
+	
+
+			HDC hdc=m_loadImage->GetDC();
+			CDC *pDC = CDC::FromHandle(hdc);
+			point.x-=rect.left; point.y-=rect.top;
+			point.x+=m_srcRect.left; point.y+=m_srcRect.top;
+	
+			drawmap::DrawObstacles(pDC,m_obP,point,RGB(255,255,0));
+			m_loadImage->ReleaseDC();
+
+			// --- Step.2.4 --- 记录圆心和边上的一点
+            dr.drawPoints.push_back(m_obP);
+			dr.drawPoints.push_back(point);
+
+			// --- Step.2.5 --- 记录到"绘画动作表"中	
+			int theID=0;
+			reverse(m_records.begin(),m_records.end());  //倒置
+			auto it=find(m_records.begin(),m_records.end(),5); //找到倒置后的第一个障碍物
+			if(it!=m_records.end()){   //找到最后一个
+				theID=it->id+1;
+			}
+
+			reverse(m_records.begin(),m_records.end()); //倒置回去
+			dr.id=theID;
+			dr.type=5;
+			m_records.push_back(dr);
+			m_listRecord.AddString(drawmap::PrintRecord(dr)); 
+
+
+			// --- Step.2.6 --- 记录到地图结构中	
+			CREATE_MAP_OBSTACLE ob;
+			ob.id=theID;
+			ob.x=m_obP.x;
+			ob.y=m_obP.y;
+			CPoint p=point-m_obP;
+			ob.rPix=sqrt(p.x*p.x+p.y*p.y);
+			m_njustMap.obstacles.push_back(ob);
+			
+
+			// --- Step.3 --- 绘制和重置状态
+			m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect); 	
+			m_obP.SetPoint(0,0);
+			m_nowCase=Case_None;
+	}
+}
+
+
+//************************************
 // 函数名:   DlgDrawMark
 // 函数描述：绘制路口
 // 参数: 	 CPoint point
@@ -836,8 +929,8 @@ afx_msg LRESULT CCreateMapDlg::OnMapSetline2id(WPARAM wParam, LPARAM lParam)
 		}
 		delete[]indexBuf;
 		//合并到节点
-		CPoint *p=(CPoint*)lParam;
-		if(m_njustMap.merge2Line(tempRecord,*p)){
+		MAP_ROAD *pPackage=(MAP_ROAD*)lParam;
+		if(m_njustMap.merge2Line(tempRecord,*pPackage)){
 			//绘画动作列表添加动作
 			DRAW_RECORD dr;
 			// --- Step.2.2 --- 根据两点 在图中绘制直线
@@ -871,7 +964,7 @@ afx_msg LRESULT CCreateMapDlg::OnMapSetline2id(WPARAM wParam, LPARAM lParam)
 		}else{
 			AfxMessageBox(L"合并有误，检查是否添加非法动作",MB_OK);
 		}
-		delete[] p; //用完释放内存
+		delete[] pPackage; //用完释放内存
 	}else{
 		AfxMessageBox(L"未选取绘图动作",MB_OK);
 	}
@@ -1292,9 +1385,91 @@ void CCreateMapDlg::OnContextMenu(CWnd* /*pWnd*/, CPoint /*point*/)
 
 }
 
+//修改道路属性
+void CCreateMapDlg::OnMenuPro1()
+{
+	if(!isLoad())
+		return;
+
+	int index=m_listMap.GetCurSel();
+	if(index!=LB_ERR){
+		int ls=m_njustMap.roads.size();
+		if(index<ls){						//选中了道路
+			//删除绘画列表中的标注
+			int showid=m_njustMap.roads[index].road.idself-START_LINE_ID+1;
+
+			// --- Step.1 ---初始化参数
+			unsigned int i;
+			vector<int> IDIndex;
+			for(i=0;i<m_njustMap.nodes.size();i++)
+				IDIndex.push_back(m_njustMap.nodes[i].node.idself-START_NODE_ID);
+
+			// --- Step.2 --- 构建子对话框
+			if(m_lineDlg==NULL){   //第一次创建
+				m_lineDlg=new CreateLineDlg();
+				m_lineDlg->Create(IDD_CREATELINE_DIALOG,this);
+			}
+			m_lineDlg->Initialize(IDIndex);
+
+			m_lineDlg->setModify(m_njustMap.roads[index].road);
+			m_lineDlg->ShowWindow(SW_SHOW);	
+
+			
+	
+		}else{								//选中了路口
+			//地图结构删除 路口
+			//m_njustMap.crosses.erase(m_njustMap.crosses.begin()+index-ls);
+			//列表中删除
+			//m_listMap.DeleteString(index);
+		}
 
 
+	}
+}
 
+//响应修改道路信息消息
+afx_msg LRESULT CCreateMapDlg::OnMapModifyLine(WPARAM wParam, LPARAM lParam)
+{
+	MAP_ROAD* package=(MAP_ROAD*)lParam;
+
+	//id需要转化
+	package->idstart=package->idstart+START_NODE_ID-1;
+	package->idend=package->idend+START_NODE_ID-1;
+
+	//补充设置ID
+	for(int i=0;i<m_njustMap.roads.size();i++){
+		if(m_njustMap.roads[i].road.idself==package->idself){ //找到目标
+			m_njustMap.roads[i].road=*package;				 //替换
+			break;
+		}
+	}
+
+	return 0;
+}
+
+//修改路口(node)属性
+void CCreateMapDlg::OnNodepro()
+{
+	if(!isLoad())
+		return;
+
+	int nItemCount = m_listRecord.GetSelCount();
+	if (0 != nItemCount){
+		if(nItemCount==1){ //此时只能选中一条记录且为 路口
+			int* indexBuf = new int;
+			memset(indexBuf,0,nItemCount*sizeof(int));
+			m_listRecord.GetSelItems(nItemCount,indexBuf);
+			//vector<DRAW_RECORD> tempRecord;			//临时记录选中条目
+			//必须是道路节点
+			if(m_records[*indexBuf].type==3){
+				//节点窗口
+
+				//
+			}
+			delete[]indexBuf;
+		}
+	}
+}
 
 /////////////////////////////标定相关操作/////////////////////////////////////////////
 void CCreateMapDlg::showNowGPS(char *buff,long len){
@@ -1482,3 +1657,13 @@ void CCreateMapDlg::drawMyCar(double longlat[2]){
 	// --- Step.3---  更新图示
 	m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect);
 }
+
+
+
+
+
+
+
+
+
+
