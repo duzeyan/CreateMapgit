@@ -18,6 +18,9 @@ public :
 	void setValue(MAP_NODE node);   //传递原始数据
 	void initView();			    //初始化视窗
 
+private:
+	MAP_NODE m_node;   //用来接收和传递数据
+
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
 
@@ -25,4 +28,11 @@ protected:
 public:
 	int m_radioNodeType;
 	afx_msg void OnBnClickedUnknow();
+	int m_radioHLDP;
+	afx_msg void OnBnClickedUnknow2();
+	int m_radioHLDType;
+	afx_msg void OnBnClickedNodel();
+	int m_radioz;
+	afx_msg void OnBnClickedHavez();
+	afx_msg void OnBnClickedOk();
 };

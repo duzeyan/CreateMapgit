@@ -16,8 +16,9 @@ enum CONTROL_CASE{
 	Case_BEZIER,     //画曲线
 	Case_Points,      //画孤立点
 	Case_MarkNode,     //标注路口
-	Case_getP1,        //标定点1
-	Case_getP2,       //标定点2
+	Case_getP1,         //标定点1
+	Case_getP2,        //标定点2
+	Case_getP3,		   //标定点3
 	Case_Deviation,     //计算误差
 	Case_MarkObstacle  //标记障碍物
 	//..

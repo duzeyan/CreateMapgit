@@ -95,6 +95,8 @@ ON_BN_CLICKED(IDC_BTNOB, &CCreateMapDlg::OnBnClickedBtnob)
 ON_COMMAND(ID_MENU_PRO1, &CCreateMapDlg::OnMenuPro1)
 ON_MESSAGE(MAP_MODIFY_LINE, &CCreateMapDlg::OnMapModifyLine)
 ON_COMMAND(ID_NODEPRO, &CCreateMapDlg::OnNodepro)
+ON_MESSAGE(MAP_MODIF_NODE, &CCreateMapDlg::OnMapModifNode)
+ON_COMMAND(ID_MENU_P3, &CCreateMapDlg::OnMenuP3)
 END_MESSAGE_MAP()
 
 //手动注册事件响应
@@ -127,6 +129,7 @@ BOOL CCreateMapDlg::OnInitDialog()
 	control_bezier.index=0;				//曲线初始化
 	m_lineDlg=NULL;						//构建道路地图框
 	m_crossDlg=NULL;					 //构建路口地图框
+	m_nodeDlg=NULL;                      //节点属性
 	m_curMapName="";					//当前地图名字
 	m_Show_cur=0;						//反向绘制 当前索引
 	m_clockGPS=0;						//GPS接受频率
@@ -280,6 +283,11 @@ void CCreateMapDlg::OnLButtonDown(UINT nFlags, CPoint point)
 									m_nowCase=Case_None;
 									break;
 							 }
+			case Case_getP3:{
+									setCalibration(point,rect,2);
+									m_nowCase=Case_None;
+									break;
+							}
 			case Case_Deviation:{
 									coumputerDevication(point,rect);
 									m_nowCase=Case_None;
@@ -763,6 +771,7 @@ void CCreateMapDlg::DlgDrawPoints(CPoint point ,CRect rect){
 	HDC hdc=m_loadImage->GetDC();
 	CDC *pDC = CDC::FromHandle(hdc);
 	pDC->SetPixel(point,RGB(255,0,0));
+	m_loadImage->ReleaseDC();
 
 	// --- Step.2 --- 记录点
 	control_points.points.push_back(point);
@@ -1447,7 +1456,7 @@ afx_msg LRESULT CCreateMapDlg::OnMapModifyLine(WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-//修改路口(node)属性
+//修改节点(node)属性
 void CCreateMapDlg::OnNodepro()
 {
 	if(!isLoad())
@@ -1460,16 +1469,44 @@ void CCreateMapDlg::OnNodepro()
 			memset(indexBuf,0,nItemCount*sizeof(int));
 			m_listRecord.GetSelItems(nItemCount,indexBuf);
 			//vector<DRAW_RECORD> tempRecord;			//临时记录选中条目
+
 			//必须是道路节点
 			if(m_records[*indexBuf].type==3){
 				//节点窗口
+				if(m_nodeDlg==NULL){
+					m_nodeDlg=new ModifyNode();
+					m_nodeDlg->Create(IDD_MODIFYNODE_DIALOG,this);
+				}
+				int searchID=m_records[*indexBuf].id+START_NODE_ID ; //通过ID查找到指定节点的索引
+				int searchIndex=-1; 
+				for(int i=0;i<m_njustMap.nodes.size();i++){
+					if(m_njustMap.nodes[i].node.idself==searchID){
+						searchIndex=i;
+					}
+				}
 
-				//
+				m_nodeDlg->setValue(m_njustMap.nodes[searchIndex].node);
+				m_nodeDlg->ShowWindow(SW_SHOW);	
 			}
 			delete[]indexBuf;
 		}
 	}
 }
+
+afx_msg LRESULT CCreateMapDlg::OnMapModifNode(WPARAM wParam, LPARAM lParam)
+{
+	auto pnode=(MAP_NODE*)lParam;
+	int searchID=pnode->idself ; //通过ID查找到指定节点的索引
+	int searchIndex=-1; 
+	for(int i=0;i<m_njustMap.nodes.size();i++){
+		if(m_njustMap.nodes[i].node.idself==searchID){
+			searchIndex=i;
+		}
+	}
+	m_njustMap.nodes[searchIndex].node=*pnode;
+	return 0;
+}
+
 
 /////////////////////////////标定相关操作/////////////////////////////////////////////
 void CCreateMapDlg::showNowGPS(char *buff,long len){
@@ -1517,6 +1554,12 @@ void CCreateMapDlg::OnMenuP2()
 {
 	m_nowCase=Case_getP2;
 }
+
+void CCreateMapDlg::OnMenuP3()
+{
+	m_nowCase=Case_getP3;
+}
+
 
 //计算误差
 void CCreateMapDlg::OnMenuDeviation()
@@ -1657,6 +1700,10 @@ void CCreateMapDlg::drawMyCar(double longlat[2]){
 	// --- Step.3---  更新图示
 	m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect);
 }
+
+
+
+
 
 
 

@@ -197,4 +197,6 @@ protected:
 	afx_msg LRESULT OnMapModifyLine(WPARAM wParam, LPARAM lParam);
 public:
 	afx_msg void OnNodepro();
+protected:
+	afx_msg LRESULT OnMapModifNode(WPARAM wParam, LPARAM lParam);
 };

@@ -17,7 +17,7 @@ public:
 	vector<CREATE_MAP_NODE> nodes;   //节点序列
 	vector<CREATE_MAP_CROSS> crosses;//路口序列
 
-	COMPUTE_GPS buildGPS[2];        //图中任意两点的 图片坐标和GPS
+	COMPUTE_GPS buildGPS[3];        //图中任意3点的 图片坐标和GPS
 	double scaleX;					//X方向上GPS分布比例
 	double scaleY;				    //Y方向上GPS分布比例
 	vector<CREATE_MAP_OBSTACLE> obstacles;    //障碍物

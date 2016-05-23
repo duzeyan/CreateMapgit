@@ -10,6 +10,7 @@ using namespace std;
 NJUSTMap::NJUSTMap(){
 	buildGPS[0].x=buildGPS[0].y=0.0;
 	buildGPS[1].x=buildGPS[1].y=0.0;
+	buildGPS[2].x=buildGPS[2].y=0.0;
 }
 
 
@@ -27,8 +28,19 @@ void NJUSTMap::init(){
 
 //计算尺度
 void NJUSTMap::computeScale(){
-	scaleX=(buildGPS[1].lng-buildGPS[0].lng)/(buildGPS[1].x-buildGPS[0].x);
-	scaleY=(buildGPS[1].lat-buildGPS[0].lat)/(buildGPS[1].y-buildGPS[0].y);
+	//scaleX=(buildGPS[1].lng-buildGPS[0].lng)/(buildGPS[1].x-buildGPS[0].x);
+	//scaleY=(buildGPS[1].lat-buildGPS[0].lat)/(buildGPS[1].y-buildGPS[0].y);
+
+	//两两计算尺度
+	double scaleX01=(buildGPS[1].lng-buildGPS[0].lng)/(buildGPS[1].x-buildGPS[0].x);
+	double scaleX12=(buildGPS[1].lng-buildGPS[2].lng)/(buildGPS[1].x-buildGPS[2].x);
+	double scaleX02=(buildGPS[0].lng-buildGPS[2].lng)/(buildGPS[0].x-buildGPS[2].x);
+
+	double scaleY01=(buildGPS[1].lat-buildGPS[0].lat)/(buildGPS[1].y-buildGPS[0].y);
+	double scaleY12=(buildGPS[1].lat-buildGPS[2].lat)/(buildGPS[1].y-buildGPS[2].y);
+	double scaleY02=(buildGPS[0].lat-buildGPS[2].lat)/(buildGPS[0].y-buildGPS[2].y);
+	scaleX=(scaleX01+scaleX01+scaleX01)/3;
+	scaleY=(scaleY01+scaleY01+scaleY01)/3;
 }
 
 //检查是否已经设置好参数
@@ -387,6 +399,7 @@ void NJUSTMap::serial(CFile &file){
 	// --- Step.4 ---写入地图换算参数
 	file.Write(&buildGPS[0],sizeof(COMPUTE_GPS)); 
 	file.Write(&buildGPS[1],sizeof(COMPUTE_GPS)); 
+	file.Write(&buildGPS[2],sizeof(COMPUTE_GPS)); 
 
 	file.Write(&scaleX,sizeof(double)); 
 	file.Write(&scaleY,sizeof(double)); 
@@ -456,6 +469,7 @@ void NJUSTMap::enserial(CFile& file){
 	// --- Step.4 --- 获取内容地图转化参数
 	file.Read(&buildGPS[0],sizeof(COMPUTE_GPS)); 
 	file.Read(&buildGPS[1],sizeof(COMPUTE_GPS)); 
+	file.Read(&buildGPS[2],sizeof(COMPUTE_GPS)); 
 
 	file.Read(&scaleX,sizeof(double)); 
 	file.Read(&scaleY,sizeof(double)); 
