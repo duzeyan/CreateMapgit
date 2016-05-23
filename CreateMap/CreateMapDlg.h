@@ -187,6 +187,7 @@ public:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnMenuP1();
 	afx_msg void OnMenuP2();
+	afx_msg void OnMenuP3();
 	afx_msg void OnMenuDeviation();
 	afx_msg void OnDestroy();
 	afx_msg void OnResolution();
