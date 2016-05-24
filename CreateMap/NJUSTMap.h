@@ -136,6 +136,9 @@ public:
 
 	//反序列化类
 	void enserial(CFile& file);
+
+	//保存地图结构 兼容linux读取模式
+	bool saveForLinux(CString filename);
 };
 
 #endif

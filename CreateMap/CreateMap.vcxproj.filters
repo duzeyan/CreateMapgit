@@ -31,6 +31,9 @@
     <Filter Include="通信模块">
       <UniqueIdentifier>{15d51410-42d5-42ca-888b-5621060b5ae3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="工具类">
+      <UniqueIdentifier>{1879d66e-781d-4a52-a457-a08a96839a38}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -93,6 +96,9 @@
     <ClInclude Include="ModifyNode.h">
       <Filter>对话框\附属对话框</Filter>
     </ClInclude>
+    <ClInclude Include="ToolsUtil.h">
+      <Filter>工具类</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -133,6 +139,9 @@
     </ClCompile>
     <ClCompile Include="ModifyNode.cpp">
       <Filter>对话框\附属对话框</Filter>
+    </ClCompile>
+    <ClCompile Include="ToolsUtil.cpp">
+      <Filter>工具类</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

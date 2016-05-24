@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <afx.h>
 #include <iomanip>
+#include"ToolsUtil.h"
 using namespace std;
 
 
@@ -473,4 +474,38 @@ void NJUSTMap::enserial(CFile& file){
 
 	file.Read(&scaleX,sizeof(double)); 
 	file.Read(&scaleY,sizeof(double)); 
+}
+
+//在指定文件中输入内容
+bool NJUSTMap::saveForLinux(CString filename){
+	MAP_BUILD_FILE_HEAD mapHead;
+	int x,y;			//转化的大地坐标
+	ToolsUtil::GPS2Earthy(buildGPS[0].lat,buildGPS[0].lng,x,y);
+	//中心坐标 用来防止数据溢出
+	mapHead.m_adjustx=x;
+	mapHead.m_adjusty=y;
+
+    //设置元素个数
+	mapHead.linecounter=roads.size();
+	mapHead.notecounter=nodes.size();
+
+	CFile file;
+	BOOL isOpen=file.Open(filename,CFile::modeCreate|CFile::modeWrite);
+	//创建文件成功
+	if(isOpen){
+		 //写入文件头
+		file.Write(&mapHead,sizeof(MAP_BUILD_FILE_HEAD));             
+
+		//写入节点序列
+		for(auto node:nodes){
+			file.Write(&node.node,sizeof(MAP_NODE));
+		}
+		for(auto road:roads){
+			file.Write(&road.road,sizeof(MAP_NODE));
+		}
+
+		file.Close();
+		return true;
+	}
+	return false;
 }

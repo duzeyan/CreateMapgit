@@ -97,6 +97,7 @@ ON_MESSAGE(MAP_MODIFY_LINE, &CCreateMapDlg::OnMapModifyLine)
 ON_COMMAND(ID_NODEPRO, &CCreateMapDlg::OnNodepro)
 ON_MESSAGE(MAP_MODIF_NODE, &CCreateMapDlg::OnMapModifNode)
 ON_COMMAND(ID_MENU_P3, &CCreateMapDlg::OnMenuP3)
+ON_COMMAND(ID_SAVE_LINUX, &CCreateMapDlg::OnSaveLinux)
 END_MESSAGE_MAP()
 
 //手动注册事件响应
@@ -1370,6 +1371,12 @@ void CCreateMapDlg::OnMenuShowGPS()
 	CWnd::SetTimer(1,100,NULL);
 }
 
+//导出linux地图
+void CCreateMapDlg::OnSaveLinux()
+{
+	m_njustMap.saveForLinux(L"D:\\map\\board.db");
+}
+
 /////////////////////////////上下文菜单栏操作/////////////////////////////////////////////
 
 void CCreateMapDlg::OnContextMenu(CWnd* /*pWnd*/, CPoint /*point*/)
@@ -1700,6 +1707,9 @@ void CCreateMapDlg::drawMyCar(double longlat[2]){
 	// --- Step.3---  更新图示
 	m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect);
 }
+
+
+
 
 
 
