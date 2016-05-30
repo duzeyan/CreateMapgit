@@ -14,7 +14,7 @@ namespace drawmap{
 	void DrawRoadMark(CDC *pdc,const vector<CPoint> &pV,int id);
 
 	//绘制 障碍物 p1圆心 p2圆上一点
-	void DrawObstacles(CDC *pdc,CPoint p1,CPoint p2,COLORREF color);
+	void DrawObstacles(CDC *pdc,CPoint p1,CPoint p2,COLORREF color,int id);
 
 	//在目标上 用bresenham直线绘法绘图
 	void DrawLineBresenham(CDC *pdc,CPoint p1,CPoint p2,COLORREF color);
@@ -35,8 +35,12 @@ namespace drawmap{
 	//画曲线
 	void DrawBezier(CDC *pdc,CPoint points[],unsigned int len,COLORREF color);
 
-	//检查点是否在 矩形内
-	//bool CheckPInRect(CPoint p,CRect rect);  ptInRect
+	//自定义贝塞尔绘制
+	void DrawMyBezier(CDC *pdc,CPoint points[],unsigned int len,COLORREF color);
+
+	//记录贝塞尔曲线生成的点
+	void LogLineBresenham(CPoint points[],vector<CPoint> &pV);
+	
 
 	//检测视窗是否 超过图片 如果超过则设置到边缘
 	void CheckViewInImage(CRect &view,int imageW,int imageH,int viewW,int viewH);
@@ -50,6 +54,8 @@ namespace drawmap{
 	//输出列表项目
 	CString PrintRecord(DRAW_RECORD record);
 
+	//获取贝塞尔点
+	CPoint PointOnCubicBezier( CPoint cp[4], float t ); 
 	
 
 }

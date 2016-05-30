@@ -92,3 +92,15 @@ void ToolsUtil::GPS2Earthy(double x, double y, int &earthx, int &earthy)
 	earthy = (int)gps_yy;
 	return;
 }
+
+//计算两对经纬度获取之间的直线距离(m)
+double ToolsUtil::GetDistanceByGPS(double lng1,double lat1,double lng2,double lat2){
+	int earthxcur, earthycur;
+	int earthxtemp, earthytemp;
+	ToolsUtil::GPS2Earthy(lat1 , lng1 , earthxcur, earthycur);
+	ToolsUtil::GPS2Earthy(lat2, lng2, earthxtemp, earthytemp);
+	double x = abs(earthxcur - earthxtemp) / 100;
+	double y = abs(earthycur - earthytemp) / 100;
+	double distance = sqrt(x*x + y*y);
+	return distance;
+}

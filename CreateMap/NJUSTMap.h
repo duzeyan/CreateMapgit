@@ -6,7 +6,8 @@
 #include <algorithm>
 using std::vector;
 
-#define  MAP_DASH_NUM 10    //直线曲线踩点间隔
+//一个像素40cm 
+#define  MAP_DASH_NUM 10   //直线曲线踩点间隔
 
 
 
@@ -96,6 +97,9 @@ public:
 	//根据ID删除障碍物
 	void removeObstaclesByID(int id);
 
+	//根据index删除道路 需要同时清理关联node中的相邻道路信息
+	void deleteRoadByIndex(int index);
+
 	//在特定目录下保存二进制文件
 	bool writeRoad(CString path);
 
@@ -138,7 +142,16 @@ public:
 	void enserial(CFile& file);
 
 	//保存地图结构 兼容linux读取模式
-	bool saveForLinux(CString filename);
+	bool saveBuildMapForLinux(CString filename);
+
+	//保存节点之间的邻接矩阵
+	bool saveAdjForLinux(CString);
+
+	//获取直线方程
+	void getLineFunctionPara(int startID,int endStart,double &k,double &b,double &c);
+
+	//根据经度维度返回最近节点的编号 若差距太大返回-1
+	int getIndexByGPS(double lng,double lat);
 };
 
 #endif

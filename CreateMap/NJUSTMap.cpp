@@ -29,19 +29,19 @@ void NJUSTMap::init(){
 
 //计算尺度
 void NJUSTMap::computeScale(){
-	//scaleX=(buildGPS[1].lng-buildGPS[0].lng)/(buildGPS[1].x-buildGPS[0].x);
-	//scaleY=(buildGPS[1].lat-buildGPS[0].lat)/(buildGPS[1].y-buildGPS[0].y);
+	scaleX=(buildGPS[1].lng-buildGPS[0].lng)/(buildGPS[1].x-buildGPS[0].x);
+	scaleY=(buildGPS[1].lat-buildGPS[0].lat)/(buildGPS[1].y-buildGPS[0].y);
 
 	//两两计算尺度
-	double scaleX01=(buildGPS[1].lng-buildGPS[0].lng)/(buildGPS[1].x-buildGPS[0].x);
+	/*double scaleX01=(buildGPS[1].lng-buildGPS[0].lng)/(buildGPS[1].x-buildGPS[0].x);
 	double scaleX12=(buildGPS[1].lng-buildGPS[2].lng)/(buildGPS[1].x-buildGPS[2].x);
 	double scaleX02=(buildGPS[0].lng-buildGPS[2].lng)/(buildGPS[0].x-buildGPS[2].x);
 
 	double scaleY01=(buildGPS[1].lat-buildGPS[0].lat)/(buildGPS[1].y-buildGPS[0].y);
 	double scaleY12=(buildGPS[1].lat-buildGPS[2].lat)/(buildGPS[1].y-buildGPS[2].y);
 	double scaleY02=(buildGPS[0].lat-buildGPS[2].lat)/(buildGPS[0].y-buildGPS[2].y);
-	scaleX=(scaleX01+scaleX01+scaleX01)/3;
-	scaleY=(scaleY01+scaleY01+scaleY01)/3;
+	scaleX=(scaleX01+scaleX02+scaleX12)/3;
+	scaleY=(scaleY01+scaleY02+scaleY12)/3;*/
 }
 
 //检查是否已经设置好参数
@@ -81,6 +81,7 @@ void NJUSTMap::deleteEleByID(bool isNode,int id){
 bool NJUSTMap::merge2Line(const vector<DRAW_RECORD> &mergeV,MAP_ROAD package){
 	unsigned int i,j;
 	CREATE_MAP_ROAD road;
+
 	//目前只支持直线和断点的连接 设置线上内容
 	for(i=0;i<mergeV.size();i++){
 		switch (mergeV[i].type)
@@ -99,6 +100,14 @@ bool NJUSTMap::merge2Line(const vector<DRAW_RECORD> &mergeV,MAP_ROAD package){
 					road.pInLine.push_back(mergeV[i].drawPoints[j]);
 				break;
 			}
+		//贝塞尔曲线
+		case 1:{
+				for(j=0;j<mergeV[i].drawPoints.size();j+=MAP_DASH_NUM)
+					road.pInLine.push_back(mergeV[i].drawPoints[j]);
+				if(j!=mergeV[i].drawPoints.size()+MAP_DASH_NUM-1) //保证线段首尾都有
+					road.pInLine.push_back(mergeV[i].drawPoints.back());
+				break;
+			   }
 		default:
 				return false;
 			break;
@@ -151,6 +160,29 @@ void NJUSTMap::removeObstaclesByID(int id){
 	obstacles.erase(it);
 }
 
+void NJUSTMap::deleteRoadByIndex(int index){
+	//获取要删除道路的ID
+	int id=roads[index].road.idself;
+
+	for(auto &tnode:nodes){
+		int  whichIndex=-1;
+		for(int i=0;i<tnode.node.neigh;i++){
+			if(tnode.node.NeighLineID[i]==id){ //如果存在 则删除
+				whichIndex=i;
+				break;        //不存在重复道路
+			}
+		}
+		if(whichIndex!=-1){ //发现了关联该道路
+			for(int i=whichIndex;i<tnode.node.neigh-1;i++){ //删除
+				tnode.node.NeighLineID[i]=tnode.node.NeighLineID[i+1];
+			}
+			tnode.node.neigh--;
+		}
+	}
+	//删除该道路
+	roads.erase(roads.begin()+index);
+}
+
 //生成路口
 bool NJUSTMap::merge2Cross(const vector<DRAW_RECORD> &mergeV,CPoint line2ID){
 	unsigned int i,j;
@@ -171,6 +203,14 @@ bool NJUSTMap::merge2Cross(const vector<DRAW_RECORD> &mergeV,CPoint line2ID){
 					cross.points.push_back(mergeV[i].drawPoints[j]);
 				break;
 			}
+		//贝塞尔曲线
+		case 1:{
+				for(j=0;j<mergeV[i].drawPoints.size();j+=MAP_DASH_NUM)
+					cross.points.push_back(mergeV[i].drawPoints[j]);
+				if(j!=mergeV[i].drawPoints.size()+MAP_DASH_NUM-1) //保证线段首尾都有
+					cross.points.push_back(mergeV[i].drawPoints.back());
+				break;
+			   }
 		default:
 				return false;
 			break;
@@ -202,7 +242,7 @@ CString NJUSTMap::printRoad(unsigned int index)const{
 
 CString NJUSTMap::printCross(unsigned int index)const{
 	CString strShow;
-	strShow.Format(L"路口:道路%d->路口%d",
+	strShow.Format(L"路口:道路%d->道路%d",
 								crosses[index].idstart-START_LINE_ID+1,
 								crosses[index].idend-START_LINE_ID+1); 
 	return strShow;
@@ -314,20 +354,20 @@ bool NJUSTMap::writeRoadTxt(CString path){
 	return true;
 }
 
-
+//buildGPS[2]为基准点
 void NJUSTMap::pixel2GPS(COMPUTE_GPS &var){
 	var=COMPUTE_GPS(var.x,
 					var.y
-					,(var.x-buildGPS[0].x)*1.0*scaleX+buildGPS[0].lng
-					,(var.y-buildGPS[0].y)*1.0*scaleY+buildGPS[0].lat);
+					,(var.x-buildGPS[2].x)*1.0*scaleX+buildGPS[2].lng
+					,(var.y-buildGPS[2].y)*1.0*scaleY+buildGPS[2].lat);
 	return ;
 }
 
 void NJUSTMap::GPS2pexel(COMPUTE_GPS &var){
-	int x=(int)((var.lng-buildGPS[0].lng)/scaleX);
-	int y=(int)((var.lat-buildGPS[0].lat)/scaleY);
-	x+=buildGPS[0].x;
-	y+=buildGPS[0].y;
+	int x=(int)((var.lng-buildGPS[2].lng)/scaleX);
+	int y=(int)((var.lat-buildGPS[2].lat)/scaleY);
+	x+=buildGPS[2].x;
+	y+=buildGPS[2].y;
 	var=COMPUTE_GPS(x
 					,y
 					,var.lng
@@ -397,7 +437,15 @@ void NJUSTMap::serial(CFile &file){
 		}
 	}
 
-	// --- Step.4 ---写入地图换算参数
+	// --- Step.4 ---写入地图障碍物序列
+	len=obstacles.size();
+	file.Write(&len,sizeof(unsigned int));
+	for(i=0;i<len;i++){
+		//写入roads[i]的道路结构
+		file.Write(&(obstacles[i]),sizeof(CREATE_MAP_OBSTACLE)); 
+	}
+
+	// --- Step.5 ---写入地图换算参数
 	file.Write(&buildGPS[0],sizeof(COMPUTE_GPS)); 
 	file.Write(&buildGPS[1],sizeof(COMPUTE_GPS)); 
 	file.Write(&buildGPS[2],sizeof(COMPUTE_GPS)); 
@@ -458,7 +506,7 @@ void NJUSTMap::enserial(CFile& file){
 		file.Read(&tcross.idstart,sizeof(int));
 		file.Read(&tcross.idend,sizeof(int));
 
-		file.Write(&len1,sizeof(unsigned int));
+		file.Read(&len1,sizeof(unsigned int));
 		for(j=0;j<len1;j++){
 			//获取crosses[i]的点集
 			file.Read(&pt,sizeof(MAP_CPOINT)); 
@@ -468,16 +516,29 @@ void NJUSTMap::enserial(CFile& file){
 	}
 
 	// --- Step.4 --- 获取内容地图转化参数
+	CREATE_MAP_OBSTACLE tobs;
+	file.Read(&len,sizeof(unsigned int));
+	for(i=0;i<len;i++){
+		//写入roads[i]的道路结构
+		file.Read(&tobs,sizeof(CREATE_MAP_OBSTACLE));
+		obstacles.push_back(tobs);
+	}
+
+	// --- Step.5 --- 获取内容地图转化参数
 	file.Read(&buildGPS[0],sizeof(COMPUTE_GPS)); 
 	file.Read(&buildGPS[1],sizeof(COMPUTE_GPS)); 
 	file.Read(&buildGPS[2],sizeof(COMPUTE_GPS)); 
+	//DEBUG 删除这句话！！！
+	//buildGPS[2]=buildGPS[0];
 
 	file.Read(&scaleX,sizeof(double)); 
 	file.Read(&scaleY,sizeof(double)); 
 }
 
+
+
 //在指定文件中输入内容
-bool NJUSTMap::saveForLinux(CString filename){
+bool NJUSTMap::saveBuildMapForLinux(CString filename){
 	MAP_BUILD_FILE_HEAD mapHead;
 	int x,y;			//转化的大地坐标
 	ToolsUtil::GPS2Earthy(buildGPS[0].lat,buildGPS[0].lng,x,y);
@@ -488,6 +549,7 @@ bool NJUSTMap::saveForLinux(CString filename){
     //设置元素个数
 	mapHead.linecounter=roads.size();
 	mapHead.notecounter=nodes.size();
+	mapHead.obstaclecounter=obstacles.size();
 
 	CFile file;
 	BOOL isOpen=file.Open(filename,CFile::modeCreate|CFile::modeWrite);
@@ -497,15 +559,150 @@ bool NJUSTMap::saveForLinux(CString filename){
 		file.Write(&mapHead,sizeof(MAP_BUILD_FILE_HEAD));             
 
 		//写入节点序列
-		for(auto node:nodes){
+		COMPUTE_GPS cgps;
+		int ex,ey;//大地坐标
+		for(auto &node:nodes){
+			//坐标转化成GPS和大地坐标
+			cgps.x=node.position.x;
+			cgps.y=node.position.y;
+			pixel2GPS(cgps);
+			ToolsUtil::GPS2Earthy(cgps.lat,cgps.lng,ex,ey);
+
+			//填写
+			node.node.earthx=ex;
+			node.node.earthy=ey;
+			node.node.gpsx=cgps.lng;
+			node.node.gpsy=cgps.lat;
 			file.Write(&node.node,sizeof(MAP_NODE));
 		}
-		for(auto road:roads){
-			file.Write(&road.road,sizeof(MAP_NODE));
+
+		//写入道路序列
+		for(auto &road:roads){
+			//计算直线
+			getLineFunctionPara(road.road.idstart,
+								road.road.idend,
+								road.road.k,
+								road.road.b,
+								road.road.c);
+			file.Write(&road.road,sizeof(MAP_ROAD));
+		}
+
+		for(auto &obstacle:obstacles){
+			cgps.x=obstacle.x;  //原点坐标
+			cgps.y=obstacle.y;		
+			pixel2GPS(cgps);
+			obstacle.ob.ObstacleCenterGPS.longtitude=cgps.lng;
+			obstacle.ob.ObstacleCenterGPS.latitude=cgps.lat;
+
+			cgps.x=obstacle.x+obstacle.rPix;  //左上坐标
+			cgps.y=obstacle.y+obstacle.rPix;
+			pixel2GPS(cgps);
+			double disM=ToolsUtil::GetDistanceByGPS(obstacle.ob.ObstacleCenterGPS.longtitude,
+										obstacle.ob.ObstacleCenterGPS.latitude,
+										cgps.lng,
+										cgps.lat);
+			obstacle.ob.RadialCM=disM*100;  //计算出半径长度 
+			file.Write(&obstacle.ob,sizeof(NJUST_MAP_OBSTACLE));
 		}
 
 		file.Close();
 		return true;
 	}
 	return false;
+}
+
+//保存节点之间的邻接矩阵  该函数必须跟在saveBuildMapForLinux后
+bool NJUSTMap::saveAdjForLinux(CString filename){
+	int nodeLen=nodes.size();
+	int* adj=new int[nodeLen*nodeLen];
+	for(int i=0;i<nodeLen*nodeLen;i++){
+		adj[i]=INF;
+	}
+
+	for(int i=0;i<nodeLen;i++){
+		int ex1=nodes[i].node.earthx;
+		int ey1=nodes[i].node.earthy;
+		for(int j=0;j<nodes[i].node.neigh;j++){
+			int id=nodes[i].node.NeighNoteID[j];
+			int index2=-1;
+		    for(int k=0;k<nodeLen;k++){
+				if(nodes[k].node.idself==id){
+					index2=k;break;
+				}
+			}
+			int ex2=nodes[index2].node.earthx;
+			int ey2=nodes[index2].node.earthy;
+			int dx=(ex1-ex2)/100;            //单位转成米
+			int dy=(ey1-ey2)/100;
+			int dis=sqrt(dx*dx+dy*dy);
+
+			adj[i*nodeLen+index2]=dis;
+			
+		}
+	}
+	CFile file;
+	BOOL isOpen=file.Open(filename,CFile::modeCreate|CFile::modeWrite);
+	if(isOpen){
+		for(int i=0;i<nodeLen*nodeLen;i++){
+			file.Write(&adj[i],sizeof(int));
+		}
+		file.Close();
+	}
+	delete []adj;
+	return isOpen;
+
+}
+
+
+void NJUSTMap::getLineFunctionPara(int startID,int endStart,double &k,double &b,double &c){
+
+	CPoint startpoint,endpoint;
+	int x,y;			//转化的大地坐标
+	ToolsUtil::GPS2Earthy(buildGPS[0].lat,buildGPS[0].lng,x,y); //已第一个点为基础点
+
+	
+	startpoint.x=nodes[startID-START_NODE_ID].node.earthx-x;
+	startpoint.y=nodes[startID-START_NODE_ID].node.earthy-y;
+	endpoint.x=nodes[endStart-START_NODE_ID].node.earthx-x;
+	endpoint.y=nodes[endStart-START_NODE_ID].node.earthy-y;
+	if (startpoint.x==endpoint.x)//垂直于x轴
+	{
+		k=1;
+		b=0;
+    	c=-endpoint.x;
+	}
+	else if(startpoint.y==endpoint.y)//垂直于y轴
+	{
+	    k=0;
+		b=1;
+		c=-startpoint.y;
+	}
+	else
+	{
+		k=(double)min((endpoint.y-startpoint.y)/(endpoint.x-startpoint.x),999999);
+		b=-1;
+		c=(double)startpoint.y-k*startpoint.x;
+	}	
+	return ;
+
+}
+
+int NJUSTMap::getIndexByGPS(double lng,double lat){
+	double minDlen=100;//最大值不会超过100
+	int index; //最近的索引
+	int k=0;
+	for(auto &node:nodes){
+		double dlng=node.node.gpsx-lng;
+		double dlat=node.node.gpsy-lat;
+		double dlen2=dlat*dlat+dlng*dlng;
+		if(dlen2<minDlen){  //
+			minDlen=dlen2;
+			index=k;
+		}
+		k++;
+	}
+	if(minDlen<0.005*0.005){ //0.001 == 2米  10米
+		return nodes[index].node.idself-START_NODE_ID+1;
+	}
+	return -1;
 }

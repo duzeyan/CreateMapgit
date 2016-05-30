@@ -84,7 +84,7 @@ void drawmap::LogLineBresenham(CPoint p1,CPoint p2,vector<CPoint> &pV){
 
 
 //绘制 障碍物 
-void drawmap::DrawObstacles(CDC *pdc,CPoint p1,CPoint p2,COLORREF color){
+void drawmap::DrawObstacles(CDC *pdc,CPoint p1,CPoint p2,COLORREF color,int id){
 	CPen pen;
 	
 	CPoint pt=p2-p1;
@@ -95,6 +95,13 @@ void drawmap::DrawObstacles(CDC *pdc,CPoint p1,CPoint p2,COLORREF color){
 	pdc->SelectObject(pen);
 	pdc->MoveTo(p1);
 	pdc->Ellipse(p1.x-r,p1.y-r,p1.x+r,p1.y+r);
+
+	int rr=10;
+	CRect textRect(p1.x+rr,p1.y-5*rr,p1.x+10*rr,p1.y-rr);
+
+	CString outStr;
+	outStr.Format(L"障碍物:%d",id); //ID是显示ID
+	pdc->DrawTextEx(outStr,&textRect,DT_LEFT,NULL);
 
 }
 
@@ -176,7 +183,7 @@ void drawmap::DrawByRecord(CImage *ptrImage,const vector<DRAW_RECORD>  &vRecord,
 					drawmap::DrawObstacles(pDC,
 											vRecord[i].drawPoints[0],
 											vRecord[i].drawPoints[1],
-											RGB(255,255,0));
+											RGB(255,255,0),vRecord[i].id);
 					break;	
 			   }
 		default:
@@ -196,6 +203,64 @@ void drawmap::DrawBezier(CDC *pdc,CPoint points[],unsigned int count,COLORREF co
 	pdc->SelectObject(pen);
 	pdc->PolyBezier(points,count);
 }
+
+//自定义贝塞尔绘制 当前支持四点 len为4
+void drawmap::DrawMyBezier(CDC *pdc,CPoint points[],unsigned int len,COLORREF color){
+	float dt; 
+	CPoint tp=points[0]-points[3];//估算需要显示的gps长度 过量估计
+	int numberOfPoints=tp.x+tp.y;
+	numberOfPoints*=2;
+	dt = 1.0 / ( numberOfPoints - 1 ); 
+	CPoint oldPoint(0,0); //消除重复
+	for(int i = 0; i < numberOfPoints; i++) { //相同的点不绘制 不记录
+		CPoint drawPoint = PointOnCubicBezier( points, i*dt ); 
+		if(oldPoint!=drawPoint){
+			pdc->SetPixel(drawPoint,color);
+			oldPoint=drawPoint;
+		}
+	}
+}
+
+//记录贝塞尔曲线生成的点 目前版本数组必须长度为四
+void drawmap::LogLineBresenham(CPoint points[],vector<CPoint> &pV){
+	float dt; 
+	CPoint tp=points[0]-points[3];//估算需要显示的gps长度 过量估计
+	int numberOfPoints=tp.x+tp.y;
+	numberOfPoints*=2;
+	dt = 1.0 / ( numberOfPoints - 1 ); 
+	CPoint oldPoint(0,0); //消除重复
+	for(int i = 0; i < numberOfPoints; i++) { //相同的点不绘制 不记录
+		CPoint drawPoint = PointOnCubicBezier( points, i*dt ); 
+		if(oldPoint!=drawPoint){
+			pV.push_back(drawPoint);
+			oldPoint=drawPoint;
+		}
+	}
+}
+
+//获取贝塞尔点
+CPoint drawmap::PointOnCubicBezier( CPoint cp[4], float t )
+	{ 
+		float ax, bx, cx; 
+		float ay, by, cy; 
+		float tSquared, tCubed;
+		CPoint result; 
+		/* 计算多项式系数 */ 
+		cx = 3.0 * (cp[1].x - cp[0].x); 
+		bx = 3.0 * (cp[2].x - cp[1].x) - cx; 
+		ax = cp[3].x - cp[0].x - cx - bx; 
+		cy = 3.0 * (cp[1].y - cp[0].y); 
+		by = 3.0 * (cp[2].y - cp[1].y) - cy; 
+		ay = cp[3].y - cp[0].y - cy - by; 
+		/* 计算t位置的点值 */ 
+		tSquared = t * t; 
+		tCubed = tSquared * t; 
+		result.x = (ax * tCubed) + (bx * tSquared) + (cx * t) + cp[0].x; 
+		result.y = (ay * tCubed) + (by * tSquared) + (cy * t) + cp[0].y; 
+		return result; 
+	} 
+
+
 
 //检测视窗是否 超过图片 如果超过则设置到边缘
 void drawmap::CheckViewInImage(CRect &view,int imageW,int imageH,int viewW,int viewH){
@@ -282,7 +347,7 @@ CString drawmap::PrintRecord(DRAW_RECORD record){
 				break;
 			   }
 		case 5:{
-				str.Format(L"障碍物|p:(%d,%d)",record.drawPoints[0].x,record.drawPoints[0].y);
+			str.Format(L"障碍物|ID:%d",record.id);
 				break;
 			   }
 	default:

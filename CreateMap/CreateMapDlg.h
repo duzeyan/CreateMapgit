@@ -50,6 +50,7 @@ public:
 	CImage *m_backUpImage; //原始图像备份
 	CImage *m_canvas;	   //画布 为了记录绘制点集 
 	//CImage *m_canvas1;	   //画布 为了记录绘制点集 
+	bool m_RecordGPS;
 
 	CRect m_srcRect;       //原图上的视窗 
 	CRect m_picRect;       //图片控件大小
@@ -70,7 +71,7 @@ public:
 	ModifyNode *m_nodeDlg;         //修改节点属性的子窗口
 	CPoint m_Line2ID ;				//x y为直线两边的ID
 
-	CString m_curMapName;      //当前打开地图的名字
+	CString m_curMapFullPath;      //当前地图的全路径
 
 	//控件相关
 	CListBox m_listRecord;  //绘画记录列表
@@ -81,7 +82,9 @@ public:
 	CreateMapCommunication m_getMCInfo;  //GPS通信
 	MAP_DOUBLE_POINT m_RealGPS;         //从惯导获取的GPS
 	unsigned int m_clockGPS;			//控制接受频率
-	bool m_isDrawCar;                   //false
+	bool m_isDrawCar;                   //控制绘制车体
+	bool m_isHighLight;                
+
 
 	////////////////////////////////////////////////////////////////////////// 反向操作变量
 	vector<MAP_DOUBLE_POINT> m_Show_GPSList; //读取的GFS
@@ -181,7 +184,7 @@ public:
 	afx_msg void OnBnClickedButtonloadmap();
 	afx_msg void OnMenuBuildMap();
 	afx_msg void OnOpenMap();
-	afx_msg void OnSaveMap();
+	afx_msg void OnSaveAsMap();
 	afx_msg void OnMenuShowGPS();
 	afx_msg void OnContextMenu(CWnd* /*pWnd*/, CPoint /*point*/);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
@@ -194,10 +197,16 @@ public:
 	afx_msg void OnMenuDrawcar();
 	afx_msg void OnBnClickedBtnob();
 	afx_msg void OnMenuPro1();
+	afx_msg void OnSaveLinux();
 protected:
 	afx_msg LRESULT OnMapModifyLine(WPARAM wParam, LPARAM lParam);
 public:
 	afx_msg void OnNodepro();
 protected:
 	afx_msg LRESULT OnMapModifNode(WPARAM wParam, LPARAM lParam);
+public:
+	afx_msg void OnSavethemap();
+	afx_msg void OnMenuShowall();
+	afx_msg void OnSaveMapTask();
+	afx_msg void OnRecordgps();
 };
