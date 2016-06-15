@@ -5,6 +5,9 @@
 #include "stdafx.h"
 #include "UDP.h"
 #include "CreateMapDlg.h"
+#include "resource.h"
+
+#include "ToolsUtil.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -13,6 +16,9 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 char buff[1024];
+extern int S_DEBUG;//在主对话框中源文件中定义
+extern CRITICAL_SECTION g_cs; //关键段
+
 
 /////////////////////////////////////////////////////////////////////////////
 CGzUdp::CGzUdp()
@@ -35,7 +41,7 @@ CGzUdp::~CGzUdp()
 	StopReceiving();
 }
 
-BOOL CGzUdp::Init(CCreateMapDlg *dlg)
+BOOL CGzUdp::Init(void *dlg)
 {
 
 	WSADATA wsaData;
@@ -46,7 +52,7 @@ BOOL CGzUdp::Init(CCreateMapDlg *dlg)
 		TRACE(_T("Initilize Error!\n"));  //初始化失败
 		return FALSE;
 	}
-	m_dlg=dlg;
+	m_dlg=(CCreateMapDlg*)dlg;
 	return TRUE;
 }
 
@@ -270,11 +276,14 @@ void CGzUdp::ReceivingLoop()
 	long bytes = 0;
 	m_bIsReceiving = TRUE;
 
+	int itime=0;
 	while (m_bIsReceiving)
 	{			
+		//Sleep(100);//睡眠100毫秒
 		memset(buff,0,1024);
 		bytes = recvfrom(m_sockReceive, buff, 1024, 0,(LPSOCKADDR) &addr_cli, (int *) &addr_cli_len);	
-		
-		m_dlg->showNowGPS(buff,bytes);
+		auto pWind=AfxGetApp()->GetMainWnd();
+		auto pm_dlg=(CCreateMapDlg*)pWind;
+		pm_dlg->showNowGPS(buff,bytes);
 	}
 }

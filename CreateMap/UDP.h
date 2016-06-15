@@ -43,7 +43,7 @@ protected:
 public:
 	//接口函数
 	
-	BOOL Init(CCreateMapDlg *dlg);
+	BOOL Init(void *dlg);
 	
 	void SetTargetIP(DWORD inIP);  //设置目标IP
 	DWORD GetTargetIP(void);       //获得目标IP

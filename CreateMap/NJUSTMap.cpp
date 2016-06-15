@@ -9,9 +9,9 @@ using namespace std;
 
 
 NJUSTMap::NJUSTMap(){
-	buildGPS[0].x=buildGPS[0].y=0.0;
-	buildGPS[1].x=buildGPS[1].y=0.0;
-	buildGPS[2].x=buildGPS[2].y=0.0;
+	buildGPS[0].x=buildGPS[0].y=0;
+	buildGPS[1].x=buildGPS[1].y=0;
+	buildGPS[2].x=buildGPS[2].y=0;
 }
 
 
@@ -81,6 +81,8 @@ void NJUSTMap::deleteEleByID(bool isNode,int id){
 bool NJUSTMap::merge2Line(const vector<DRAW_RECORD> &mergeV,MAP_ROAD package){
 	unsigned int i,j;
 	CREATE_MAP_ROAD road;
+	road.position.x=road.position.y=0;   //初始化
+	memset(&road.road,0,sizeof(MAP_ROAD));
 
 	//目前只支持直线和断点的连接 设置线上内容
 	for(i=0;i<mergeV.size();i++){
@@ -455,6 +457,97 @@ void NJUSTMap::serial(CFile &file){
 
 }
 
+void NJUSTMap::serial2DB(MYSQL *conn,unsigned int mapID){
+	auto winroad=WinRoadDAO::getInstance();
+	winroad->init(conn);
+	auto winnode=WinNodeDAO::getInstance();
+	winnode->init(conn);
+	auto wincross=WinCrossDAO::getInstance();
+	wincross->init(conn);
+	auto winobs=WinObsDAO::getInstance();
+	winobs->init(conn);
+	auto wincail=WinCailbrationDAO::getInstance();
+	wincail->init(conn);
+
+	//Step 0 -----------删除原有相关记录--------------
+	winroad->deleteAllByMapID(mapID);
+	winnode->deleteAllByMapID(mapID);
+	wincross->deleteEntitiesByMapID(mapID);
+	winobs->deleteAllByMapID(mapID);
+	wincail->deleteEntityByKey(mapID);
+
+	//Step 1 ------------插入道路信息-------------
+	for(auto &road:roads){
+		MODEL_WINROAD model;
+		model.mapRoad=road;
+		winroad->insertEntity(model,mapID);	
+	}
+
+	//Step 2 -----------插入节点信息--------------
+	for(auto &node:nodes){
+		MODEL_WINNODE model;
+		model.mapNode=node;
+		winnode->insertEntity(model,mapID);	
+	}
+
+	//Step 3 -----------插入路口信息-------------- 
+	for(auto &cross:crosses){
+		wincross->insertEntity(cross,mapID);	
+	}
+
+	//Step 4 -----------插入障碍物信息--------------
+	for(auto &obs:obstacles){
+		winobs->insertEntity(obs,mapID);	
+	}
+
+	//Step 5 -----------插入标定信息--------------
+	MODEL_WINCALIBRATION model;
+	model.mapID=mapID;
+	model.scaleX=scaleX;
+	model.scaleY=scaleY;
+	for(int i=0;i<3;i++)
+		model.buildGPS[i]=buildGPS[i];
+	wincail->insertEntity(model);
+}
+
+//从数据库查询获取数据
+void NJUSTMap::enserial2DB(MYSQL *conn,unsigned int mapID){
+	int  i;
+	auto winroad=WinRoadDAO::getInstance();
+	winroad->init(conn);
+	auto winnode=WinNodeDAO::getInstance();
+	winnode->init(conn);
+	auto wincross=WinCrossDAO::getInstance();
+	wincross->init(conn);
+	auto winobs=WinObsDAO::getInstance();
+	winobs->init(conn);
+	auto wincail=WinCailbrationDAO::getInstance();
+	wincail->init(conn);
+
+	//Step 0 -----------清除原有信息--------------
+	init();
+
+	//Step 1 -----------获取道路信息--------------
+	winroad->getEntitiesByMapID(mapID,roads);
+
+	//Step 2 -----------获取节点信息--------------
+	winnode->getEntitiesByMapID(mapID,nodes);
+
+	//Step 3 ------------获取路口信息-------------
+	wincross->getEntitiesByMapID(mapID,crosses);
+
+	//Step 4 -----------获取障碍物信息--------------
+	winobs->getEntitiesByMapID(mapID,obstacles);
+
+	//Step 5 -----------获取地图校准信息--------------
+	MODEL_WINCALIBRATION wcail= wincail->getEntityByMapID(mapID);
+	for (i=0;i<3;i++)
+	{
+		buildGPS[i]=wcail.buildGPS[i];
+	}
+	scaleX=wcail.scaleX;
+	scaleY=wcail.scaleY;
+}
 //该函数内没有文件检测机制 TODO添加
 void NJUSTMap::enserial(CFile& file){
 	unsigned int i,j;

@@ -34,6 +34,12 @@
     <Filter Include="工具类">
       <UniqueIdentifier>{1879d66e-781d-4a52-a457-a08a96839a38}</UniqueIdentifier>
     </Filter>
+    <Filter Include="MYSQL模块">
+      <UniqueIdentifier>{7993204d-a583-4b52-88c4-16a8db9d207e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MYSQL模块\DAO">
+      <UniqueIdentifier>{5d2538c1-1583-4607-b625-4ac855c98175}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -75,9 +81,6 @@
     <ClInclude Include="NJUSTMap.h">
       <Filter>地图结构</Filter>
     </ClInclude>
-    <ClInclude Include="MAP__BASIC_data.h">
-      <Filter>地图结构</Filter>
-    </ClInclude>
     <ClInclude Include="MapDrawControl.h">
       <Filter>对话框\主对话框</Filter>
     </ClInclude>
@@ -98,6 +101,51 @@
     </ClInclude>
     <ClInclude Include="ToolsUtil.h">
       <Filter>工具类</Filter>
+    </ClInclude>
+    <ClInclude Include="MysqlConnector.h">
+      <Filter>MYSQL模块</Filter>
+    </ClInclude>
+    <ClInclude Include="MySqlCommand.h">
+      <Filter>MYSQL模块</Filter>
+    </ClInclude>
+    <ClInclude Include="map_mysql_data.h">
+      <Filter>MYSQL模块</Filter>
+    </ClInclude>
+    <ClInclude Include="WinCalibration.h">
+      <Filter>MYSQL模块\DAO</Filter>
+    </ClInclude>
+    <ClInclude Include="MAP_BASIC_data.h">
+      <Filter>地图结构</Filter>
+    </ClInclude>
+    <ClInclude Include="WinMapNameDAO.h">
+      <Filter>MYSQL模块\DAO</Filter>
+    </ClInclude>
+    <ClInclude Include="SelectMapDlg.h">
+      <Filter>对话框\附属对话框</Filter>
+    </ClInclude>
+    <ClInclude Include="SetNameDlg.h">
+      <Filter>对话框\附属对话框</Filter>
+    </ClInclude>
+    <ClInclude Include="WinRoadDAO.h">
+      <Filter>MYSQL模块\DAO</Filter>
+    </ClInclude>
+    <ClInclude Include="WinPointsDAO.h">
+      <Filter>MYSQL模块\DAO</Filter>
+    </ClInclude>
+    <ClInclude Include="WinNodeDAO.h">
+      <Filter>MYSQL模块\DAO</Filter>
+    </ClInclude>
+    <ClInclude Include="WinCrossDAO.h">
+      <Filter>MYSQL模块\DAO</Filter>
+    </ClInclude>
+    <ClInclude Include="WinObsDAO.h">
+      <Filter>MYSQL模块\DAO</Filter>
+    </ClInclude>
+    <ClInclude Include="MapDAO.h">
+      <Filter>MYSQL模块\DAO</Filter>
+    </ClInclude>
+    <ClInclude Include="WinDrawRecordDAO.h">
+      <Filter>MYSQL模块\DAO</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -142,6 +190,42 @@
     </ClCompile>
     <ClCompile Include="ToolsUtil.cpp">
       <Filter>工具类</Filter>
+    </ClCompile>
+    <ClCompile Include="MysqlConnector.cpp">
+      <Filter>MYSQL模块</Filter>
+    </ClCompile>
+    <ClCompile Include="MySqlCommand.cpp">
+      <Filter>MYSQL模块</Filter>
+    </ClCompile>
+    <ClCompile Include="WinCalibration.cpp">
+      <Filter>MYSQL模块\DAO</Filter>
+    </ClCompile>
+    <ClCompile Include="WinMapNameDAO.cpp">
+      <Filter>MYSQL模块\DAO</Filter>
+    </ClCompile>
+    <ClCompile Include="SelectMapDlg.cpp">
+      <Filter>对话框\附属对话框</Filter>
+    </ClCompile>
+    <ClCompile Include="SetNameDlg.cpp">
+      <Filter>对话框\附属对话框</Filter>
+    </ClCompile>
+    <ClCompile Include="WinRoadDAO.cpp">
+      <Filter>MYSQL模块\DAO</Filter>
+    </ClCompile>
+    <ClCompile Include="WinPointsDAO.cpp">
+      <Filter>MYSQL模块\DAO</Filter>
+    </ClCompile>
+    <ClCompile Include="WinNodeDAO.cpp">
+      <Filter>MYSQL模块\DAO</Filter>
+    </ClCompile>
+    <ClCompile Include="WinCrossDAO.cpp">
+      <Filter>MYSQL模块\DAO</Filter>
+    </ClCompile>
+    <ClCompile Include="WinObsDAO.cpp">
+      <Filter>MYSQL模块\DAO</Filter>
+    </ClCompile>
+    <ClCompile Include="WinDrawRecordDAO.cpp">
+      <Filter>MYSQL模块\DAO</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -4,7 +4,7 @@
 #include"stdafx.h"
 #include<iostream>
 #include<vector>
-#include "MAP__BASIC_data.h"
+#include "MAP_BASIC_data.h"
 
 using namespace std;
 //鼠标操作配合绘图
@@ -63,11 +63,9 @@ typedef struct CREATE_MAP_CROSS{
 
 //绘图系统中的道路
 typedef struct  CREATE_MAP_ROAD{
-	CPoint position; //图中坐标
+	CPoint position; //图中坐标 TODO无用
 	vector<CPoint> pInLine;//道路上的像素点 非连续
 	MAP_ROAD road; //道路信息
-
-
 }CREATE_MAP_ROAD;
 
 

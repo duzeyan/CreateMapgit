@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "CreateMapCommunication.h"
+#include "ToolsUtil.h"
 #include <math.h>
 
 CreateMapCommunication::CreateMapCommunication(void)
@@ -14,140 +15,140 @@ CreateMapCommunication::~CreateMapCommunication(void)
 
 
 
-int CreateMapCommunication::NJUST_MC_Decode_IP_Data( const void* pIPData, const int nBytes,
-                             NJUST_MC_STATE_INFO  **pState, //当不是状态数据时,值为NULL
-							 NJUST_MC_NAV_INFO  **pNav, //当不是导航信息时,值为NULL
-							 NJUST_MC_DRIVE_INFO  **pDrive  //当不是执行数据时,值为NULL
-						   )
-{
-	int errCode;
-
-	// step.1----------初始化--------------------------------//
-	*pState=NULL;
-	*pNav=NULL;
-	*pDrive=NULL;
-	errCode=1;   //无有效数据 
-	//step.2----------数据解析-------------------------------//
-	if(((char *)pIPData)[0]==0x24&&((char *)pIPData)[1]==0x09){//状态
-		errCode=NJUST_MC_Decode_State(pIPData,nBytes);
-	    if (!errCode)
-		{
-			*pState=&gMCState;
-		}
-	}else if(((char *)pIPData)[0]==0x24&&((char *)pIPData)[1]==0x08){//导航
-		errCode=NJUST_MC_Decode_NAV(pIPData,nBytes);
-	    if (!errCode)
-		{
-			*pNav=&gMCNav;
-		}
-	
-	}else if(((char *)pIPData)[0]==0x24&&((char *)pIPData)[1]==0x07){//驱动
-		errCode=NJUST_MC_Decode_Drive(pIPData,nBytes);
-	    if (!errCode)
-		{
-			*pDrive=&gMCDrive;
-		}
-	}
-
-	//step.3----------返回-----------------------------------//
-	return errCode;
-}
-
-int CreateMapCommunication::NJUST_MC_Decode_State(const void* pIPData, const int nBytes)
-{   //解析导航信息:将数据解析到gMCState
-
-	int errCode=0; //无错误
-	char *pBuf;
-	signed char checksum;
-	int i;
-	//step.1----------初始化---------------------------------//
-	memset(&gMCState,0,sizeof(NJUST_MC_STATE_INFO));
-
-
-	//step.2----------将数据解析到gMCState-------------------//
-	pBuf = (char *)pIPData;
-	for(i=0,checksum=0;i<nBytes-1;i++)
-	{	
-		checksum +=pBuf[i];    
-	}
-	i=sizeof(NJUST_MC_STATE_INFO);
-	if((signed char)(pBuf[nBytes-1])!=checksum||(nBytes)!=sizeof(NJUST_MC_STATE_INFO)){//||(nBytes)!=sizeof(NJUST_MC_STATE_INFO)
-		errCode=1;//两个校验位或checksum或大小不对，有错误
-	}else{
-		memcpy(&gMCState,pBuf,sizeof(NJUST_MC_STATE_INFO));
-		if(gMCState.nSize!=sizeof(NJUST_MC_STATE_INFO)){//结构体大小对不上
-			memset(&gMCState,0,sizeof(NJUST_MC_STATE_INFO));
-			errCode=1;
-		}
-	}
-
-	//step.3----------返回错误码-----------------------------//
-	return errCode;
-}
-
-int CreateMapCommunication::NJUST_MC_Decode_NAV(const void* pIPData, const int nBytes)
-{   //解析状态数据,将数据解析到gMCNav
-	int errCode=0; //无错误
-	char *pBuf;
-	signed char checksum;
-	int i;
-	//step.1----------初始化---------------------------------//
-	memset(&gMCNav,0,sizeof(NJUST_MC_NAV_INFO));
-	//step.2----------将数据解析到gMCNav---------------------//
-	pBuf = (char *)pIPData;
-	for(i=0,checksum=0;i<nBytes-1;i++)
-	{	
-		checksum +=pBuf[i];    
-	}
-	i=sizeof(NJUST_MC_NAV_INFO);
-
-	//pBuf[nBytes-1]!=0x0a||pBuf[nBytes-2]!=0x0d
-	if((signed char)(pBuf[nBytes-1])!=checksum||(nBytes)!=sizeof(NJUST_MC_NAV_INFO)){
-		errCode=1;//两个校验位或checksum或大小不对，有错误
-	}else{
-		memcpy(&gMCNav,pBuf,sizeof(NJUST_MC_NAV_INFO));
-		if(gMCNav.nSize!=sizeof(NJUST_MC_NAV_INFO)){//结构体大小对不上
-			memset(&gMCNav,0,sizeof(NJUST_MC_NAV_INFO));
-			errCode=1;
-		}
-	}
-
-
-
-	//step.3----------返回错误码-----------------------------//
-	return errCode;
-
-	return errCode;
-}
-
-int CreateMapCommunication::NJUST_MC_Decode_Drive(const void* pIPData, const int nBytes)
-{   //解析执行数据,将数据解析到gMCDrive
-	int errCode=0; //无错误
-	char *pBuf;
-	signed char checksum;
-	int i;
-	//step.1----------初始化---------------------------------//
-	memset(&gMCDrive,0,sizeof(NJUST_MC_DRIVE_INFO));
-	//step.2----------将数据解析到gMCDrive-------------------//
-	pBuf = (char *)pIPData;
-	for(i=0,checksum=0;i<nBytes-3;i++)
-	{	
-		checksum +=pBuf[i];    
-	}
-
-	if(pBuf[nBytes-1]!=0x0a||pBuf[nBytes-2]!=0x0d||(signed char)(pBuf[nBytes-3])!=checksum||(nBytes-2)!=sizeof(NJUST_MC_DRIVE_INFO)){
-		errCode=1;//两个校验位或checksum或大小不对，有错误
-	}else{
-		memcpy(&gMCDrive,pBuf,sizeof(NJUST_MC_DRIVE_INFO));
-		if(gMCDrive.nSize!=sizeof(NJUST_MC_DRIVE_INFO)){//结构体大小对不上
-			memset(&gMCDrive,0,sizeof(NJUST_MC_DRIVE_INFO));
-			errCode=1;
-		}
-	}
-
-	//step.3----------返回错误码-----------------------------//
-	return errCode;
-}
+//int CreateMapCommunication::NJUST_MC_Decode_IP_Data( const void* pIPData, const int nBytes,
+//                             NJUST_MC_STATE_INFO  **pState, //当不是状态数据时,值为NULL
+//							 NJUST_MC_NAV_INFO  **pNav, //当不是导航信息时,值为NULL
+//							 NJUST_MC_DRIVE_INFO  **pDrive  //当不是执行数据时,值为NULL
+//						   )
+//{
+//	int errCode;
+//
+//	// step.1----------初始化--------------------------------//
+//	*pState=NULL;
+//	*pNav=NULL;
+//	*pDrive=NULL;
+//	errCode=1;   //无有效数据 
+//	//step.2----------数据解析-------------------------------//
+//	if(((char *)pIPData)[0]==0x24&&((char *)pIPData)[1]==0x09){//状态
+//		errCode=NJUST_MC_Decode_State(pIPData,nBytes);
+//	    if (!errCode)
+//		{
+//			*pState=&gMCState;
+//		}
+//	}else if(((char *)pIPData)[0]==0x24&&((char *)pIPData)[1]==0x08){//导航
+//		errCode=NJUST_MC_Decode_NAV(pIPData,nBytes);
+//	    if (!errCode)
+//		{
+//			*pNav=&gMCNav;
+//		}
+//	
+//	}else if(((char *)pIPData)[0]==0x24&&((char *)pIPData)[1]==0x07){//驱动
+//		errCode=NJUST_MC_Decode_Drive(pIPData,nBytes);
+//	    if (!errCode)
+//		{
+//			*pDrive=&gMCDrive;
+//		}
+//	}
+//
+//	//step.3----------返回-----------------------------------//
+//	return errCode;
+//}
+//
+//int CreateMapCommunication::NJUST_MC_Decode_State(const void* pIPData, const int nBytes)
+//{   //解析导航信息:将数据解析到gMCState
+//
+//	int errCode=0; //无错误
+//	char *pBuf;
+//	signed char checksum;
+//	int i;
+//	//step.1----------初始化---------------------------------//
+//	memset(&gMCState,0,sizeof(NJUST_MC_STATE_INFO));
+//
+//
+//	//step.2----------将数据解析到gMCState-------------------//
+//	pBuf = (char *)pIPData;
+//	for(i=0,checksum=0;i<nBytes-1;i++)
+//	{	
+//		checksum +=pBuf[i];    
+//	}
+//	i=sizeof(NJUST_MC_STATE_INFO);
+//	if((signed char)(pBuf[nBytes-1])!=checksum||(nBytes)!=sizeof(NJUST_MC_STATE_INFO)){//||(nBytes)!=sizeof(NJUST_MC_STATE_INFO)
+//		errCode=1;//两个校验位或checksum或大小不对，有错误
+//	}else{
+//		memcpy(&gMCState,pBuf,sizeof(NJUST_MC_STATE_INFO));
+//		if(gMCState.nSize!=sizeof(NJUST_MC_STATE_INFO)){//结构体大小对不上
+//			memset(&gMCState,0,sizeof(NJUST_MC_STATE_INFO));
+//			errCode=1;
+//		}
+//	}
+//
+//	//step.3----------返回错误码-----------------------------//
+//	return errCode;
+//}
+//
+//int CreateMapCommunication::NJUST_MC_Decode_NAV(const void* pIPData, const int nBytes)
+//{   //解析状态数据,将数据解析到gMCNav
+//	int errCode=0; //无错误
+//	char *pBuf;
+//	signed char checksum;
+//	int i;
+//	//step.1----------初始化---------------------------------//
+//	memset(&gMCNav,0,sizeof(NJUST_MC_NAV_INFO));
+//	//step.2----------将数据解析到gMCNav---------------------//
+//	pBuf = (char *)pIPData;
+//	for(i=0,checksum=0;i<nBytes-1;i++)
+//	{	
+//		checksum +=pBuf[i];    
+//	}
+//	i=sizeof(NJUST_MC_NAV_INFO);
+//
+//	//pBuf[nBytes-1]!=0x0a||pBuf[nBytes-2]!=0x0d
+//	if((signed char)(pBuf[nBytes-1])!=checksum||(nBytes)!=sizeof(NJUST_MC_NAV_INFO)){
+//		errCode=1;//两个校验位或checksum或大小不对，有错误
+//	}else{
+//		memcpy(&gMCNav,pBuf,sizeof(NJUST_MC_NAV_INFO));
+//		if(gMCNav.nSize!=sizeof(NJUST_MC_NAV_INFO)){//结构体大小对不上
+//			memset(&gMCNav,0,sizeof(NJUST_MC_NAV_INFO));
+//			errCode=1;
+//		}
+//	}
+//
+//
+//
+//	//step.3----------返回错误码-----------------------------//
+//	return errCode;
+//
+//	return errCode;
+//}
+//
+//int CreateMapCommunication::NJUST_MC_Decode_Drive(const void* pIPData, const int nBytes)
+//{   //解析执行数据,将数据解析到gMCDrive
+//	int errCode=0; //无错误
+//	char *pBuf;
+//	signed char checksum;
+//	int i;
+//	//step.1----------初始化---------------------------------//
+//	memset(&gMCDrive,0,sizeof(NJUST_MC_DRIVE_INFO));
+//	//step.2----------将数据解析到gMCDrive-------------------//
+//	pBuf = (char *)pIPData;
+//	for(i=0,checksum=0;i<nBytes-3;i++)
+//	{	
+//		checksum +=pBuf[i];    
+//	}
+//
+//	if(pBuf[nBytes-1]!=0x0a||pBuf[nBytes-2]!=0x0d||(signed char)(pBuf[nBytes-3])!=checksum||(nBytes-2)!=sizeof(NJUST_MC_DRIVE_INFO)){
+//		errCode=1;//两个校验位或checksum或大小不对，有错误
+//	}else{
+//		memcpy(&gMCDrive,pBuf,sizeof(NJUST_MC_DRIVE_INFO));
+//		if(gMCDrive.nSize!=sizeof(NJUST_MC_DRIVE_INFO)){//结构体大小对不上
+//			memset(&gMCDrive,0,sizeof(NJUST_MC_DRIVE_INFO));
+//			errCode=1;
+//		}
+//	}
+//
+//	//step.3----------返回错误码-----------------------------//
+//	return errCode;
+//}
 
 //纬度，经度，单位是度,单位是厘米
 void CreateMapCommunication::blh2xy(double x,double y,int &earthx,int &earthy)
@@ -253,7 +254,7 @@ void CreateMapCommunication::blh2xy(double x,double y,int &earthx,int &earthy)
 }
 
 
-void CreateMapCommunication::StartUdpCommunication(CCreateMapDlg *dlg)
+void CreateMapCommunication::StartUdpCommunication(void *dlg)
 {
 	m_Udp.Init(dlg);  
 	m_Udp.SetLocalPort(LOCAL_UDP_PORT);
@@ -282,7 +283,7 @@ void  CreateMapCommunication::getGPSAndPostion(char * buff, int len,double longl
 	NJUST_MC_STATE_INFO  *pState; //当不是状态数据时,值为NULL
     NJUST_MC_NAV_INFO    *pNav; //当不是导航信息时,值为NULL
     NJUST_MC_DRIVE_INFO  *pDrive ; //当不是执行数据时,值为NUL
-	NJUST_MC_Decode_IP_Data( buff,  //IP数据,目标模块从网络收到的数据
+	ToolsUtil::NJUST_MC_Decode_IP_Data( buff,  //IP数据,目标模块从网络收到的数据
 							 len,     //pIPData数据的字节个数
                              &pState, //当不是状态数据时,值为NULL
 				             &pNav, //当不是导航信息时,值为NULL

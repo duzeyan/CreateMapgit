@@ -6,7 +6,7 @@
 #include "CreateMap.h"
 #include "CreateMapDlg.h"
 #include "afxdialogex.h"
-
+#include <WinUser.h>
 #include <stdio.h>
 #include<fstream>
 #include<string>
@@ -14,17 +14,18 @@
 
 //#include"GDITest.h"
 //#include"DrawMapMark.h"
-
-
+#include "MapDAO.h"
+#include "ToolsUtil.h"
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
 
 // CCreateMapDlg 对话框
+CRITICAL_SECTION g_cs;
+int S_DEBUG=0;
 
-
-const unsigned int RECIVE_RATE=50;
+const unsigned int RECIVE_RATE=30;
 
 
 CCreateMapDlg::CCreateMapDlg(CWnd* pParent /*=NULL*/)
@@ -105,6 +106,14 @@ ON_COMMAND(ID_SAVETHEMAP, &CCreateMapDlg::OnSavethemap)
 ON_COMMAND(ID_MENU_SHOWALL, &CCreateMapDlg::OnMenuShowall)
 ON_COMMAND(ID_SAVEMAPTASK, &CCreateMapDlg::OnSaveMapTask)
 ON_COMMAND(ID_RECORDGPS, &CCreateMapDlg::OnRecordgps)
+ON_COMMAND(ID_CONDB, &CCreateMapDlg::OnCondb)
+ON_MESSAGE(MAP_SELDBMAP, &CCreateMapDlg::OnMapSeldbmap)
+ON_COMMAND(ID_CREATEDBMAP, &CCreateMapDlg::OnCreatedbmap)
+ON_COMMAND(ID_SAVEDBMAP, &CCreateMapDlg::OnSaveAsdbmap)
+ON_MESSAGE(MAP_SETNAME, &CCreateMapDlg::OnMapSetname)
+ON_COMMAND(ID_32832, &CCreateMapDlg::OnSaveDBMap)
+ON_BN_CLICKED(IDC_BUTTON3, &CCreateMapDlg::OnBnClickedButton3)
+ON_MESSAGE(MAP_GETGPS, &CCreateMapDlg::OnMapGetgps)
 END_MESSAGE_MAP()
 
 //手动注册事件响应
@@ -138,6 +147,7 @@ BOOL CCreateMapDlg::OnInitDialog()
 	m_lineDlg=NULL;						//构建道路地图框
 	m_crossDlg=NULL;					 //构建路口地图框
 	m_nodeDlg=NULL;                      //节点属性
+	m_dbDlg=NULL;                        //数据库属性
 	m_curMapFullPath="";					//当前地图名字
 	m_Show_cur=0;						//反向绘制 当前索引
 	m_clockGPS=0;						//GPS接受频率
@@ -149,9 +159,9 @@ BOOL CCreateMapDlg::OnInitDialog()
 	initStatusBar();                    //初始化底部状态栏
 	initCtlPosition();                  //初始化记录控件位置
 
-	//初始化标定相关
-	m_RealGPS.x=m_RealGPS.y=0.0f;			 //默认接受的GPS为0  表示没有接受到数据
-	m_getMCInfo.StartUdpCommunication(this); //建立与惯导的通信
+	//连接数据库
+	m_dbcon.Connect("127.0.0.1","root","111111","njustmapdb");
+	memset(&m_dbstate,0,sizeof(DB_STATE)) ;
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -312,7 +322,7 @@ void CCreateMapDlg::OnLButtonDown(UINT nFlags, CPoint point)
 			default:{
 							m_isMove=true;
 							SetClassLong(this->GetSafeHwnd(),
-										GCL_HCURSOR , 
+										-12, 
 										(LONG)LoadCursor(NULL , IDC_HAND));
 							m_startPoint.x=point.x;
 							m_startPoint.y=point.y;
@@ -329,7 +339,7 @@ void CCreateMapDlg::OnMouseMove(UINT nFlags, CPoint point)
 	
 	//左键点击 且 已经加载过图片
 	if(m_isMove&&m_loadImage!=NULL){
-		 SetClassLong(this->GetSafeHwnd(), GCL_HCURSOR ,(LONG)LoadCursor(NULL , IDC_HAND));
+		 SetClassLong(this->GetSafeHwnd(), -12,(LONG)LoadCursor(NULL , IDC_HAND));
 		 //计算鼠标位移
 		int dx=point.x-m_startPoint.x;
 		int dy=point.y-m_startPoint.y;
@@ -387,7 +397,7 @@ void CCreateMapDlg::OnLButtonUp(UINT nFlags, CPoint point)
 	//不在绘制状态 转回正常鼠标状态
 	if(!isDraw){
 		SetClassLong(this->GetSafeHwnd(),
-                             GCL_HCURSOR , 
+                              -12,
                              (LONG)LoadCursor(NULL , IDC_ARROW));
 	}
 	
@@ -400,7 +410,7 @@ void CCreateMapDlg::OnBnClickedButton2()
 	if(!isLoad())
 		return;
 	m_nowCase=Case_Line;			//改变绘图状态
-	SetClassLong(this->GetSafeHwnd(), GCL_HCURSOR ,(LONG)LoadCursor(NULL , IDC_CROSS));
+	SetClassLong(this->GetSafeHwnd(),-12, (LONG)LoadCursor(NULL , IDC_CROSS));
 }
 
 //贝塞尔曲线test
@@ -409,7 +419,7 @@ void CCreateMapDlg::OnBnClickedButnbezier()
 	if(!isLoad())
 		return;
 	m_nowCase=Case_BEZIER;
-	SetClassLong(this->GetSafeHwnd(), GCL_HCURSOR ,(LONG)LoadCursor(NULL , IDC_CROSS));
+	SetClassLong(this->GetSafeHwnd(), -12,(LONG)LoadCursor(NULL , IDC_CROSS));
 }
 
 
@@ -419,7 +429,7 @@ void CCreateMapDlg::OnBnClickedButnmarknode()
 	if(!isLoad())
 		return;
 	m_nowCase=Case_MarkNode;
-	SetClassLong(this->GetSafeHwnd(), GCL_HCURSOR ,(LONG)LoadCursor(NULL , IDC_CROSS));
+	SetClassLong(this->GetSafeHwnd(), -12,(LONG)LoadCursor(NULL , IDC_CROSS));
 }
 
 
@@ -430,7 +440,7 @@ void CCreateMapDlg::OnBnClickedButnpoints()
 		return;
 	if(Case_None==m_nowCase){ // 第一次点
 		m_nowCase=Case_Points;
-		SetClassLong(this->GetSafeHwnd(), GCL_HCURSOR ,(LONG)LoadCursor(NULL , IDC_CROSS));
+		SetClassLong(this->GetSafeHwnd(), -12,(LONG)LoadCursor(NULL , IDC_CROSS));
 	}
 	else if(Case_Points==m_nowCase){
 		//记录到 绘画动作表中
@@ -724,7 +734,7 @@ void CCreateMapDlg::OnBnClickedBtnob()
 	if(!isLoad())
 		return;
 	m_nowCase=Case_MarkObstacle;			//改变绘图状态
-	SetClassLong(this->GetSafeHwnd(), GCL_HCURSOR ,(LONG)LoadCursor(NULL , IDC_CROSS));
+	SetClassLong(this->GetSafeHwnd(), -12,(LONG)LoadCursor(NULL , IDC_CROSS));
 }
 
 
@@ -748,6 +758,7 @@ void CCreateMapDlg::DlgDrawLine(CPoint point,CRect rect){
 			m_lineP=point;
 		}else{
 			DRAW_RECORD dr;
+			dr.id=dr.type=0;
 
 			// --- Step.2.2 --- 根据两点 在图中绘制直线
 			HDC hdc=m_loadImage->GetDC();
@@ -759,9 +770,7 @@ void CCreateMapDlg::DlgDrawLine(CPoint point,CRect rect){
 			m_loadImage->ReleaseDC();
 
 			// --- Step.2.3 --- 记录曲线上所有的点
-			//drawmap::getPointsByImage(m_canvas,nrect,dr.drawPoints);//获取绘制的点
 			drawmap::LogLineBresenham(m_lineP,point,dr.drawPoints);
-			/*m_canvas->ReleaseDC();*/
 
 			// --- Step.2.4 --- 记录到"绘画动作表"中	
 			dr.type=0;
@@ -952,9 +961,8 @@ void CCreateMapDlg::DlgDrawMark(CPoint point,CRect rect){
 
 			// --- Step.2.3 --- 记录到地图结构中  TODO 拆分成函数
 			CREATE_MAP_NODE tNode;
-			tNode.node.neigh=0;
+			memset(&tNode.node,0,sizeof(MAP_NODE));
 			if(m_njustMap.nodes.size()==0){
-				
 				tNode.position.SetPoint(m_nodeP.x,m_nodeP.y); //路口中心位置像素坐标
 				tNode.node.idself=START_NODE_ID;				//ID从START_NODE_ID开始
 				m_njustMap.nodes.push_back(tNode);           
@@ -1717,8 +1725,10 @@ afx_msg LRESULT CCreateMapDlg::OnMapModifNode(WPARAM wParam, LPARAM lParam)
 
 /////////////////////////////标定相关操作/////////////////////////////////////////////
 void CCreateMapDlg::showNowGPS(char *buff,long len){
-	
 	//Step1 控制接受频率
+	CString s;
+	s.Format(L"m_clockGPS: %d \n",m_clockGPS);
+	TRACE(s);
 	m_clockGPS++;
 	m_clockGPS%=10000; //避免越界
 	if(m_clockGPS%RECIVE_RATE!=0){ //50取1
@@ -1727,7 +1737,7 @@ void CCreateMapDlg::showNowGPS(char *buff,long len){
 
 	double longlat[2];
 
-	m_getMCInfo.getGPSAndPostion(buff,len,longlat);
+	m_getMCInfo.getGPSAndPostion(buff,len,longlat); //TODO
 	if((longlat[0]-0)<0.001f) //获取0   不更新
 		return;
 	//转化为度
@@ -1753,7 +1763,7 @@ void CCreateMapDlg::showNowGPS(char *buff,long len){
 void CCreateMapDlg::OnMenuP1()
 {
 	 m_nowCase=Case_getP1;
-	SetClassLong(this->GetSafeHwnd(), GCL_HCURSOR ,(LONG)LoadCursor(NULL , IDC_CROSS));
+	SetClassLong(this->GetSafeHwnd(), -12,(LONG)LoadCursor(NULL , IDC_CROSS));
 
 }
 
@@ -1761,14 +1771,14 @@ void CCreateMapDlg::OnMenuP1()
 void CCreateMapDlg::OnMenuP2()
 {
 	m_nowCase=Case_getP2;
-	SetClassLong(this->GetSafeHwnd(), GCL_HCURSOR ,(LONG)LoadCursor(NULL , IDC_CROSS));
+	SetClassLong(this->GetSafeHwnd(), -12,(LONG)LoadCursor(NULL , IDC_CROSS));
 
 }
 
 void CCreateMapDlg::OnMenuP3()
 {
 	m_nowCase=Case_getP3;
-	SetClassLong(this->GetSafeHwnd(), GCL_HCURSOR ,(LONG)LoadCursor(NULL , IDC_CROSS));
+	SetClassLong(this->GetSafeHwnd(), -12,(LONG)LoadCursor(NULL , IDC_CROSS));
 
 }
 
@@ -1777,7 +1787,7 @@ void CCreateMapDlg::OnMenuP3()
 void CCreateMapDlg::OnMenuDeviation()
 {
 	m_nowCase=Case_Deviation;
-	SetClassLong(this->GetSafeHwnd(), GCL_HCURSOR ,(LONG)LoadCursor(NULL , IDC_CROSS));
+	SetClassLong(this->GetSafeHwnd(), -12,(LONG)LoadCursor(NULL , IDC_CROSS));
 }
 
 //设置标定数据 鼠标点击位置(客户区) 图片控件大小(rect) 标定点索引
@@ -1919,30 +1929,259 @@ void CCreateMapDlg::drawMyCar(double longlat[2]){
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 void CCreateMapDlg::OnRecordgps()
 {
 	
 
+}
+
+//////////////////////////数据库操作////////////////////////////////////////
+
+//打开地图(从数据库)
+void CCreateMapDlg::OnCondb()
+{
+	// --- Step.1 --- 查询所有的地图
+	mysql_ping(m_dbcon.GetMysqlObject());
+	vector<MODEL_WINMAPNAME> vMapNames;
+	auto winmapname=WinMapNameDAO::getInstance();
+	winmapname->init(m_dbcon.GetMysqlObject());
+	winmapname->getAllEntities(vMapNames);
+
+	// --- Step.2 --- 构建子对话框
+	if(m_dbDlg==NULL){   //第一次创建
+		m_dbDlg=new SelectMapDlg();
+		m_dbDlg->Create(IDD_SELMAP_DIALOG,this);
+	}
+	m_dbDlg->init(vMapNames);
+	m_dbDlg->ShowWindow(SW_SHOW);	
+}
+
+//接送子窗口发送的自定义消息 MAP_SELDBMAP
+afx_msg LRESULT CCreateMapDlg::OnMapSeldbmap(WPARAM wParam, LPARAM lParam){
+	int* pID=(int*)lParam;
+	auto windr=WinDrawRecordDAO::getInstance();
+	windr->init(m_dbcon.GetMysqlObject());
+	auto winmapname=WinMapNameDAO::getInstance();
+	winmapname->init(m_dbcon.GetMysqlObject());
+
+	//Step 1 -----------获取地图ID--------------
+	m_dbstate.mapid=*pID;
+	delete pID;
+
+	//Step 2 -----------加载地图结构--------------
+	m_njustMap.enserial2DB(m_dbcon.GetMysqlObject(),m_dbstate.mapid);
+
+	//Step 3 -----------加载绘图信息--------------
+	windr->getEntitiesByMapID(m_dbstate.mapid,m_records);
+
+	//Step 4 -----------加载地图图片--------------
+	MODEL_WINMAPNAME winn;
+	memset(&winn,0,sizeof(MODEL_WINMAPNAME));
+	winmapname->getEntityByID(m_dbstate.mapid,winn);
+	CString bmpFileName(winn.imagepath);
+	CString mapName(winn.name);
+
+	//Step 4 -----------根据记录绘制--------------
+	if(m_loadImage!=NULL) delete m_loadImage;
+	if(m_backUpImage!=NULL) delete m_backUpImage;
+	if(m_canvas!=NULL) delete m_canvas;
+	m_loadImage=new CImage();
+	m_loadImage->Load(bmpFileName); //根据图片路径加载图片  
+	m_backUpImage=new CImage();
+	m_backUpImage->Load(bmpFileName); //根据图片路径加载图片  
+	m_canvas=new CImage();
+	m_canvas->Create(m_loadImage->GetWidth(),m_loadImage->GetHeight(),24);
+	m_srcRect=m_picRect;	//重置视窗	
+
+	//重绘图像
+	DlgReDraw();
+
+	//Step 5 -----------重置列表--------------
+	m_listRecord.ResetContent(); //绘画记录列表
+	unsigned int k;
+	for(k=0;k<m_records.size();k++)
+		m_listRecord.AddString(drawmap::PrintRecord(m_records[k]));
+	m_listMap.ResetContent();
+
+	for(k=0;k<m_njustMap.roads.size();k++)  //地图信息列表
+		m_listMap.AddString(m_njustMap.printRoad(k));
+	for(k=0;k<m_njustMap.crosses.size();k++)
+		m_listMap.AddString(m_njustMap.printCross(k));
+
+	//Step 5 ----------修改状态栏--------------
+	m_statusBar->SetText(L"当前地图:【"+mapName+L"】",0,0);
+
+	return 0;
+}
+
+//在数据库上 新建地图(没有保存)
+void CCreateMapDlg::OnCreatedbmap()
+{
+	//已经有数据
+	if(m_loadImage!=NULL){
+		INT_PTR re=AfxMessageBox(L"是否放弃当前工作空间,新建地图?",MB_OKCANCEL);
+		if(re!=IDOK)
+			return;
+	}
+
+	CString FilePathName;
+	CFileDialog dlg(TRUE, //TRUE为OPEN对话框，FALSE为SAVE AS对话框
+		NULL, 
+		NULL,
+		OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
+		(LPCTSTR)_TEXT("BMP Files (*.bmp)|*.bmp|All Files (*.*)|*.*||"),
+		NULL);
+	if(dlg.DoModal()==IDOK)
+	{
+		FilePathName=dlg.GetPathName(); //文件名
+		m_loadImage=new CImage();
+		m_loadImage->Load(FilePathName); //根据图片路径加载图片  
+
+		m_backUpImage=new CImage();
+		m_backUpImage->Load(FilePathName); //根据图片路径加载图片  
+
+		m_canvas=new CImage();
+		m_canvas->Create(m_loadImage->GetWidth(),m_loadImage->GetHeight(),24);
+
+		CWnd *pWnd=GetDlgItem(IDC_PIC_MAIN);//获得pictrue控件窗口的句柄      
+		//初始化地图结构
+		m_njustMap.init();  //重新初始化 reset
+		m_records.clear();    //删除已有地图
+
+		//清除列表
+		m_listMap.ResetContent();
+		m_listRecord.ResetContent();
+
+
+		//修改状态栏
+		CString strbar;
+		strbar.Format(L"当前地图:【%s】",L"*未命名");
+		m_statusBar->SetText(strbar,0,0);
+		m_srcRect=m_picRect;
+		m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect); //将图片画到Picture控件表示的矩形区域  
+	}
+}
+
+
+//在数据库上 另存地图(命名)
+void CCreateMapDlg::OnSaveAsdbmap()
+{
+	// --- Step.1 --- 查询所有的地图
+	mysql_ping(m_dbcon.GetMysqlObject());
+	vector<MODEL_WINMAPNAME> vMapNames;
+	auto winmapname=WinMapNameDAO::getInstance();
+	winmapname->init(m_dbcon.GetMysqlObject());
+	winmapname->getAllEntities(vMapNames);
+
+	// --- Step.2 --- 构建子对话框
+	if(m_nameDlg==NULL){   //第一次创建
+		m_nameDlg=new SetNameDlg();
+		m_nameDlg->Create(IDD_NAMEMAP_DIALOG,this);
+	}
+	m_nameDlg->init(vMapNames);
+	m_nameDlg->ShowWindow(SW_SHOW);	
+}
+
+//MAP_SETNAME
+afx_msg LRESULT CCreateMapDlg::OnMapSetname(WPARAM wParam, LPARAM lParam)
+{
+	CString* pStrName=(CString*)lParam;
+	MODEL_WINMAPNAME model;
+
+	//Step 1 -----------设置地图名和文件位置--------------
+	unsigned int strlen=0;
+	CString path=L"D:\\\\map\\\\image\\\\";
+	CString imagepath=path+*pStrName+L".bmp";
+	m_backUpImage->Save(imagepath);
+
+	ToolsUtil::WtoA(model.name,255,pStrName);
+	ToolsUtil::WtoA(model.imagepath,255,&imagepath);
+
+	//Step 2 -----------存入数据库--------------
+	mysql_ping(m_dbcon.GetMysqlObject());
+	auto winmapname=WinMapNameDAO::getInstance();
+	winmapname->init(m_dbcon.GetMysqlObject());
+	winmapname->insertEntity(model);
+	m_dbstate.mapid=model.ID;              //获取插入后反馈的ID
+
+	//Step 3 -----------修改状态栏--------------
+	CString strbar;
+	strbar.Format(L"当前地图:【%s】",*pStrName);
+	m_statusBar->SetText(strbar,0,0);
+
+	delete pStrName;
+	return 0;
+}
+
+
+//保存地图
+void CCreateMapDlg::OnSaveDBMap()
+{
+	//Step 1 -----------判断是否可以保存--------------
+	if(m_dbstate.mapid==0){
+		AfxMessageBox(L"请先另存数据库!",MB_OK);
+		return;
+	}
+	
+	//Step 2 -----------确认连接--------------
+	mysql_ping(m_dbcon.GetMysqlObject()); 
+
+	//Step 3 -----------更新地图结构数据到数据库--------------
+	m_njustMap.serial2DB(m_dbcon.GetMysqlObject(), //存入地图拓扑结构和属性
+							m_dbstate.mapid); 
+
+	//Step 4 ----------更新绘制地图信息到数据库--------------
+	auto winDrawRecord=WinDrawRecordDAO::getInstance();
+	winDrawRecord->init(m_dbcon.GetMysqlObject());
+	winDrawRecord->deleteAllByMapID(m_dbstate.mapid); //先删除原有数据
+	winDrawRecord->insertEntities(m_records,m_dbstate.mapid);
+}
+
+
+void CCreateMapDlg::OnBnClickedButton3()
+{
+	//初始化标定相关
+	m_RealGPS.x=m_RealGPS.y=0.0f;			 //默认接受的GPS为0  表示没有接受到数据
+	m_getMCInfo.StartUdpCommunication(this); //建立与惯导的通信
+}
+
+//消息机制 获取GPS
+afx_msg LRESULT CCreateMapDlg::OnMapGetgps(WPARAM wParam, LPARAM lParam)
+{
+	//废弃代码
+	//MAP_DOUBLE_POINT *p=(MAP_DOUBLE_POINT*)lParam;
+	//double longlat[2];
+	//CString str;
+	//str.Format(L"%lf,%lf\n",p->x,p->y);
+	////TRACE(str);
+	//longlat[0]=p->x;
+	//longlat[1]=p->y;
+
+	//m_clockGPS++;
+	//m_clockGPS%=10000; //避免越界
+	//if(m_clockGPS%RECIVE_RATE!=0){ //50取1
+	//	return 0;
+	//}
+
+	////if((p->x-0)<0.001f) //获取0   不更新
+	////	return 0;
+	//////转化为度
+	//longlat[0]/=60;
+	//longlat[1]/=60;
+	///////Test 118.85644481,32.02762140
+	//////longlat[0]=118.85690144;
+	//////longlat[1]=32.02764064;
+	///////
+
+	//CString strShow;
+	//strShow.Format(L"经度(°):%.8lf 纬度(°):%.8lf",longlat[0],longlat[1]);
+
+	////m_RealGPS.x=longlat[0];
+	////m_RealGPS.y=longlat[1];
+
+
+	////drawMyCar(longlat);      //在车中绘制
+	//m_statusBar->SetText(strShow,1,0);
+	//delete p;
+	//return 0;
 }

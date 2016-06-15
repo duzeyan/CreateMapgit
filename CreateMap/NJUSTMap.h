@@ -3,6 +3,7 @@
 
 
 #include"MapDrawControl.h"
+#include "MapDAO.h"
 #include <algorithm>
 using std::vector;
 
@@ -140,6 +141,12 @@ public:
 
 	//反序列化类
 	void enserial(CFile& file);
+
+	//保存到数据库
+	void serial2DB(MYSQL *conn,unsigned int mapID);
+
+	//从数据库查询获取
+	void enserial2DB(MYSQL *conn,unsigned int mapID);
 
 	//保存地图结构 兼容linux读取模式
 	bool saveBuildMapForLinux(CString filename);

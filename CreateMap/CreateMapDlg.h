@@ -11,12 +11,12 @@
 #include "CreateLineDlg.h"
 #include"CreateCrossDlg.h"
 #include "ModifyNode.h"
+#include "SetNameDlg.h"
 #include "CreateMapCommunication.h"
 #include "resource.h"
 #include<math.h>
-
-
-
+#include"map_mysql_data.h"
+#include "SelectMapDlg.h"
 
 // CCreateMapDlg 对话框
 class CCreateMapDlg : public CDialog
@@ -69,6 +69,8 @@ public:
 	CreateLineDlg *m_lineDlg;       //道路子窗口
 	CreateCrossDlg *m_crossDlg;  //路口子窗口s
 	ModifyNode *m_nodeDlg;         //修改节点属性的子窗口
+	SelectMapDlg *m_dbDlg;          //选择地图子窗口
+	SetNameDlg   *m_nameDlg;      //设置名字子窗口
 	CPoint m_Line2ID ;				//x y为直线两边的ID
 
 	CString m_curMapFullPath;      //当前地图的全路径
@@ -83,8 +85,10 @@ public:
 	MAP_DOUBLE_POINT m_RealGPS;         //从惯导获取的GPS
 	unsigned int m_clockGPS;			//控制接受频率
 	bool m_isDrawCar;                   //控制绘制车体
-	bool m_isHighLight;                
+	bool m_isHighLight;    
 
+	MysqlConnector m_dbcon;             //数据库连接
+    DB_STATE m_dbstate;                 //当前数据库状态
 
 	////////////////////////////////////////////////////////////////////////// 反向操作变量
 	vector<MAP_DOUBLE_POINT> m_Show_GPSList; //读取的GFS
@@ -209,4 +213,17 @@ public:
 	afx_msg void OnMenuShowall();
 	afx_msg void OnSaveMapTask();
 	afx_msg void OnRecordgps();
+	afx_msg void OnCondb();
+protected:
+	afx_msg LRESULT OnMapSeldbmap(WPARAM wParam, LPARAM lParam);
+public:
+	afx_msg void OnCreatedbmap();
+	afx_msg void OnSaveAsdbmap();
+protected:
+	afx_msg LRESULT OnMapSetname(WPARAM wParam, LPARAM lParam);
+public:
+	afx_msg void OnSaveDBMap();
+	afx_msg void OnBnClickedButton3();
+protected:
+	afx_msg LRESULT OnMapGetgps(WPARAM wParam, LPARAM lParam);
 };

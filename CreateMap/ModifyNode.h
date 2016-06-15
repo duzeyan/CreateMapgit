@@ -1,6 +1,6 @@
 #pragma once
 
-#include"MAP__BASIC_data.h"
+#include"MAP_BASIC_data.h"
 // ModifyNode ¶Ô»°¿ò
 
 class ModifyNode : public CDialogEx
