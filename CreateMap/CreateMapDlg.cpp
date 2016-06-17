@@ -136,7 +136,6 @@ BOOL CCreateMapDlg::OnInitDialog()
 
 	m_isMove=false;                    //是否正在按下 移动
 	m_loadImage=NULL;
-	m_canvas=NULL;
 	m_backUpImage=NULL;
 	m_isDrawLine=false;                 //是否正在绘制直线
 	CWnd *pWnd=GetDlgItem(IDC_PIC_MAIN);//获得pictrue控件窗口的句柄   
@@ -248,7 +247,6 @@ void CCreateMapDlg::OnDestroy()
 	if(m_crossDlg!=NULL) delete m_crossDlg; 
 	if(m_loadImage!=NULL) delete m_loadImage; 
 	if(m_backUpImage!=NULL) delete m_backUpImage; 
-	if(m_canvas!=NULL) delete m_canvas; 
 
 	//释放图片控件DC
 	GetDlgItem(IDC_PIC_MAIN)->ReleaseDC(m_pPicDC);
@@ -821,23 +819,11 @@ void CCreateMapDlg::DlgDrawBezier(CPoint point ,CRect rect){
 
 		// --- Step.3.2 --- 记录曲线上的点
 		drawmap::LogLineBresenham(control_bezier.Points,dr.drawPoints);
-		//CRect nrect(0,0,m_loadImage->GetWidth(),m_loadImage->GetHeight());		//TODO: 大图此处可优化为局部重置
-		//nrect.NormalizeRect();
-		//dr.drawPoints.reserve(nrect.Width()+nrect.Height());
-
-		//pDC=CDC::FromHandle(m_canvas->GetDC());
-		//drawmap::ResetImage(m_canvas,m_backUpImage,nrect); //清除之前的后台画板上痕迹 mask
-		//drawmap::DrawBezier(pDC,control_bezier.Points,control_bezier.index+1,RGB(255,0,0));
-		//drawmap::getPointsByImage(m_canvas,nrect,dr.drawPoints);//获取绘制的点
-		//m_canvas->ReleaseDC();
-
-
 
 		// --- Step.3.3 --- 记录到"绘画动作表"中	
 		dr.type=1;
 		m_records.push_back(dr);
 		m_listRecord.AddString(drawmap::PrintRecord(dr));
-
 
 		// --- Step.3.4 --- 重置画笔状态,曲线状态
 		m_nowCase=Case_None;
@@ -1283,7 +1269,7 @@ void CCreateMapDlg::OnMenuBuildMap()
         NULL, 
         NULL,
         OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
-        (LPCTSTR)_TEXT("BMP Files (*.bmp)|*.bmp|All Files (*.*)|*.*||"),
+        (LPCTSTR)_TEXT("BMP Files (*.bmp)|*.bmp|*.png|All Files (*.*)|*.*||"),
         NULL);
     if(dlg.DoModal()==IDOK)
     {
@@ -1293,12 +1279,6 @@ void CCreateMapDlg::OnMenuBuildMap()
 
 		m_backUpImage=new CImage();
 		m_backUpImage->Load(FilePathName); //根据图片路径加载图片  
-
-
-		m_canvas=new CImage();
-		m_canvas->Create(m_loadImage->GetWidth(),m_loadImage->GetHeight(),24);
-
-
 
 		CWnd *pWnd=GetDlgItem(IDC_PIC_MAIN);//获得pictrue控件窗口的句柄      
     
@@ -1358,18 +1338,16 @@ void CCreateMapDlg::OnOpenMap()
 		}
 		int nPos= fileName.ReverseFind('.');
 		CString bmpFileName = fileName.Left(nPos); //yyy
-	    bmpFileName+=L".bmp";
-		
+	    //bmpFileName+=L".bmp";
+		bmpFileName+=L".png";
+
 
 		if(m_loadImage!=NULL) delete m_loadImage;
 		if(m_backUpImage!=NULL) delete m_backUpImage;
-		if(m_canvas!=NULL) delete m_canvas;
 		m_loadImage=new CImage();
 		m_loadImage->Load(bmpFileName); //根据图片路径加载图片  
 		m_backUpImage=new CImage();
 		m_backUpImage->Load(bmpFileName); //根据图片路径加载图片  
-		m_canvas=new CImage();
-		m_canvas->Create(m_loadImage->GetWidth(),m_loadImage->GetHeight(),24);
 		//重置视窗
 		m_srcRect=m_picRect;
 
@@ -1436,7 +1414,9 @@ void CCreateMapDlg::OnSaveAsMap()
 			file.Close();
 		}
 		// --- Step.3 --- 保存图片
-		m_backUpImage->Save(fileName+L".bmp");
+		//m_backUpImage->Save(fileName+L".bmp");
+		m_backUpImage->Save(fileName+L".png");
+
 
 		//修改状态栏
 		int nPos1=fileName.ReverseFind('\\');
@@ -1984,13 +1964,10 @@ afx_msg LRESULT CCreateMapDlg::OnMapSeldbmap(WPARAM wParam, LPARAM lParam){
 	//Step 4 -----------根据记录绘制--------------
 	if(m_loadImage!=NULL) delete m_loadImage;
 	if(m_backUpImage!=NULL) delete m_backUpImage;
-	if(m_canvas!=NULL) delete m_canvas;
 	m_loadImage=new CImage();
 	m_loadImage->Load(bmpFileName); //根据图片路径加载图片  
 	m_backUpImage=new CImage();
 	m_backUpImage->Load(bmpFileName); //根据图片路径加载图片  
-	m_canvas=new CImage();
-	m_canvas->Create(m_loadImage->GetWidth(),m_loadImage->GetHeight(),24);
 	m_srcRect=m_picRect;	//重置视窗	
 
 	//重绘图像
@@ -2029,7 +2006,7 @@ void CCreateMapDlg::OnCreatedbmap()
 		NULL, 
 		NULL,
 		OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
-		(LPCTSTR)_TEXT("BMP Files (*.bmp)|*.bmp|All Files (*.*)|*.*||"),
+		(LPCTSTR)_TEXT("BMP Files (*.bmp)|*.bmp|*.png|All Files (*.*)|*.*||"),
 		NULL);
 	if(dlg.DoModal()==IDOK)
 	{
@@ -2040,8 +2017,6 @@ void CCreateMapDlg::OnCreatedbmap()
 		m_backUpImage=new CImage();
 		m_backUpImage->Load(FilePathName); //根据图片路径加载图片  
 
-		m_canvas=new CImage();
-		m_canvas->Create(m_loadImage->GetWidth(),m_loadImage->GetHeight(),24);
 
 		CWnd *pWnd=GetDlgItem(IDC_PIC_MAIN);//获得pictrue控件窗口的句柄      
 		//初始化地图结构
@@ -2091,7 +2066,8 @@ afx_msg LRESULT CCreateMapDlg::OnMapSetname(WPARAM wParam, LPARAM lParam)
 	//Step 1 -----------设置地图名和文件位置--------------
 	unsigned int strlen=0;
 	CString path=L"D:\\\\map\\\\image\\\\";
-	CString imagepath=path+*pStrName+L".bmp";
+	//CString imagepath=path+*pStrName+L".bmp";
+	CString imagepath=path+*pStrName+L".png";
 	m_backUpImage->Save(imagepath);
 
 	ToolsUtil::WtoA(model.name,255,pStrName);
@@ -2183,5 +2159,5 @@ afx_msg LRESULT CCreateMapDlg::OnMapGetgps(WPARAM wParam, LPARAM lParam)
 	////drawMyCar(longlat);      //在车中绘制
 	//m_statusBar->SetText(strShow,1,0);
 	//delete p;
-	//return 0;
+	return 0;
 }

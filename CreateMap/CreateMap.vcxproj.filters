@@ -147,6 +147,9 @@
     <ClInclude Include="WinDrawRecordDAO.h">
       <Filter>MYSQL模块\DAO</Filter>
     </ClInclude>
+    <ClInclude Include="BlockImage.h">
+      <Filter>绘图模块</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -226,6 +229,9 @@
     </ClCompile>
     <ClCompile Include="WinDrawRecordDAO.cpp">
       <Filter>MYSQL模块\DAO</Filter>
+    </ClCompile>
+    <ClCompile Include="BlockImage.cpp">
+      <Filter>绘图模块</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

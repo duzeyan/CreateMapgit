@@ -48,7 +48,6 @@ public:
 	CPoint m_startPoint;   //左键启动点
 	CImage *m_loadImage;   //最新绘制的图片
 	CImage *m_backUpImage; //原始图像备份
-	CImage *m_canvas;	   //画布 为了记录绘制点集 
 	//CImage *m_canvas1;	   //画布 为了记录绘制点集 
 	bool m_RecordGPS;
 

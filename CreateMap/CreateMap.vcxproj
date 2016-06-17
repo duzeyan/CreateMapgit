@@ -190,6 +190,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BlockImage.h" />
     <ClInclude Include="CreateCrossDlg.h" />
     <ClInclude Include="CreateLineDlg.h" />
     <ClInclude Include="CreateMap.h" />
@@ -226,6 +227,7 @@
     <ClInclude Include="WinRoadDAO.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BlockImage.cpp" />
     <ClCompile Include="CreateCrossDlg.cpp" />
     <ClCompile Include="CreateLineDlg.cpp" />
     <ClCompile Include="CreateMap.cpp" />
