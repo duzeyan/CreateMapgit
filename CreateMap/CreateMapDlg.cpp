@@ -11,6 +11,7 @@
 #include<fstream>
 #include<string>
 #include<sstream>
+#include<string.h>
 
 //#include"GDITest.h"
 //#include"DrawMapMark.h"
@@ -135,8 +136,9 @@ BOOL CCreateMapDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	m_isMove=false;                    //是否正在按下 移动
-	m_loadImage=NULL;
-	m_backUpImage=NULL;
+	//m_loadImage=NULL;
+	//m_backUpImage=NULL;
+	
 	m_isDrawLine=false;                 //是否正在绘制直线
 	CWnd *pWnd=GetDlgItem(IDC_PIC_MAIN);//获得pictrue控件窗口的句柄   
 	pWnd->GetClientRect(&m_picRect);	//获得pictrue控件所在的矩形区域   
@@ -245,8 +247,9 @@ void CCreateMapDlg::OnDestroy()
 	 if(m_statusBar!=NULL) delete m_statusBar;
 	if(m_lineDlg!=NULL) delete m_lineDlg;
 	if(m_crossDlg!=NULL) delete m_crossDlg; 
-	if(m_loadImage!=NULL) delete m_loadImage; 
-	if(m_backUpImage!=NULL) delete m_backUpImage; 
+	//if(m_loadImage!=NULL) delete m_loadImage; 
+	//if(m_backUpImage!=NULL) delete m_backUpImage; 
+	m_blockImage.release();
 
 	//释放图片控件DC
 	GetDlgItem(IDC_PIC_MAIN)->ReleaseDC(m_pPicDC);
@@ -336,7 +339,7 @@ void CCreateMapDlg::OnMouseMove(UINT nFlags, CPoint point)
 {
 	
 	//左键点击 且 已经加载过图片
-	if(m_isMove&&m_loadImage!=NULL){
+	if(m_isMove&&m_blockImage.getImage()!=NULL){
 		 SetClassLong(this->GetSafeHwnd(), -12,(LONG)LoadCursor(NULL , IDC_HAND));
 		 //计算鼠标位移
 		int dx=point.x-m_startPoint.x;
@@ -345,24 +348,28 @@ void CCreateMapDlg::OnMouseMove(UINT nFlags, CPoint point)
 		//更新鼠标移动起始点
 		m_startPoint.x=point.x;
 		m_startPoint.y=point.y;
-
-		int imageW=m_loadImage->GetWidth();
-		int imageH=m_loadImage->GetHeight();
+		
+		int imageW=m_blockImage.getgWidth();
+		int imageH=m_blockImage.getgHeight();
 
 		//定义图像位置块矩形类 
 		CWnd *pWnd=GetDlgItem(IDC_PIC_MAIN);//获得pictrue控件窗口的句柄     
-		//CDC *pDC=pWnd->GetDC();//获得pictrue控件的DC     
 
 		//根据鼠标位移滑动视窗	
-		m_srcRect.left-=dx;m_srcRect.right-=dx;
-		m_srcRect.top-=dy;m_srcRect.bottom-=dy;
+		m_viewRect.left-=dx;m_viewRect.right-=dx;
+		m_viewRect.top-=dy;m_viewRect.bottom-=dy;
 
 		////检查是否越界
-		drawmap::CheckViewInImage(m_srcRect,imageW,imageH,m_picRect.Width(),m_picRect.Height());
-
-		m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect); //将图片画到Picture控件表示的矩形区域  
-
+		drawmap::CheckViewInImage(m_viewRect,imageW,imageH,m_picRect.Width(),m_picRect.Height());
+		CPoint t=m_viewRect.TopLeft();
+		m_blockImage.getImage(m_viewRect.TopLeft());
+		m_blockImage.getImage()->Draw(m_pPicDC->m_hDC, //被绘制控件句柄
+			m_picRect,     //在控件矩形范围内绘制
+			m_blockImage.getFUImageRect()); //在FUImage中待绘部分
+		if(m_blockImage.isStateChange())
+			DlgReDraw();
 	}
+	
 	CDialog::OnMouseMove(nFlags, point);
 }
 
@@ -495,16 +502,24 @@ void CCreateMapDlg::OnBnClickedButtondel()
 void CCreateMapDlg::DlgReDraw(){
 	if(!isLoad())
 		return;
-
-	CRect rect(0,0,m_loadImage->GetWidth(),m_loadImage->GetHeight());
-	HDC hdc=m_loadImage->GetDC();
-	m_backUpImage->Draw(hdc,rect,rect);		//重置为原图
-	m_loadImage->ReleaseDC();
+	CImage* tImage=m_blockImage.getImage(); //名字太长 临时指针
+	CRect rect(0,0,tImage->GetWidth(),tImage->GetHeight());
+	HDC hdc=tImage->GetDC();
+	m_blockImage.getImageBackUp()->Draw(hdc,rect,rect);		//重置为原图
+	tImage->ReleaseDC();
 
 	//绘制图形
-	drawmap::DrawByRecord(m_loadImage,m_records,RGB(255,0,0));
+	auto tRecords=m_records;   //坐标转换
+	for(auto &tRcd:tRecords){
+		for(auto &p:tRcd.drawPoints){
+			p=m_blockImage.gPTolP(p);
+		}
+	}
+	drawmap::DrawByRecord(tImage,tRecords,RGB(255,0,0));
 	//刷新
-	m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect); 
+	tImage->Draw(m_pPicDC->m_hDC, //被绘制控件句柄
+		m_picRect,     //在控件矩形范围内绘制
+		m_blockImage.getFUImageRect()); //在FUImage中待绘部分
 }
 	
 //高亮 选中条目
@@ -528,21 +543,34 @@ void CCreateMapDlg::OnBnClickedButtonshow(){
 				delete[]indexBuf;
 	
 				// --- Step.2 --- 根据选中列表绘制高亮
-				drawmap::DrawByRecord(m_loadImage,tempRecord,RGB(0,255,255));
-				//刷新
-				m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect);
-	
+				CImage *tImage=m_blockImage.getImage();
+				auto tRecords=m_records;   //坐标转换
+				for(auto &tRcd:tRecords){
+					for(auto &p:tRcd.drawPoints){
+						p=m_blockImage.gPTolP(p);
+					}
+				}
+				drawmap::DrawByRecord(tImage,tempRecord,RGB(0,255,255));
+				//在原图基础上绘制高亮
+				tImage->Draw(m_pPicDC->m_hDC,m_picRect,m_blockImage.getFUImageRect());
 				m_isHighLight=true;
 			}
 		}else{
 				//根据动作表恢复原先绘制的图
-				CRect rect(0,0,m_loadImage->GetWidth(),m_loadImage->GetHeight());
-				HDC hdc=m_loadImage->GetDC();
-				m_backUpImage->Draw(hdc,rect,rect);		//重置为原图
-				m_loadImage->ReleaseDC();
-				drawmap::DrawByRecord(m_loadImage,m_records,RGB(255,0,0));
+				CImage *tImage=m_blockImage.getImage();
+				CRect rect(0,0,tImage->GetWidth(),tImage->GetHeight());
+				HDC hdc=tImage->GetDC();
+				m_blockImage.getImageBackUp()->Draw(hdc,rect,rect);		//重置为原图
+				tImage->ReleaseDC();
+				auto tRecords=m_records;   //坐标转换
+				for(auto &tRcd:tRecords){
+					for(auto &p:tRcd.drawPoints){
+						p=m_blockImage.gPTolP(p);
+					}
+				}
+				drawmap::DrawByRecord(tImage,m_records,RGB(255,0,0));
 				//刷新
-				m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect);
+				tImage->Draw(m_pPicDC->m_hDC,m_picRect,m_blockImage.getFUImageRect());
 				m_isHighLight=false;
 		}
 }
@@ -601,7 +629,7 @@ void CCreateMapDlg::OnBnClickedButtonshowroad()
 	unsigned int k;
 	int index=m_listMap.GetCurSel();
 	if(index!=LB_ERR){
-		HDC hdc=m_loadImage->GetDC();
+		HDC hdc=m_blockImage.getImage()->GetDC();
 		CDC *pDC = CDC::FromHandle(hdc);
 		int roadsLen=m_njustMap.roads.size();
 		if(index<roadsLen){   //显示最终的道路序列
@@ -611,10 +639,12 @@ void CCreateMapDlg::OnBnClickedButtonshowroad()
 			for(k=0;k<m_njustMap.crosses[index-roadsLen].points.size();k++)
 				pDC->SetPixel(m_njustMap.crosses[index-roadsLen].points[k],RGB(255,255,255));
 		}
-		
-	
-		m_loadImage->ReleaseDC();
-		m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect);
+		m_blockImage.getImage()->ReleaseDC();
+
+		m_blockImage.getImage(m_viewRect.TopLeft());
+		m_blockImage.getImage()->Draw(m_pPicDC->m_hDC, //被绘制控件句柄
+			m_picRect,     //在控件矩形范围内绘制
+			m_blockImage.getFUImageRect()); //在FUImage中待绘部分
 	}
 }
 
@@ -623,7 +653,8 @@ void CCreateMapDlg::OnMenuShowall()
 {
 	if(!isLoad())
 		return;
-	HDC hdc=m_loadImage->GetDC();
+	CImage *tImage=m_blockImage.getImage();
+	HDC hdc=tImage->GetDC();
 	CDC *pDC = CDC::FromHandle(hdc);
 	int k,i;
 	int roadsLen=m_njustMap.roads.size();
@@ -641,8 +672,8 @@ void CCreateMapDlg::OnMenuShowall()
 	}
 		
 	
-	m_loadImage->ReleaseDC();
-	m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect);
+	tImage->ReleaseDC();
+	tImage->Draw(m_pPicDC->m_hDC,m_picRect,m_blockImage.getFUImageRect());
 }
 
 
@@ -653,13 +684,20 @@ void CCreateMapDlg::OnBnClickedButtonf5()
 		return;
 
 	//绘制图形
-	CRect rect(0,0,m_loadImage->GetWidth(),m_loadImage->GetHeight());
-	HDC hdc=m_loadImage->GetDC();
-	m_backUpImage->Draw(hdc,rect,rect);		//重置为原图
-	m_loadImage->ReleaseDC();
-	drawmap::DrawByRecord(m_loadImage,m_records,RGB(255,0,0));
-	//刷新
-	m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect); 
+	CImage *tImage=m_blockImage.getImage();
+	CRect rect(0,0,tImage->GetWidth(),tImage->GetHeight());
+	HDC hdc=tImage->GetDC();
+	m_blockImage.getImageBackUp()->Draw(hdc,rect,rect);		//重置为原图
+	tImage->ReleaseDC();
+	auto tRecords=m_records;   //坐标转换
+	for(auto &tRcd:tRecords){
+		for(auto &p:tRcd.drawPoints){
+			p=m_blockImage.gPTolP(p);
+		}
+	}
+	drawmap::DrawByRecord(tImage,m_records,RGB(255,0,0));
+	//重新绘制
+	tImage->Draw(m_pPicDC->m_hDC,m_picRect,m_blockImage.getFUImageRect()); 
 }
 
 //删除道路或路口
@@ -752,22 +790,26 @@ void CCreateMapDlg::DlgDrawLine(CPoint point,CRect rect){
 		if(m_lineP.x==0&&m_lineP.y==0){	  
 			// --- Step.2.1 --- 记录第一个点
 			point.x-=rect.left; point.y-=rect.top;
-			point.x+=m_srcRect.left; point.y+=m_srcRect.top;
+			point.x+=m_viewRect.left; 
+			point.y+=m_viewRect.top;
 			m_lineP=point;
 		}else{
 			DRAW_RECORD dr;
 			dr.id=dr.type=0;
 
 			// --- Step.2.2 --- 根据两点 在图中绘制直线
-			HDC hdc=m_loadImage->GetDC();
+			CImage *tImage=m_blockImage.getImage();
+			HDC hdc=tImage->GetDC();
 			CDC *pDC = CDC::FromHandle(hdc);
 			point.x-=rect.left; point.y-=rect.top;
-			point.x+=m_srcRect.left; point.y+=m_srcRect.top;
-			//drawmap::DrawLine(pDC,m_lineP,point,RGB(255,0,0));
-			drawmap::DrawLineBresenham(pDC,m_lineP,point,RGB(255,0,0));
-			m_loadImage->ReleaseDC();
+			point.x+=m_viewRect.left; point.y+=m_viewRect.top;
+			drawmap::DrawLineBresenham(pDC,
+									  m_blockImage.gPTolP(m_lineP),
+									  m_blockImage.gPTolP(point),
+									  RGB(255,0,0));
+			tImage->ReleaseDC();
 
-			// --- Step.2.3 --- 记录曲线上所有的点
+			// --- Step.2.3 --- 记录曲线上所有的全局点
 			drawmap::LogLineBresenham(m_lineP,point,dr.drawPoints);
 
 			// --- Step.2.4 --- 记录到"绘画动作表"中	
@@ -775,10 +817,9 @@ void CCreateMapDlg::DlgDrawLine(CPoint point,CRect rect){
 			m_records.push_back(dr);
 			m_listRecord.AddString(drawmap::PrintRecord(dr));
 
-			// --- Step.2.5 --- 绘制,重置起点
-			m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect); 
-			
-			m_lineP.SetPoint(0,0);
+			// --- Step.2.5 --- 绘制
+			tImage->Draw(m_pPicDC->m_hDC,m_picRect,m_blockImage.getFUImageRect()); 
+			m_lineP.SetPoint(0,0); //重置起点
 		}
 		// --- Step.3 --- 重置画笔状态
 		m_nowCase=Case_None;
@@ -798,26 +839,28 @@ void CCreateMapDlg::DlgDrawBezier(CPoint point ,CRect rect){
 	if(control_bezier.index<3){
 		// --- Step.2 --- 转化到图片坐标，并记录
 		point.x-=rect.left; point.y-=rect.top;
-		point.x+=m_srcRect.left; point.y+=m_srcRect.top;
+		point.x+=m_viewRect.left; point.y+=m_viewRect.top;//全局点
 
 		control_bezier.Points[control_bezier.index++]=point;
 	}else if(control_bezier.index == 3){
 		DRAW_RECORD dr;
 		// --- Step.3.1 --- 记录最后一个(4)点的坐标，并绘制
 		point.x-=rect.left; point.y-=rect.top;
-		point.x+=m_srcRect.left; point.y+=m_srcRect.top;
+		point.x+=m_viewRect.left; point.y+=m_viewRect.top;
 		control_bezier.Points[control_bezier.index]=point;
 
-		HDC hdc=m_loadImage->GetDC();
+		CImage *tImage=m_blockImage.getImage();
+		HDC hdc=tImage->GetDC();
 		CDC *pDC = CDC::FromHandle(hdc);
+		CPoint lPoints[4];
+		for(int i=0;i<4;i++)
+			lPoints[i]=m_blockImage.gPTolP(control_bezier.Points[i]);
+		drawmap::DrawMyBezier(pDC,lPoints,control_bezier.index+1,RGB(255,0,0));
+		tImage->ReleaseDC();
 
-		//drawmap::DrawBezier(pDC,control_bezier.Points,control_bezier.index+1,RGB(255,0,0));
-		drawmap::DrawMyBezier(pDC,control_bezier.Points,control_bezier.index+1,RGB(255,0,0));
+		tImage->Draw(m_pPicDC->m_hDC,m_picRect,m_blockImage.getFUImageRect()); //更新picture control
 
-		m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect); //更新picture control
-		m_loadImage->ReleaseDC();
-
-		// --- Step.3.2 --- 记录曲线上的点
+		// --- Step.3.2 --- 记录曲线上的全局点
 		drawmap::LogLineBresenham(control_bezier.Points,dr.drawPoints);
 
 		// --- Step.3.3 --- 记录到"绘画动作表"中	
@@ -843,18 +886,19 @@ void CCreateMapDlg::DlgDrawBezier(CPoint point ,CRect rect){
 void CCreateMapDlg::DlgDrawPoints(CPoint point ,CRect rect){
 	// --- Step.1 绘制 ---
 	point.x-=rect.left; point.y-=rect.top;
-	point.x+=m_srcRect.left; point.y+=m_srcRect.top;
+	point.x+=m_viewRect.left; point.y+=m_viewRect.top;
 
-	HDC hdc=m_loadImage->GetDC();
+	CImage *tImage=m_blockImage.getImage();
+	HDC hdc=tImage->GetDC();
 	CDC *pDC = CDC::FromHandle(hdc);
-	pDC->SetPixel(point,RGB(255,0,0));
-	m_loadImage->ReleaseDC();
+	pDC->SetPixel(m_blockImage.gPTolP(point),RGB(255,0,0));
+	tImage->ReleaseDC();
 
 	// --- Step.2 --- 记录点
 	control_points.points.push_back(point);
 
 	// --- Step.3---  更新图示
-	m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect);
+	tImage->Draw(m_pPicDC->m_hDC,m_picRect,m_blockImage.getFUImageRect());
 }
 
 
@@ -871,25 +915,22 @@ void CCreateMapDlg::DlgDrawObstacle(CPoint point ,CRect rect){
 	if(m_obP.x==0&&m_obP.y==0){
 		// --- Step.2.1 --- 记录第一个点
 			point.x-=rect.left; point.y-=rect.top;
-			point.x+=m_srcRect.left; point.y+=m_srcRect.top;
+			point.x+=m_viewRect.left; point.y+=m_viewRect.top;
 			m_obP=point;
 	}else{
 		// --- Step.2.2 --- 绘制
 			DRAW_RECORD dr;
-	
-
-			HDC hdc=m_loadImage->GetDC();
+			HDC hdc=m_blockImage.getImage()->GetDC();
 			CDC *pDC = CDC::FromHandle(hdc);
 			point.x-=rect.left; point.y-=rect.top;
-			point.x+=m_srcRect.left; point.y+=m_srcRect.top;
+			point.x+=m_viewRect.left; point.y+=m_viewRect.top;
 	
-			
-
 			// --- Step.2.4 --- 记录圆心和边上的一点
             dr.drawPoints.push_back(m_obP);
 			dr.drawPoints.push_back(point);
 
 			// --- Step.2.5 --- 记录到"绘画动作表"中	
+			//计算新绘制障碍物的ID
 			int theID=0;
 			reverse(m_records.begin(),m_records.end());  //倒置
 			auto it=find(m_records.begin(),m_records.end(),5); //找到倒置后的第一个障碍物
@@ -903,11 +944,13 @@ void CCreateMapDlg::DlgDrawObstacle(CPoint point ,CRect rect){
 			m_records.push_back(dr);
 			m_listRecord.AddString(drawmap::PrintRecord(dr)); 
 
-			drawmap::DrawObstacles(pDC,m_obP,point,RGB(255,255,0),theID);
-			m_loadImage->ReleaseDC();
+			drawmap::DrawObstacles(pDC,m_blockImage.gPTolP(m_obP),
+										m_blockImage.gPTolP(point),
+										RGB(255,255,0),theID);
+			m_blockImage.getImage()->ReleaseDC();
 
 
-			// --- Step.2.6 --- 记录到地图结构中	
+			// --- Step.2.6 --- 记录障碍物到地图结构中	
 			CREATE_MAP_OBSTACLE ob;
 			ob.id=theID;
 			ob.x=m_obP.x;
@@ -918,7 +961,7 @@ void CCreateMapDlg::DlgDrawObstacle(CPoint point ,CRect rect){
 			
 
 			// --- Step.3 --- 绘制和重置状态
-			m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect); 	
+			m_blockImage.getImage()->Draw(m_pPicDC->m_hDC,m_picRect,m_blockImage.getFUImageRect()); 	
 			m_obP.SetPoint(0,0);
 			m_nowCase=Case_None;
 	}
@@ -938,13 +981,11 @@ void CCreateMapDlg::DlgDrawMark(CPoint point,CRect rect){
 	if(m_nodeP.x==0&&m_nodeP.y==0){
 		// --- Step.2.1 --- 记录第一个点
 			point.x-=rect.left; point.y-=rect.top;
-			point.x+=m_srcRect.left; point.y+=m_srcRect.top;
+			point.x+=m_viewRect.left; point.y+=m_viewRect.top;
 			m_nodeP=point;
 	}else{
 		// --- Step.2.2 --- 绘制
 			DRAW_RECORD dr;
-
-
 			// --- Step.2.3 --- 记录到地图结构中  TODO 拆分成函数
 			CREATE_MAP_NODE tNode;
 			memset(&tNode.node,0,sizeof(MAP_NODE));
@@ -959,17 +1000,19 @@ void CCreateMapDlg::DlgDrawMark(CPoint point,CRect rect){
 				m_njustMap.nodes.push_back(tNode);
 			}
 
-
-			HDC hdc=m_loadImage->GetDC();
+			CImage *tImage=m_blockImage.getImage();
+			HDC hdc=tImage->GetDC();
 			CDC *pDC = CDC::FromHandle(hdc);
 			point.x-=rect.left; point.y-=rect.top;
-			point.x+=m_srcRect.left; point.y+=m_srcRect.top;
+			point.x+=m_viewRect.left; point.y+=m_viewRect.top;
 			double r=(point.x-m_nodeP.x)*(point.x-m_nodeP.x)+(point.y-m_nodeP.y)*(point.y-m_nodeP.y);
 			r=sqrt(r);
-			drawmap::DrawNodeMark(pDC,m_nodeP,int(r),RGB(255,0,0),tNode.node.idself-START_NODE_ID);
-			m_loadImage->ReleaseDC();
+			drawmap::DrawNodeMark(pDC,
+									m_blockImage.gPTolP(m_nodeP),
+									int(r),RGB(255,0,0),tNode.node.idself-START_NODE_ID);
+			tImage->ReleaseDC();
 
-			// --- Step.2.4 --- 记录圆心和边上的一点
+			// --- Step.2.4 --- 记录圆心和边上的一点(大图)
             dr.drawPoints.push_back(m_nodeP);
 			dr.drawPoints.push_back(point);
 
@@ -978,11 +1021,9 @@ void CCreateMapDlg::DlgDrawMark(CPoint point,CRect rect){
 			dr.id=tNode.node.idself-START_NODE_ID;
 			m_records.push_back(dr);
 			m_listRecord.AddString(drawmap::PrintRecord(dr)); 
-			//m_listMap.AddString(drawmap::PrintRecord(dr));
-			
 
 			// --- Step.3 --- 绘制和重置状态
-			m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect); 	
+			tImage->Draw(m_pPicDC->m_hDC,m_picRect,m_blockImage.getFUImageRect()); 	
 			m_nodeP.SetPoint(0,0);
 			m_nowCase=Case_None;
 	}
@@ -1022,26 +1063,23 @@ afx_msg LRESULT CCreateMapDlg::OnMapSetline2id(WPARAM wParam, LPARAM lParam)
 			//绘画动作列表添加动作
 			DRAW_RECORD dr;
 			// --- Step.2.2 --- 根据两点 在图中绘制直线
-			HDC hdc=m_loadImage->GetDC();
+			CImage *tImage=m_blockImage.getImage();
+			HDC hdc=tImage->GetDC();
 			CDC *pDC = CDC::FromHandle(hdc);
-			m_loadImage->ReleaseDC();
+			tImage->ReleaseDC();
 			//填写记录
 			dr.type=4;
 			dr.id=m_njustMap.roads.back().road.idself-START_LINE_ID+1;
 			dr.drawPoints=m_njustMap.roads.back().pInLine;
 			//绘制图形
-			//drawmap::DrawByRecord(m_loadImage,m_records,RGB(255,0,0));
 			drawmap::DrawRoadMark(pDC,dr.drawPoints,dr.id);
-		
 			m_records.push_back(dr);
 			//这里记录和道路列表同步 切记
 			m_listRecord.AddString(drawmap::PrintRecord(dr));  
 
 			// --- Step.2.5 --- 绘制,重置
 			DlgReDraw();
-			m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect); 
-
-
+			tImage->Draw(m_pPicDC->m_hDC,m_picRect,m_blockImage.getFUImageRect()); 
 
 			//重填道路列表
 			m_listMap.ResetContent();
@@ -1056,7 +1094,6 @@ afx_msg LRESULT CCreateMapDlg::OnMapSetline2id(WPARAM wParam, LPARAM lParam)
 	}else{
 		AfxMessageBox(L"未选取绘图动作",MB_OK);
 	}
-	
 	return 0;
 }
 
@@ -1090,7 +1127,6 @@ afx_msg LRESULT CCreateMapDlg::OnMapSetcross2id(WPARAM wParam, LPARAM lParam)
 		//合并到节点
 		CPoint *p=(CPoint*)lParam;
 		if(m_njustMap.merge2Cross(tempRecord,*p)){
-
 			//重填道路列表
 			m_listMap.ResetContent();
 			for(k=0;k<m_njustMap.roads.size();k++)
@@ -1104,7 +1140,6 @@ afx_msg LRESULT CCreateMapDlg::OnMapSetcross2id(WPARAM wParam, LPARAM lParam)
 	}else{
 		AfxMessageBox(L"未选取绘图动作",MB_OK);
 	}
-	
 	return 0;
 }
 
@@ -1114,12 +1149,6 @@ afx_msg LRESULT CCreateMapDlg::OnMapSetcross2id(WPARAM wParam, LPARAM lParam)
 // 函数描述：序列化数据
 // 返回类型: void
 // 日期：	 2016/04/29
-//************************************
-//
-//
-//
-//
-//
 //************************************
 void CCreateMapDlg::serial(CFile &file){
 	unsigned int i,j;
@@ -1161,7 +1190,7 @@ void CCreateMapDlg::enserial(CFile &file){
 }
 
 bool CCreateMapDlg::isLoad(){
-	if(m_loadImage==NULL){
+	if(m_blockImage.getImage()==NULL){
 		AfxMessageBox(L"请先新建或载入地图",MB_OK);
 		return false;
 	}
@@ -1219,6 +1248,7 @@ void CCreateMapDlg::OnBnClickedCancel()
 	
 }
 
+//绘制TODO
 void CCreateMapDlg::OnTimer(UINT_PTR nIDEvent)
 {
 	if(m_Show_cur!=m_Show_GPSList.size()){
@@ -1228,18 +1258,20 @@ void CCreateMapDlg::OnTimer(UINT_PTR nIDEvent)
 		gps.lat=m_Show_GPSList[m_Show_cur].y/60.0;
 		m_Show_cur++;
 		m_njustMap.GPS2pexel(gps);
+		CPoint gp(gps.x,gps.y);
 
 		//Draw
-		HDC hdc=m_loadImage->GetDC();
+		CImage *tImage=m_blockImage.getImage(gp);
+		HDC hdc=tImage->GetDC();
 		CDC *pDC = CDC::FromHandle(hdc);
 		pDC->SelectStockObject(WHITE_BRUSH);
 
 		CPoint p=CPoint(gps.x,gps.y);int r=4;
 		pDC->MoveTo(p);
 		pDC->Ellipse(p.x-r,p.y-r,p.x+r,p.y+r);
-		m_loadImage->ReleaseDC();
+		tImage->ReleaseDC();
 		//更新
-		m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect);
+		tImage->Draw(m_pPicDC->m_hDC,m_picRect,m_blockImage.getFUImageRect());
 
 	}else{
 		CWnd::KillTimer(1);
@@ -1257,173 +1289,158 @@ void CCreateMapDlg::OnTimer(UINT_PTR nIDEvent)
 //新建地图
 void CCreateMapDlg::OnMenuBuildMap()
 {
-	//已经有数据
-	if(m_loadImage!=NULL){
-		INT_PTR re=AfxMessageBox(L"是否放弃当前工作空间,新建地图?",MB_OKCANCEL);
-		if(re!=IDOK)
-			return;
-	}
+	////已经有数据
+	//if(m_blockImage.getImage()!=NULL){
+	//	INT_PTR re=AfxMessageBox(L"是否放弃当前工作空间,新建地图?",MB_OKCANCEL);
+	//	if(re!=IDOK)
+	//		return;
+	//}
 
-	CString FilePathName;
-    CFileDialog dlg(TRUE, //TRUE为OPEN对话框，FALSE为SAVE AS对话框
-        NULL, 
-        NULL,
-        OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
-        (LPCTSTR)_TEXT("BMP Files (*.bmp)|*.bmp|*.png|All Files (*.*)|*.*||"),
-        NULL);
-    if(dlg.DoModal()==IDOK)
-    {
-        FilePathName=dlg.GetPathName(); //文件名
-		m_loadImage=new CImage();
-		m_loadImage->Load(FilePathName); //根据图片路径加载图片  
+	//CString FilePathName;
+ //   CFileDialog dlg(TRUE, //TRUE为OPEN对话框，FALSE为SAVE AS对话框
+ //       NULL, 
+ //       NULL,
+ //       OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
+ //       (LPCTSTR)_TEXT("BIMG Files (*.BIMG)|All Files (*.*)|*.*||"),
+ //       NULL);
+ //   if(dlg.DoModal()==IDOK)
+ //   {
+ //       FilePathName=dlg.GetPathName(); //文件名
+	//	CWnd *pWnd=GetDlgItem(IDC_PIC_MAIN);//获得pictrue控件窗口的句柄      
 
-		m_backUpImage=new CImage();
-		m_backUpImage->Load(FilePathName); //根据图片路径加载图片  
+	//	//初始化地图结构
+	//	COMPUTE_GPS gps2[2];
+	//	m_njustMap.init();   //重新初始化 reset
+	//	m_records.clear();    //删除已有地图
+	//	//清除列表
+	//	m_listMap.ResetContent();
+	//	m_listRecord.ResetContent();
+	//	//修改状态栏
+	//	CString strbar;
+	//	strbar.Format(L"当前地图:【%s】",L"*未命名");
+	//	m_statusBar->SetText(strbar,0,0);
 
-		CWnd *pWnd=GetDlgItem(IDC_PIC_MAIN);//获得pictrue控件窗口的句柄      
-    
-
-		//初始化地图结构
-		COMPUTE_GPS gps2[2];
-		/*gps2[0]=COMPUTE_GPS(484,311,118.8559087276,32.0303230959);
-		gps2[1]=COMPUTE_GPS(m_loadImage->GetWidth()-1
-							,m_loadImage->GetHeight()-1
-							,118.8583817276
-							,32.0258740959);*/
-		//gps2[0]=COMPUTE_GPS(484,311,118.8558887276,32.0302730959); //5- 2 ;5-5
-		//gps2[1]=COMPUTE_GPS(m_loadImage->GetWidth()-1
-		//					,m_loadImage->GetHeight()-1
-		//					,118.8583617276
-		//					,32.0258240959);
-		m_njustMap.init();  //重新初始化 reset
-		m_records.clear();    //删除已有地图
-
-		//清除列表
-		m_listMap.ResetContent();
-		m_listRecord.ResetContent();
-		//修改状态栏
-		CString strbar;
-		strbar.Format(L"当前地图:【%s】",L"*未命名");
-		
-		m_statusBar->SetText(strbar,0,0);
-
-		m_srcRect=m_picRect;
-		m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect); //将图片画到Picture控件表示的矩形区域  
-	}
+	//	m_viewRect=m_picRect;
+	//	m_blockImage.init(m_picRect);
+	//	//将图片画到Picture控件表示的矩形区域  
+	//	m_blockImage.getImage(m_viewRect.TopLeft())->Draw(m_pPicDC->m_hDC, //被绘制控件句柄
+	//														m_picRect,     //在控件矩形范围内绘制
+	//														m_blockImage.getFUImageRect()); //在FUImage中待绘部分
+	//}
 }
 
 //打开地图
 void CCreateMapDlg::OnOpenMap()
 {
-	//根据载入的地图重绘
-	 // --- Step.1 ---选择保存位置	
-	 CString fileName;
-	 CFileDialog dlg(TRUE, 
-        NULL, 
-        NULL,
-        OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
-        (LPCTSTR)_TEXT("二进制文件 (*.map)|*.map|All Files (*.*)|*.*||"),
-        NULL);
-	if(dlg.DoModal()==IDOK){
-		fileName=dlg.GetPathName(); //文件名
-		m_curMapFullPath=fileName;
-		CFile file;
-		// --- Step.2 --- 数据
-		if(file.Open(fileName,CFile::modeRead)){
-			//读取m_njustmap
-			m_njustMap.enserial(file);
-			//保存m_record
-			enserial(file);
-			file.Close();
-		}
-		int nPos= fileName.ReverseFind('.');
-		CString bmpFileName = fileName.Left(nPos); //yyy
-	    //bmpFileName+=L".bmp";
-		bmpFileName+=L".png";
+	////根据载入的地图重绘
+	// // --- Step.1 ---选择保存位置	
+	// CString fileName;
+	// CFileDialog dlg(TRUE, 
+ //       NULL, 
+ //       NULL,
+ //       OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
+ //       (LPCTSTR)_TEXT("二进制文件 (*.map)|*.map|All Files (*.*)|*.*||"),
+ //       NULL);
+	//if(dlg.DoModal()==IDOK){
+	//	fileName=dlg.GetPathName(); //文件名
+	//	m_curMapFullPath=fileName;
+	//	CFile file;
+	//	// --- Step.2 --- 数据
+	//	if(file.Open(fileName,CFile::modeRead)){
+	//		//读取m_njustmap
+	//		m_njustMap.enserial(file);
+	//		//保存m_record
+	//		enserial(file);
+	//		file.Close();
+	//	}
+	//	int nPos= fileName.ReverseFind('.');
+	//	CString bmpFileName = fileName.Left(nPos); //yyy
+	//    //bmpFileName+=L".bmp";
+	//	bmpFileName+=L".png";
 
 
-		if(m_loadImage!=NULL) delete m_loadImage;
-		if(m_backUpImage!=NULL) delete m_backUpImage;
-		m_loadImage=new CImage();
-		m_loadImage->Load(bmpFileName); //根据图片路径加载图片  
-		m_backUpImage=new CImage();
-		m_backUpImage->Load(bmpFileName); //根据图片路径加载图片  
-		//重置视窗
-		m_srcRect=m_picRect;
+	//	if(m_loadImage!=NULL) delete m_loadImage;
+	//	if(m_backUpImage!=NULL) delete m_backUpImage;
+	//	m_loadImage=new CImage();
+	//	m_loadImage->Load(bmpFileName); //根据图片路径加载图片  
+	//	m_backUpImage=new CImage();
+	//	m_backUpImage->Load(bmpFileName); //根据图片路径加载图片  
+	//	//重置视窗
+	//	m_viewRect=m_picRect;
 
-		//重绘图像
-		DlgReDraw();
-		//重置list
-		m_listRecord.ResetContent();
-		unsigned int k;
-		for(k=0;k<m_records.size();k++)
-			m_listRecord.AddString(drawmap::PrintRecord(m_records[k]));
-		m_listMap.ResetContent();
-		for(k=0;k<m_njustMap.roads.size();k++)
-				m_listMap.AddString(m_njustMap.printRoad(k));
-		for(k=0;k<m_njustMap.crosses.size();k++)
-				m_listMap.AddString(m_njustMap.printCross(k));
+	//	//重绘图像
+	//	DlgReDraw();
+	//	//重置list
+	//	m_listRecord.ResetContent();
+	//	unsigned int k;
+	//	for(k=0;k<m_records.size();k++)
+	//		m_listRecord.AddString(drawmap::PrintRecord(m_records[k]));
+	//	m_listMap.ResetContent();
+	//	for(k=0;k<m_njustMap.roads.size();k++)
+	//			m_listMap.AddString(m_njustMap.printRoad(k));
+	//	for(k=0;k<m_njustMap.crosses.size();k++)
+	//			m_listMap.AddString(m_njustMap.printCross(k));
 
-		//修改状态栏
-		int nPos1=fileName.ReverseFind('\\');
-		CString strbar=fileName.Right(fileName.GetLength()-nPos1-1);
-		strbar=strbar.Left(strbar.GetLength()-4); //.map(4)
-		m_statusBar->SetText(L"当前地图:【"+strbar+L"】",0,0);
-		
-	}
+	//	//修改状态栏
+	//	int nPos1=fileName.ReverseFind('\\');
+	//	CString strbar=fileName.Right(fileName.GetLength()-nPos1-1);
+	//	strbar=strbar.Left(strbar.GetLength()-4); //.map(4)
+	//	m_statusBar->SetText(L"当前地图:【"+strbar+L"】",0,0);
+	//	
+	//}
 }
 
 //保存当前地图
 void CCreateMapDlg::OnSavethemap()
 {
-	CFile file;
-	if(m_curMapFullPath!=""){
-		if(file.Open(m_curMapFullPath,CFile::modeCreate|CFile::modeWrite)){
-				//保存m_njustmap
-				m_njustMap.serial(file);
-				//保存绘画记录
-				serial(file);
-				file.Close();
-				AfxMessageBox(L"保存成功",MB_OK);	   
-		}
-	}
+	//CFile file;
+	//if(m_curMapFullPath!=""){
+	//	if(file.Open(m_curMapFullPath,CFile::modeCreate|CFile::modeWrite)){
+	//			//保存m_njustmap
+	//			m_njustMap.serial(file);
+	//			//保存绘画记录
+	//			serial(file);
+	//			file.Close();
+	//			AfxMessageBox(L"保存成功",MB_OK);	   
+	//	}
+	//}
 }
 
 //另存地图
 void CCreateMapDlg::OnSaveAsMap()
 {
-	if(!isLoad())
-		return;
-	 // --- Step.1 ---选择保存位置	
-	 CString fileName;
-	 CFileDialog dlg(FALSE, 
-        NULL, 
-        NULL,
-        OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
-        (LPCTSTR)_TEXT("定义地图名 |All Files (*.*)|*.*||"),
-        NULL);
-	if(dlg.DoModal()==IDOK){
-		fileName=dlg.GetPathName(); //文件名 C:\\xxx\\yyy
-		CFile file;
-		// --- Step.2 --- 保存m_njustmap(.map)
-		if(file.Open(fileName+L".map",CFile::modeCreate|CFile::modeWrite)){
-			//保存m_njustmap
-			m_njustMap.serial(file);
-			//保存绘画记录
-			serial(file);
-			file.Close();
-		}
-		// --- Step.3 --- 保存图片
-		//m_backUpImage->Save(fileName+L".bmp");
-		m_backUpImage->Save(fileName+L".png");
+	//if(!isLoad())
+	//	return;
+	// // --- Step.1 ---选择保存位置	
+	// CString fileName;
+	// CFileDialog dlg(FALSE, 
+ //       NULL, 
+ //       NULL,
+ //       OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
+ //       (LPCTSTR)_TEXT("定义地图名 |All Files (*.*)|*.*||"),
+ //       NULL);
+	//if(dlg.DoModal()==IDOK){
+	//	fileName=dlg.GetPathName(); //文件名 C:\\xxx\\yyy
+	//	CFile file;
+	//	// --- Step.2 --- 保存m_njustmap(.map)
+	//	if(file.Open(fileName+L".map",CFile::modeCreate|CFile::modeWrite)){
+	//		//保存m_njustmap
+	//		m_njustMap.serial(file);
+	//		//保存绘画记录
+	//		serial(file);
+	//		file.Close();
+	//	}
+	//	// --- Step.3 --- 保存图片
+	//	//m_backUpImage->Save(fileName+L".bmp");
+	//	m_backUpImage->Save(fileName+L".png");
 
 
-		//修改状态栏
-		int nPos1=fileName.ReverseFind('\\');
-		CString strbar=fileName.Right(fileName.GetLength()-nPos1-1);
-		m_statusBar->SetText(L"当前地图:【"+strbar+L"】",0,0);
-		AfxMessageBox(L"保存成功",MB_OK);	    
-	}
+	//	//修改状态栏
+	//	int nPos1=fileName.ReverseFind('\\');
+	//	CString strbar=fileName.Right(fileName.GetLength()-nPos1-1);
+	//	m_statusBar->SetText(L"当前地图:【"+strbar+L"】",0,0);
+	//	AfxMessageBox(L"保存成功",MB_OK);	    
+	//}
 }
 
 //读取显示GPS序列
@@ -1467,8 +1484,8 @@ void CCreateMapDlg::OnSaveLinux()
 {
 	if(!isLoad())
 		return;
-	m_njustMap.saveBuildMapForLinux(L"D:\\map\\board.db");
-	m_njustMap.saveAdjForLinux(L"D:\\map\\adjust.db");
+	m_njustMap.saveBuildMapForLinux(L"D:\\map\\board.db");//地图结构
+	m_njustMap.saveAdjForLinux(L"D:\\map\\adjust.db");//邻接矩阵
 }
 
 //生成任务文件
@@ -1779,7 +1796,7 @@ void CCreateMapDlg::setCalibration(CPoint point,CRect rect,int index){
 			AfxMessageBox(L"未能获取GPS信息",MB_OK);
 		else{
 			point.x-=rect.left; point.y-=rect.top;
-			point.x+=m_srcRect.left; point.y+=m_srcRect.top;
+			point.x+=m_viewRect.left; point.y+=m_viewRect.top;
 			m_njustMap.buildGPS[index].x=point.x;
 			m_njustMap.buildGPS[index].y=point.y;
 			m_njustMap.buildGPS[index].lng=m_RealGPS.x;
@@ -1802,7 +1819,7 @@ void CCreateMapDlg::coumputerDevication(CPoint point,CRect rect){
 	}
 
 	point.x-=rect.left; point.y-=rect.top;
-	point.x+=m_srcRect.left; point.y+=m_srcRect.top;
+	point.x+=m_viewRect.left; point.y+=m_viewRect.top;
 	if(m_njustMap.CheckIsCali()){
 		m_njustMap.computeScale();//计算尺度
 		COMPUTE_GPS cGPS;
@@ -1885,7 +1902,7 @@ void CCreateMapDlg::drawMyCar(double longlat[2]){
 
 
 	// --- Step.1 --- 获取图片DC
-	HDC hdc=m_loadImage->GetDC();
+	HDC hdc=m_blockImage.getImage()->GetDC();
 	CDC *pDC = CDC::FromHandle(hdc);
 	
 
@@ -1900,10 +1917,13 @@ void CCreateMapDlg::drawMyCar(double longlat[2]){
 	int r=2;  //半径
 	pDC->Ellipse(p.x-r,p.y-r,p.x+r,p.y+r);
 
-	m_loadImage->ReleaseDC();
+	m_blockImage.getImage()->ReleaseDC();
 	// --- Step.3---  更新图示
-	m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect);
+	m_blockImage.getImage()->Draw(m_pPicDC->m_hDC, //被绘制控件句柄
+		m_picRect,     //在控件矩形范围内绘制
+		m_blockImage.getFUImageRect()); //在FUImage中待绘部分
 }
+
 
 
 
@@ -1958,17 +1978,18 @@ afx_msg LRESULT CCreateMapDlg::OnMapSeldbmap(WPARAM wParam, LPARAM lParam){
 	MODEL_WINMAPNAME winn;
 	memset(&winn,0,sizeof(MODEL_WINMAPNAME));
 	winmapname->getEntityByID(m_dbstate.mapid,winn);
-	CString bmpFileName(winn.imagepath);
+	m_blockImage.readConfig(winn.imagepath);
 	CString mapName(winn.name);
 
 	//Step 4 -----------根据记录绘制--------------
-	if(m_loadImage!=NULL) delete m_loadImage;
-	if(m_backUpImage!=NULL) delete m_backUpImage;
-	m_loadImage=new CImage();
-	m_loadImage->Load(bmpFileName); //根据图片路径加载图片  
-	m_backUpImage=new CImage();
-	m_backUpImage->Load(bmpFileName); //根据图片路径加载图片  
-	m_srcRect=m_picRect;	//重置视窗	
+	m_viewRect=m_picRect;	//重置视窗
+	m_blockImage.init(m_picRect);
+	//将图片画到Picture控件表示的矩形区域  
+	m_blockImage.getImage(m_viewRect.TopLeft());
+	m_blockImage.getImage()->Draw(m_pPicDC->m_hDC, //被绘制控件句柄
+		m_picRect,     //在控件矩形范围内绘制
+		m_blockImage.getFUImageRect()); //在FUImage中待绘部分
+
 
 	//重绘图像
 	DlgReDraw();
@@ -1995,7 +2016,7 @@ afx_msg LRESULT CCreateMapDlg::OnMapSeldbmap(WPARAM wParam, LPARAM lParam){
 void CCreateMapDlg::OnCreatedbmap()
 {
 	//已经有数据
-	if(m_loadImage!=NULL){
+	if(m_blockImage.getImage()!=NULL){
 		INT_PTR re=AfxMessageBox(L"是否放弃当前工作空间,新建地图?",MB_OKCANCEL);
 		if(re!=IDOK)
 			return;
@@ -2006,17 +2027,14 @@ void CCreateMapDlg::OnCreatedbmap()
 		NULL, 
 		NULL,
 		OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
-		(LPCTSTR)_TEXT("BMP Files (*.bmp)|*.bmp|*.png|All Files (*.*)|*.*||"),
+		(LPCTSTR)_TEXT("BIMG Files (*.BIMG)|*.BIMG"),
 		NULL);
 	if(dlg.DoModal()==IDOK)
 	{
 		FilePathName=dlg.GetPathName(); //文件名
-		m_loadImage=new CImage();
-		m_loadImage->Load(FilePathName); //根据图片路径加载图片  
-
-		m_backUpImage=new CImage();
-		m_backUpImage->Load(FilePathName); //根据图片路径加载图片  
-
+		char filename[255];
+		ToolsUtil::WtoA(filename,255,&FilePathName);
+		m_blockImage.readConfig(filename); //读取配置文件
 
 		CWnd *pWnd=GetDlgItem(IDC_PIC_MAIN);//获得pictrue控件窗口的句柄      
 		//初始化地图结构
@@ -2027,13 +2045,17 @@ void CCreateMapDlg::OnCreatedbmap()
 		m_listMap.ResetContent();
 		m_listRecord.ResetContent();
 
-
 		//修改状态栏
 		CString strbar;
 		strbar.Format(L"当前地图:【%s】",L"*未命名");
 		m_statusBar->SetText(strbar,0,0);
-		m_srcRect=m_picRect;
-		m_loadImage->Draw(m_pPicDC->m_hDC,m_picRect,m_srcRect); //将图片画到Picture控件表示的矩形区域  
+		m_viewRect=m_picRect;
+		m_blockImage.init(m_picRect);
+		m_blockImage.getImage(CPoint(0,0));
+		m_blockImage.getImage()->Draw(m_pPicDC->m_hDC,
+												m_picRect,
+												m_blockImage.getFUImageRect()
+											); //将图片画到Picture控件表示的矩形区域  
 	}
 }
 
@@ -2066,12 +2088,11 @@ afx_msg LRESULT CCreateMapDlg::OnMapSetname(WPARAM wParam, LPARAM lParam)
 	//Step 1 -----------设置地图名和文件位置--------------
 	unsigned int strlen=0;
 	CString path=L"D:\\\\map\\\\image\\\\";
-	//CString imagepath=path+*pStrName+L".bmp";
-	CString imagepath=path+*pStrName+L".png";
-	m_backUpImage->Save(imagepath);
+	CString imagepath=path+*pStrName+L".BIMG";
 
 	ToolsUtil::WtoA(model.name,255,pStrName);
 	ToolsUtil::WtoA(model.imagepath,255,&imagepath);
+	m_blockImage.writeConfig(model.imagepath);
 
 	//Step 2 -----------存入数据库--------------
 	mysql_ping(m_dbcon.GetMysqlObject());

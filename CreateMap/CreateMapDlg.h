@@ -17,6 +17,7 @@
 #include<math.h>
 #include"map_mysql_data.h"
 #include "SelectMapDlg.h"
+#include "BlockImage.h"
 
 // CCreateMapDlg 对话框
 class CCreateMapDlg : public CDialog
@@ -46,12 +47,13 @@ protected:
 public:
 	bool m_isMove;			//鼠标是否在移动
 	CPoint m_startPoint;   //左键启动点
-	CImage *m_loadImage;   //最新绘制的图片
-	CImage *m_backUpImage; //原始图像备份
+	//CImage *m_loadImage;   //最新绘制的图片
+	//CImage *m_backUpImage; //原始图像备份
+	BlockImage m_blockImage;//分块读取图片
 	//CImage *m_canvas1;	   //画布 为了记录绘制点集 
 	bool m_RecordGPS;
 
-	CRect m_srcRect;       //原图上的视窗 
+	CRect m_viewRect;       //原图上的视窗 
 	CRect m_picRect;       //图片控件大小
 	bool m_isDrawLine;     //是否进入画状态
 	CPoint m_lineP;			//画线的起始点和终点

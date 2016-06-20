@@ -208,10 +208,10 @@ void drawmap::DrawBezier(CDC *pdc,CPoint points[],unsigned int count,COLORREF co
 void drawmap::DrawMyBezier(CDC *pdc,CPoint points[],unsigned int len,COLORREF color){
 	float dt; 
 	CPoint tp=points[0]-points[3];//估算需要显示的gps长度 过量估计
-	int numberOfPoints=tp.x+tp.y;
+	int numberOfPoints=abs(tp.x)+abs(tp.y);
 	numberOfPoints*=2;
 	dt = 1.0 / ( numberOfPoints - 1 ); 
-	CPoint oldPoint(0,0); //消除重复
+	CPoint oldPoint(0,0); //记录上一次计算出的点
 	for(int i = 0; i < numberOfPoints; i++) { //相同的点不绘制 不记录
 		CPoint drawPoint = PointOnCubicBezier( points, i*dt ); 
 		if(oldPoint!=drawPoint){
@@ -225,7 +225,7 @@ void drawmap::DrawMyBezier(CDC *pdc,CPoint points[],unsigned int len,COLORREF co
 void drawmap::LogLineBresenham(CPoint points[],vector<CPoint> &pV){
 	float dt; 
 	CPoint tp=points[0]-points[3];//估算需要显示的gps长度 过量估计
-	int numberOfPoints=tp.x+tp.y;
+	int numberOfPoints=abs(tp.x)+abs(tp.y);
 	numberOfPoints*=2;
 	dt = 1.0 / ( numberOfPoints - 1 ); 
 	CPoint oldPoint(0,0); //消除重复

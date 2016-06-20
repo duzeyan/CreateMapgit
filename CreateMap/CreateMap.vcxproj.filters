@@ -150,6 +150,9 @@
     <ClInclude Include="BlockImage.h">
       <Filter>绘图模块</Filter>
     </ClInclude>
+    <ClInclude Include="ImageCacheManage.h">
+      <Filter>绘图模块</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -231,6 +234,9 @@
       <Filter>MYSQL模块\DAO</Filter>
     </ClCompile>
     <ClCompile Include="BlockImage.cpp">
+      <Filter>绘图模块</Filter>
+    </ClCompile>
+    <ClCompile Include="ImageCacheManage.cpp">
       <Filter>绘图模块</Filter>
     </ClCompile>
   </ItemGroup>

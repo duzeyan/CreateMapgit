@@ -17,10 +17,10 @@
 //%其中3为编号
 //%标号方式(此例中整个大图被分为四块)
 //	|---------|--------|
-//	|     0   |		1  |
+//	|     1   |		2  |
 //	|         |		   |
 //	|---------|--------|
-//	|     2   |	    3  |
+//	|     3   |	    4  |
 //	|         |		   |
 //	|---------|--------|
 //%图片划分
@@ -66,20 +66,38 @@ private:
 	CString _imagepathRB;
 	CRect  _viewRect;//视窗大小，视窗必须小于图块大小 
 	CPoint _lastPoint; //最近获得的视窗左上角坐标
+	CPoint _gFuLTPoint; //在全局坐标中,拼接图片的左上角坐标
 	NJUST_MAP_IMAGEFUSETYPE _curFuseType; //当前拼接类型
 	NJUST_MAP_IMAGEFUSETYPE _lastFuseType;//最近一次拼接类型
 	unsigned int _PointsNum[4];//左上,右上,左下,右下图片的编号.  _fuseType不同语义有所变化
+	bool _isStateChange; // 记录_curFuseType是否了改变状态
 public :
 	//读取配置文件 str为全路径
-	void readConfig(CString str);
+	void readConfig(const char* str);
+
+	//写配置文件 str为全路径
+	void writeConfig(const char* str);
 
 	//根据当前视窗左上角在大图坐标系中的坐标获取图片
 	CImage *getImage(CPoint p);
 
+	//直接拿FuseImage
+	CImage *getImage();
+
+	//获取当前拼接图的视窗矩阵
+	CRect getFUImageRect();
+
 	//获取备份图片(未被绘制过)
 	CImage *getImageBackUp();
 
+	//全局点转化为当前拼接图片上的点(坐标转换)
+	CPoint gPTolP(CPoint p);
+
+
 private:
+	//初始化图片对象
+	void malloc();
+
 	//获取p点所在图片的编号,
 	//1.输入由外部确定没有超过图像范围
 	//2.编号是从1开始
@@ -90,6 +108,12 @@ private:
 
 	//获取FU_LEFTRIGHT 情况下所需要的拼接矩形
 	void getFuseLRRect(CRect &rectL,CRect &rectR,CRect &rectFL,CRect &rectFR);
+
+	//获取FU_UPDOWN 情况下所需要的拼接矩形
+	void getFuseUDRect(CRect &rectU,CRect &rectD,CRect &rectFU,CRect &rectFD);
+
+	//获取FU_UDLR 情况下所需要的拼接矩形 按照注释中1,2,3,4的顺序来构造矩形
+	void getFuseUDLRRect(CRect rect[4],CRect rectF[4]);
 
 	//拼接在FU_NONE情况下的图片
 	void fuseNone(unsigned int code);
@@ -102,6 +126,20 @@ private:
 
 	//拼接在FU_UDLR情况下的图片
 	void fuseUDLR(unsigned int codeLT,unsigned int codeRD);
+
+
+public:
+	inline int getgWidth(){
+		return _gWidth;
+	}
+
+	inline int getgHeight(){
+		return _gheight;
+	}
+
+	inline bool isStateChange(){
+		return _isStateChange;
+	}
 };
 
 #endif

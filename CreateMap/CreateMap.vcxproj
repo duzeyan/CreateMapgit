@@ -199,6 +199,7 @@
     <ClInclude Include="DIBAPI.H" />
     <ClInclude Include="DrawMapMark.h" />
     <ClInclude Include="GDITest.h" />
+    <ClInclude Include="ImageCacheManage.h" />
     <ClInclude Include="MapDAO.h" />
     <ClInclude Include="MapDrawControl.h" />
     <ClInclude Include="map_mysql_data.h" />
@@ -235,6 +236,7 @@
     <ClCompile Include="CreateMapDlg.cpp" />
     <ClCompile Include="DIBAPI.CPP" />
     <ClCompile Include="DrawMapMark.cpp" />
+    <ClCompile Include="ImageCacheManage.cpp" />
     <ClCompile Include="ModifyNode.cpp" />
     <ClCompile Include="MYFILE.CPP" />
     <ClCompile Include="MySqlCommand.cpp" />
