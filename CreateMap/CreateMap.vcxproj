@@ -214,6 +214,7 @@
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SelectMapDlg.h" />
     <ClInclude Include="SetNameDlg.h" />
+    <ClInclude Include="ShowSmallDlg.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="ToolsUtil.h" />
@@ -245,6 +246,7 @@
     <ClCompile Include="QDib.cpp" />
     <ClCompile Include="SelectMapDlg.cpp" />
     <ClCompile Include="SetNameDlg.cpp" />
+    <ClCompile Include="ShowSmallDlg.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

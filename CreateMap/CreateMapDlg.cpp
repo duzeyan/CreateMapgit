@@ -113,8 +113,9 @@ ON_COMMAND(ID_CREATEDBMAP, &CCreateMapDlg::OnCreatedbmap)
 ON_COMMAND(ID_SAVEDBMAP, &CCreateMapDlg::OnSaveAsdbmap)
 ON_MESSAGE(MAP_SETNAME, &CCreateMapDlg::OnMapSetname)
 ON_COMMAND(ID_32832, &CCreateMapDlg::OnSaveDBMap)
-ON_BN_CLICKED(IDC_BUTTON3, &CCreateMapDlg::OnBnClickedButton3)
+ON_BN_CLICKED(IDC_BUTTON3, &CCreateMapDlg::OnBnClickedButton3) //缩略图
 ON_MESSAGE(MAP_GETGPS, &CCreateMapDlg::OnMapGetgps)
+ON_MESSAGE(MAP_LOCATION, &CCreateMapDlg::OnMapLocation)
 END_MESSAGE_MAP()
 
 //手动注册事件响应
@@ -163,6 +164,10 @@ BOOL CCreateMapDlg::OnInitDialog()
 	//连接数据库
 	m_dbcon.Connect("127.0.0.1","root","111111","njustmapdb");
 	memset(&m_dbstate,0,sizeof(DB_STATE)) ;
+
+	//初始化通信模块 
+	m_RealGPS.x=m_RealGPS.y=0.0f;			 //默认接受的GPS为0  表示没有接受到数据
+	m_getMCInfo.StartUdpCommunication(this); //建立与惯导的通信
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -247,6 +252,7 @@ void CCreateMapDlg::OnDestroy()
 	 if(m_statusBar!=NULL) delete m_statusBar;
 	if(m_lineDlg!=NULL) delete m_lineDlg;
 	if(m_crossDlg!=NULL) delete m_crossDlg; 
+	if(m_smallImgDlg!=NULL) delete m_smallImgDlg; 
 	//if(m_loadImage!=NULL) delete m_loadImage; 
 	//if(m_backUpImage!=NULL) delete m_backUpImage; 
 	m_blockImage.release();
@@ -269,7 +275,7 @@ void CCreateMapDlg::OnLButtonDown(UINT nFlags, CPoint point)
 	CRect rect;
 	GetDlgItem(IDC_PIC_MAIN)->GetWindowRect(&rect);//获取控件基于全窗体的位置
 	ScreenToClient(rect);//转换为对话框上的相对位置
-
+	
 	// -- Step 1 -- 判断鼠标动作是否在绘图区域内
 	if(rect.PtInRect(point)){
 		if(!isLoad())
@@ -1566,7 +1572,7 @@ void CCreateMapDlg::OnSaveMapTask()
 		fileOut.Close();
 		fclose(pft);
 
-		TRACE("结构体长度：%d",sizeof(ROADNODE));
+		//TRACE("结构体长度：%d",sizeof(ROADNODE));
 		//测试读
 		pft = fopen("D:\\map\\InitialNodeQueue.db", "rb");
 		fseek(pft, 0L, SEEK_END);
@@ -1723,9 +1729,6 @@ afx_msg LRESULT CCreateMapDlg::OnMapModifNode(WPARAM wParam, LPARAM lParam)
 /////////////////////////////标定相关操作/////////////////////////////////////////////
 void CCreateMapDlg::showNowGPS(char *buff,long len){
 	//Step1 控制接受频率
-	CString s;
-	s.Format(L"m_clockGPS: %d \n",m_clockGPS);
-	TRACE(s);
 	m_clockGPS++;
 	m_clockGPS%=10000; //避免越界
 	if(m_clockGPS%RECIVE_RATE!=0){ //50取1
@@ -1735,15 +1738,18 @@ void CCreateMapDlg::showNowGPS(char *buff,long len){
 	double longlat[2];
 
 	m_getMCInfo.getGPSAndPostion(buff,len,longlat); //TODO
+
+	///Test 118.85644481,32.02762140
+	//longlat[0]=118.85811317;
+	//longlat[1]=32.02644632;
+
 	if((longlat[0]-0)<0.001f) //获取0   不更新
 		return;
+
 	//转化为度
 	longlat[0]/=60;
 	longlat[1]/=60;
-	///Test 118.85644481,32.02762140
-	//longlat[0]=118.85690144;
-	//longlat[1]=32.02764064;
-	///
+	
 
 	CString strShow;
 	strShow.Format(L"经度(°):%.8lf 纬度(°):%.8lf",longlat[0],longlat[1]);
@@ -1902,7 +1908,12 @@ void CCreateMapDlg::drawMyCar(double longlat[2]){
 
 
 	// --- Step.1 --- 获取图片DC
-	HDC hdc=m_blockImage.getImage()->GetDC();
+	CImage *tImage=m_blockImage.getImage();
+	if((*tImage)==NULL) //图未准备好
+		return;
+	HDC hdc=tImage->GetDC();
+	if(hdc==NULL) 
+		return;
 	CDC *pDC = CDC::FromHandle(hdc);
 	
 
@@ -1913,13 +1924,14 @@ void CCreateMapDlg::drawMyCar(double longlat[2]){
 	cg.lat=longlat[1];
 	m_njustMap.GPS2pexel(cg);
 	CPoint p(cg.x,cg.y);
+	p=m_blockImage.gPTolP(p); //转换成局部坐标
 	pDC->MoveTo(p);
 	int r=2;  //半径
 	pDC->Ellipse(p.x-r,p.y-r,p.x+r,p.y+r);
 
-	m_blockImage.getImage()->ReleaseDC();
+	tImage->ReleaseDC();
 	// --- Step.3---  更新图示
-	m_blockImage.getImage()->Draw(m_pPicDC->m_hDC, //被绘制控件句柄
+	tImage->Draw(m_pPicDC->m_hDC, //被绘制控件句柄
 		m_picRect,     //在控件矩形范围内绘制
 		m_blockImage.getFUImageRect()); //在FUImage中待绘部分
 }
@@ -2137,9 +2149,21 @@ void CCreateMapDlg::OnSaveDBMap()
 
 void CCreateMapDlg::OnBnClickedButton3()
 {
-	//初始化标定相关
-	m_RealGPS.x=m_RealGPS.y=0.0f;			 //默认接受的GPS为0  表示没有接受到数据
-	m_getMCInfo.StartUdpCommunication(this); //建立与惯导的通信
+	if(!isLoad())
+		return;
+	if(m_smallImgDlg==NULL){ //未初始化过
+		m_smallImgDlg=new ShowSmallDlg();
+		m_smallImgDlg->init(L"D:\\small.bmp");
+		m_smallImgDlg->setSrcImageInfo(m_blockImage.getgWidth(),
+										m_blockImage.getgHeight(),
+										m_blockImage.getBlockWNum(),
+										m_blockImage.getBlockWNum()
+										);
+		m_smallImgDlg->Create(IDD_LOCATION_DIALOG);
+	}
+	m_smallImgDlg->setPosition(CPoint(m_viewRect.TopLeft().x/m_blockImage.getBlockW()
+									,m_viewRect.TopLeft().y/m_blockImage.getBlockH()));
+	m_smallImgDlg->ShowWindow(SW_SHOWNORMAL);
 }
 
 //消息机制 获取GPS
@@ -2180,5 +2204,31 @@ afx_msg LRESULT CCreateMapDlg::OnMapGetgps(WPARAM wParam, LPARAM lParam)
 	////drawMyCar(longlat);      //在车中绘制
 	//m_statusBar->SetText(strShow,1,0);
 	//delete p;
+	return 0;
+}
+
+
+afx_msg LRESULT CCreateMapDlg::OnMapLocation(WPARAM wParam, LPARAM lParam)
+{
+	int *p=(int*)lParam;
+	//Step 1 -----------计算新的视窗矩形--------------
+	int srcW=m_viewRect.Width(); //原视图矩形
+	int srcH=m_viewRect.Height();
+	int newX=p[0]*m_blockImage.getBlockW();//左上
+	int newY=p[1]*m_blockImage.getBlockH();//左上
+	m_viewRect.SetRect(newX,newY,newX+srcW,newY+srcH);
+
+	//Step 2 -----------根据新视窗矩形绘制--------------
+	m_blockImage.setReDraw(true); //强制重新拼接
+	m_blockImage.getImage(m_viewRect.TopLeft());
+	m_blockImage.getImage()->Draw(m_pPicDC->m_hDC, //被绘制控件句柄
+		m_picRect,     //在控件矩形范围内绘制
+		m_blockImage.getFUImageRect()); //在FUImage中待绘部分
+	m_blockImage.setReDraw(false);
+
+	if(m_blockImage.isStateChange()) //检查是否转化区域 是绘制图形
+		DlgReDraw();
+
+	delete []p;
 	return 0;
 }

@@ -40,6 +40,9 @@
     <Filter Include="MYSQL模块\DAO">
       <UniqueIdentifier>{5d2538c1-1583-4607-b625-4ac855c98175}</UniqueIdentifier>
     </Filter>
+    <Filter Include="对话框\附属对话框\子图对话框">
+      <UniqueIdentifier>{6d48d720-0da4-49f9-b5cc-fd52a8edb539}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -153,6 +156,9 @@
     <ClInclude Include="ImageCacheManage.h">
       <Filter>绘图模块</Filter>
     </ClInclude>
+    <ClInclude Include="ShowSmallDlg.h">
+      <Filter>对话框\附属对话框\子图对话框</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -238,6 +244,9 @@
     </ClCompile>
     <ClCompile Include="ImageCacheManage.cpp">
       <Filter>绘图模块</Filter>
+    </ClCompile>
+    <ClCompile Include="ShowSmallDlg.cpp">
+      <Filter>对话框\附属对话框\子图对话框</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

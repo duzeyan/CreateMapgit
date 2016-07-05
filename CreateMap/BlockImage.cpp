@@ -14,9 +14,9 @@ void BlockImage::init(CRect viewRect){
 	_curFuseType=FU_NONE;
 	_lastFuseType=FU_NONE;
 	_isStateChange=false;
+	_isFirst=true;
+	_reDraw=false;
 	memset(_PointsNum,0,sizeof(_PointsNum));
-
-	
 }
 
 void BlockImage::malloc(){
@@ -484,9 +484,13 @@ CImage* BlockImage::getImage(CPoint p){
 	this->computeTwoPointsType(p,endPoint,code1,code2);
 
 	//Step 2 -----------根据拼接类型返回图像--------------
-	if(_imageFu!=NULL&&_lastFuseType==_curFuseType){ //状态未变,且已经计算过结果直接返回上一次的结果
-		_isStateChange=false;
-		return _imageFu;
+	if(_isFirst||_reDraw){
+		_isFirst=false;
+	}else{
+		if(_imageFu!=NULL&&(_lastFuseType==_curFuseType)){ //状态未变,且已经计算过结果直接返回上一次的结果
+			_isStateChange=false;
+			return _imageFu;
+		}
 	}
 
 	_isStateChange=true;

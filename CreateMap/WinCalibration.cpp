@@ -62,7 +62,7 @@ bool WinCailbrationDAO::insertEntity(MODEL_WINCALIBRATION calibationEntity){
 		IDs[i]=insertBuildGPS(calibationEntity.buildGPS[i]);
 	}
 
-	sprintf(sql,"INSERT INTO tb_win_calibration(mapID,scaleX,scaleY,buildGPSID1,buildGPSID2,buildGPSID3) VALUES(%d,%lf,%lf,%d,%d,%d)",
+	sprintf(sql,"INSERT INTO tb_win_calibration(mapID,scaleX,scaleY,buildGPSID1,buildGPSID2,buildGPSID3) VALUES(%d,%e,%e,%d,%d,%d)",
 		calibationEntity.mapID,
 		calibationEntity.scaleX,
 		calibationEntity.scaleY,

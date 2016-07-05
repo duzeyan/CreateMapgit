@@ -18,6 +18,7 @@
 #include"map_mysql_data.h"
 #include "SelectMapDlg.h"
 #include "BlockImage.h"
+#include "ShowSmallDlg.h"
 
 // CCreateMapDlg 对话框
 class CCreateMapDlg : public CDialog
@@ -72,6 +73,7 @@ public:
 	ModifyNode *m_nodeDlg;         //修改节点属性的子窗口
 	SelectMapDlg *m_dbDlg;          //选择地图子窗口
 	SetNameDlg   *m_nameDlg;      //设置名字子窗口
+	ShowSmallDlg *m_smallImgDlg;     //设置子对话框
 	CPoint m_Line2ID ;				//x y为直线两边的ID
 
 	CString m_curMapFullPath;      //当前地图的全路径
@@ -227,4 +229,5 @@ public:
 	afx_msg void OnBnClickedButton3();
 protected:
 	afx_msg LRESULT OnMapGetgps(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnMapLocation(WPARAM wParam, LPARAM lParam);
 };

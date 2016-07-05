@@ -49,7 +49,7 @@ private:
 	unsigned int _blockWNum;//宽度分块个数 
 	unsigned int _blockHNum;//高度分块个数
 	unsigned int _blockW;//块图宽度
-	unsigned int _blockH;//快图高度
+	unsigned int _blockH;//块图高度
 	CString _imagesDir;
 	CString _imageName;
 
@@ -60,10 +60,6 @@ private:
 	CImage *_imageRB;//右下图片
 	CImage *_imageFu;//拼接图片
 	CImage *_imageFuBack;//拼接图片备份
-	CString _imagepathLT; //左上图片路径,用于重绘时读入
-	CString _imagepathRT;
-	CString _imagepathLB;
-	CString _imagepathRB;
 	CRect  _viewRect;//视窗大小，视窗必须小于图块大小 
 	CPoint _lastPoint; //最近获得的视窗左上角坐标
 	CPoint _gFuLTPoint; //在全局坐标中,拼接图片的左上角坐标
@@ -71,6 +67,8 @@ private:
 	NJUST_MAP_IMAGEFUSETYPE _lastFuseType;//最近一次拼接类型
 	unsigned int _PointsNum[4];//左上,右上,左下,右下图片的编号.  _fuseType不同语义有所变化
 	bool _isStateChange; // 记录_curFuseType是否了改变状态
+	bool _isFirst;     //是否是第一次加载
+	bool _reDraw;    //设置是否强制重绘
 public :
 	//读取配置文件 str为全路径
 	void readConfig(const char* str);
@@ -139,6 +137,27 @@ public:
 
 	inline bool isStateChange(){
 		return _isStateChange;
+	}
+
+	inline int getBlockWNum(){
+		return _blockWNum;
+	}
+
+	inline int getBlockHNum(){
+		return _blockHNum;
+	}
+
+	inline int getBlockW(){
+		return _blockW;
+	}
+
+	inline int getBlockH(){
+		return _blockH;
+	}
+
+	//设置强制重绘
+	inline void setReDraw(bool b){
+		_reDraw=b;
 	}
 };
 
