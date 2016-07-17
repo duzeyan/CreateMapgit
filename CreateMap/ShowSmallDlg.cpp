@@ -58,7 +58,7 @@ CRect ShowSmallDlg::getDrawRect(){
 			RBpoint.SetPoint(LTpoint.x+imageW,LTpoint.y+imageH);
 			rect.SetRect(LTpoint,RBpoint);
 		}else{
-			scale=_picRect.Height()*0.1/imageH;//<1
+			scale=_picRect.Height()*1.0/imageH;//<1
 			LTpoint.SetPoint((_picRect.Width()-imageW*scale)/2,0);
 			RBpoint.SetPoint(LTpoint.x+imageW*scale,_picRect.Height());
 			rect.SetRect(LTpoint,RBpoint);
@@ -183,7 +183,7 @@ void ShowSmallDlg::OnPaint()
 
 	//Step 1 -----------¼ÓÔØÍ¼Æ¬¿Ø¼þDC--------------
 	CWnd *pWnd=GetDlgItem(IDC_PICSMALL);
-	pWnd->MoveWindow(CRect(0,0,800,800));
+	pWnd->MoveWindow(CRect(0,0,600,600));
 	pWnd->GetClientRect(&_picRect);
 	_picDC=pWnd->GetDC();
 

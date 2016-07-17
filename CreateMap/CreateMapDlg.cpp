@@ -335,6 +335,13 @@ void CCreateMapDlg::OnLButtonDown(UINT nFlags, CPoint point)
 							m_startPoint.y=point.y;
 					}	
 		}
+		//Step 2 -----------显示全局点--------------
+		point.x-=rect.left; point.y-=rect.top;
+		point.x+=m_viewRect.left; 
+		point.y+=m_viewRect.top;
+		CString strShow;
+		strShow.Format(L"(%d,%d)",point.x,point.y);
+		//m_statusBar->SetText(strShow,2,0);
 	}
 	
 	CDialog::OnLButtonDown(nFlags, point);
@@ -741,7 +748,7 @@ void CCreateMapDlg::OnBnClickedButtondeline()
 			m_listMap.DeleteString(index);
 		}
 		//刷新
-		OnBnClickedButtonf5();
+		//OnBnClickedButtonf5();
 
 	}
 }
@@ -1227,9 +1234,9 @@ void CCreateMapDlg::initStatusBar(){
 	GetClientRect(&m_Rect); //获取对话框的矩形区域
 	m_Rect.top=m_Rect.bottom-20; //设置状态栏的矩形区域
 	m_statusBar->Create(WS_BORDER|WS_VISIBLE|CBRS_BOTTOM,m_Rect,this,3);
-	int nParts[2]= {m_Rect.Width()/2,-1}; //分割尺寸
-	m_statusBar->SetParts(2, nParts); //分割状态栏
-	m_statusBar->SetText(L"当前地图:【未打开地图】",0,0); //第一个分栏加入"这是第一个指示器"
+	int nParts[3]= {m_Rect.Width()/3,m_Rect.Width()/3,-1}; //分割尺寸
+	m_statusBar->SetParts(3, nParts); //分割状态栏
+	m_statusBar->SetText(L"当前地图:【未打开地图】",0,SBT_NOBORDERS); //第一个分栏加入"这是第一个指示器"
 	
 	
 }
@@ -1815,7 +1822,7 @@ void CCreateMapDlg::setCalibration(CPoint point,CRect rect,int index){
 		}
 }
 
-//计算误差
+//计算偏移量
 void CCreateMapDlg::coumputerDevication(CPoint point,CRect rect){
 	if(!isLoad())
 		return;
@@ -1830,7 +1837,12 @@ void CCreateMapDlg::coumputerDevication(CPoint point,CRect rect){
 		m_njustMap.computeScale();//计算尺度
 		COMPUTE_GPS cGPS;
 		cGPS.x=point.x;cGPS.y=point.y;
+		//cGPS.x=3810;cGPS.y=7261;
 		m_njustMap.pixel2GPS(cGPS);
+		COMPUTE_GPS testGPS;
+		testGPS.lng=m_RealGPS.x;testGPS.lat=m_RealGPS.y;
+		m_njustMap.GPS2pexel(testGPS);
+
 
 		CString strShow;
 		//计算距离
@@ -2153,7 +2165,7 @@ void CCreateMapDlg::OnBnClickedButton3()
 		return;
 	if(m_smallImgDlg==NULL){ //未初始化过
 		m_smallImgDlg=new ShowSmallDlg();
-		m_smallImgDlg->init(L"D:\\small.bmp");
+		m_smallImgDlg->init(L"D:\\BGYsmall.png");
 		m_smallImgDlg->setSrcImageInfo(m_blockImage.getgWidth(),
 										m_blockImage.getgHeight(),
 										m_blockImage.getBlockWNum(),

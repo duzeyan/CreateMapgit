@@ -41,10 +41,11 @@ END_MESSAGE_MAP()
 void SelectMapDlg::init(const vector<MODEL_WINMAPNAME> &winmapname){
 	unsigned int i;
 	m_comboxMapList.ResetContent();
+	m_winmapname.clear();
 	for(i=0;i<winmapname.size();i++){
 		m_winmapname.push_back(winmapname[i]);
 		CString strPrint(winmapname[i].name);
-		m_comboxMapList.AddString(strPrint);
+		m_comboxMapList.InsertString(i,strPrint);
 	}
 }
 
