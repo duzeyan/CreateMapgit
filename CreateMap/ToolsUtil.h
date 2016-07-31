@@ -31,6 +31,9 @@ public:
 	//读取任务路点文件,显示在图中
 	static int ReadTaskFile();
 
+	//在vps中查找和给定GPS序列最近的点的索引
+	static size_t getIndexByDis(double lng,double lat,const vector<MAP_DOUBLE_POINT> &vps);
+
 	//解析惯性导航信息
 	static int ToolsUtil::NJUST_MC_Decode_IP_Data( const void* pIPData, const int nBytes,
 		NJUST_MC_STATE_INFO  **pState, //当不是状态数据时,值为NULL

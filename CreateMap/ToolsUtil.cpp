@@ -387,6 +387,24 @@ int ToolsUtil::AnalyticalZZ(NJUSTMap &map){
 }
 
 
+size_t ToolsUtil::getIndexByDis(double lng,double lat,const vector<MAP_DOUBLE_POINT> &vps){
+	size_t index,k;
+	index=vps.size();
+	k=0;
+	double dx,dy,min,dis;
+	min=10000.0;
+	for(auto tGPS:vps){
+		dx=tGPS.x-lng;
+		dy=tGPS.y-lat;
+		dis=dx*dx+dy*dy;
+		if(dis<min){
+			min=dis;
+			index=k;
+		}
+		k++;
+	}
+	return index;
+}
 
 
 static NJUST_MC_STATE_INFO  gMCState;

@@ -131,6 +131,8 @@ ON_BN_CLICKED(IDC_BUTTONREADGPS, &CCreateMapDlg::OnBnClickedButtonreadgps)
 ON_BN_CLICKED(IDC_RADIO1, &CCreateMapDlg::OnBnClickedRadioP)
 ON_BN_CLICKED(IDC_RADIO2, &CCreateMapDlg::OnBnClickedRadioN)
 ON_COMMAND(ID_SHOWTASK, &CCreateMapDlg::OnShowtask)
+ON_BN_CLICKED(IDC_BUTTONRSHOWREADGPS, &CCreateMapDlg::OnBnClickedButtonrshowreadgps)
+ON_WM_LBUTTONDBLCLK()
 END_MESSAGE_MAP()
 
 //手动注册事件响应
@@ -450,6 +452,50 @@ void CCreateMapDlg::OnLButtonUp(UINT nFlags, CPoint point)
 	CDialog::OnLButtonUp(nFlags, point);
 }
 
+
+//左键双击(剪切GPS)
+void CCreateMapDlg::OnLButtonDblClk(UINT nFlags, CPoint point)
+{
+	// -- Step 0 -- 初始化
+	CRect rect;
+	GetDlgItem(IDC_PIC_MAIN)->GetWindowRect(&rect);//获取控件基于全窗体的位置
+	ScreenToClient(rect);//转换为对话框上的相对位置
+	// -- Step 1 -- 判断鼠标动作是否在绘图区域内
+	if(rect.PtInRect(point)){
+		point.x-=rect.left; point.y-=rect.top;
+		point.x+=m_viewRect.left; point.y+=m_viewRect.top;//全局点
+		if(m_cutPoint==CPoint(0,0)){ //第一个点
+			m_cutPoint=point;
+			AfxMessageBox(L"选择剪切起始点",MB_OK);
+		}else{//第二个点
+			//Step 2 -----------计算GPS,定位索引--------------
+			COMPUTE_GPS pix2gps;
+			MAP_DOUBLE_POINT gps1,gps2;
+			pix2gps.x=m_cutPoint.x;
+			pix2gps.y=m_cutPoint.y;
+			m_njustMap.pixel2GPS(pix2gps);//转化成GPS
+			size_t i1=ToolsUtil::getIndexByDis(pix2gps.lng,pix2gps.lat,m_realGPSList);//剪切起始index
+			pix2gps.x=point.x;
+			pix2gps.y=point.y;
+			m_njustMap.pixel2GPS(pix2gps);
+			size_t i2=ToolsUtil::getIndexByDis(pix2gps.lng,pix2gps.lat,m_realGPSList);//剪切终点index
+			//Step 3 -----------剪切--------------
+			vector<MAP_DOUBLE_POINT> tvs=m_realGPSList;
+			m_realGPSList.clear();
+			for(size_t i=i1;i<i2;i++){
+				m_realGPSList.push_back(tvs[i]);
+			}
+			m_cutPoint.SetPoint(0,0);//重置
+			AfxMessageBox(L"剪切完成",MB_OK);
+
+			//Step 4 -----------显示给用户--------------
+			DlgReDraw();//清除绘制
+			OnBnClickedButtonrshowreadgps();//显示剪切后的结果
+		}
+
+	}
+	CDialog::OnLButtonDblClk(nFlags, point);
+}
 //绘直线
 void CCreateMapDlg::OnBnClickedButton2()
 {
@@ -562,6 +608,30 @@ void CCreateMapDlg::OnBnClickedButtonreadgps()
 	}
 }
 
+//显示读取GPS
+void CCreateMapDlg::OnBnClickedButtonrshowreadgps()
+{
+	//Step 1 -----------获取图片DC--------------
+	HDC hdc=m_blockImage.getImage()->GetDC();
+	CDC *pDC = CDC::FromHandle(hdc);
+	COMPUTE_GPS gps2pix;
+	//Step 2 -----------转化坐标绘制 TODO:提供批量绘制接口--------------
+	for(auto &gps:m_realGPSList){
+		gps2pix.lng=gps.x;
+		gps2pix.lat=gps.y;
+		m_njustMap.GPS2pexel(gps2pix);
+		CPoint p=m_blockImage.gPTolP(CPoint(gps2pix.x,gps2pix.y));
+		drawmap::DrawEleFromGPS(pDC,p);//单点效率低
+	}
+	//Step 3 -----------更新到图片DC--------------
+	m_blockImage.getImage()->ReleaseDC();
+	m_blockImage.getImage(m_viewRect.TopLeft());
+	m_blockImage.getImage()->Draw(m_pPicDC->m_hDC, //被绘制控件句柄
+		m_picRect,     //在控件矩形范围内绘制
+		m_blockImage.getFUImageRect()); //在FUImage中待绘部分
+}
+
+///////////////////////////////////////////右键菜单//////////////////////
 
 //删除选中的绘画条目
 void CCreateMapDlg::OnBnClickedButtondel()
@@ -2143,8 +2213,6 @@ afx_msg LRESULT CCreateMapDlg::OnMapSeldbmap(WPARAM wParam, LPARAM lParam){
 	DlgReDraw();
 	//Step 6 ----------修改状态栏--------------
 	m_statusBar->SetText(L"当前地图:【"+mapName+L"】",0,0);
-	//m_statusBar->SetPaneText(0,L"当前地图:【"+mapName+L"】"); //第一个分栏加入"这是第一个指示器"
-
 	return 0;
 }
 
@@ -2457,3 +2525,5 @@ void CCreateMapDlg::OnShowtask()
 		OnBnClickedButton3();//打开缩略图
 	}
 }
+
+

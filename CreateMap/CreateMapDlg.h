@@ -96,11 +96,13 @@ public:
 
 	//////采集GPS
 	bool m_isStartGPS;//标志是否记录
-	vector<MAP_DOUBLE_POINT> m_realGPSList;//记录一段路GPS,用于赋给道路或路口
+	//实时车采,记录,剪切三种方法得到
+	CPoint m_cutPoint;//默认(0,0),剪切的第一个点
+	vector<MAP_DOUBLE_POINT> m_realGPSList;//用于赋给道路或路口的GPS序列
 	vector<CPoint> m_pathKeep;//记录绘制车体,刷新动作取消
-	////////////////////////////////////////////////////////////////////////// 反向显示变量
+	////////////////////////////////////////////////////////////////////////// 显示
 	vector<MAP_DOUBLE_POINT> m_Show_GPSList; //读取规划结果文件
-	vector<MAP_TASK_NODE_ZZ> m_taskPoint;//任务路点文件
+	vector<MAP_TASK_NODE_ZZ> m_taskPoint;//原始任务路点文件
 	vector<MAP_TASK_NODE_ZZ> m_taskShow;//用于在大图中显示任务文件结果
 	int m_Show_cur; //当前读到的序列位置
 	//////////////////////////////////////////////////////////////////////////
@@ -109,7 +111,6 @@ public:
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
-//	afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
 	afx_msg void OnBnClickedButtonup();
 	afx_msg void OnBnClickedButtonleft();
 	afx_msg void OnBnClickedButtonright();
@@ -247,4 +248,6 @@ public:
 	afx_msg void OnBnClickedRadioP();
 	afx_msg void OnBnClickedRadioN();
 	afx_msg void OnShowtask();
+	afx_msg void OnBnClickedButtonrshowreadgps();
+	afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
 };
