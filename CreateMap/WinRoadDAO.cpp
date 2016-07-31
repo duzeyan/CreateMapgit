@@ -14,7 +14,7 @@ bool WinRoadDAO::init(MYSQL* con){
 	return true;
 }
 
-void WinRoadDAO::getInsertSql(char *sql,const MODEL_WINROAD &model,unsigned int mapID,unsigned int pid){
+void WinRoadDAO::getInsertSql(char *sql,const MODEL_WINROAD &model,unsigned int mapID,unsigned int pid,int GPSID,int GPSIDNeg){
 	
 	string strSql="INSERT INTO tb_win_road";
 	strSql=strSql+"(mapID,"
@@ -43,12 +43,14 @@ void WinRoadDAO::getInsertSql(char *sql,const MODEL_WINROAD &model,unsigned int 
 		+"rightdaolubianjie,"
 		+"idealspeed,"
 		+"structure,"
-		+"GPSDataFrom) VALUES("
+		+"GPSDataFrom,"
+		+"GPSListID,"
+		+"GPSListIDNeg) VALUES("
 		+"%d,%d,%d,%d,%d,%d,%d," //7
 		+"%lf,%lf,%lf,%d,%lf,%lf,%d," //7
 		+"%lf,%d,%lf,%d,%d,%d,%d," //7
 		+"%d,%d,%d,%d," //4
-		+"%d,%d)"; //参数
+		+"%d,%d,%d,%d)"; //参数
 
 	sprintf(sql,strSql.c_str(),
 		mapID,
@@ -77,7 +79,9 @@ void WinRoadDAO::getInsertSql(char *sql,const MODEL_WINROAD &model,unsigned int 
 		model.mapRoad.road.rightdaolubianjie,
 		model.mapRoad.road.idealspeed,
 		model.mapRoad.road.structure,
-		model.mapRoad.road.GPSDataFrom);
+		model.mapRoad.road.GPSDataFrom,
+		GPSID,
+		GPSIDNeg);
 }
 
 bool WinRoadDAO::insertEntity(const MODEL_WINROAD &model,unsigned int mapID){
@@ -92,9 +96,19 @@ bool WinRoadDAO::insertEntity(const MODEL_WINROAD &model,unsigned int mapID){
 	if(id==-1)
 		return false;
 
+	//Step 2 -----------插入GPS序列--------------
+	int idGPS,idGPSNeg;
+	idGPS=idGPSNeg=-1;
+	if(model.mapRoad.road.GPSDataFrom==NJUST_MAP_GPS_FROM_CAR){//车采
+		if(!model.mapRoad.realGPS.empty())
+			idGPS=winpoints->insertEntity(model.mapRoad.realGPS);//插入正序列车采数据
+		if(!model.mapRoad.realGPSNeg.empty())
+			idGPSNeg=winpoints->insertEntity(model.mapRoad.realGPSNeg);//插入负序列车采数据
+	}
+
 	//Step 2 -----------插入其他属性--------------
 	memset(sql,0,sizeof(sql));
-	getInsertSql(sql,model,mapID,id);
+	getInsertSql(sql,model,mapID,id,idGPS,idGPSNeg);
 	res=mysql_query(_conn,sql);
 	if(res!=0){
 		return false;
@@ -107,24 +121,32 @@ bool WinRoadDAO::deleteEntityByKey(unsigned int mapID,int idself){
 	char sql[SQL_S_LEN];
 	MYSQL_RES *res_set;
 	MYSQL_ROW row;
-	int id;
+	int id,GPSid,GPSidNeg;
 	auto winpoints=WinPointsDAO::getInstance();
 
 	winpoints->init(_conn);
 	memset(sql,0,sizeof(sql));
 
 	//Step 1 -----------------查询所有从表点集ID-----------
-	sprintf(sql,"SELECT pInLineID FROM tb_win_road WHERE mapID=%d AND idself=%d",mapID,idself);
+	sprintf(sql,"SELECT pInLineID,GPSListID,GPSListIDNeg FROM tb_win_road WHERE mapID=%d AND idself=%d",mapID,idself);
 	mysql_query(_conn,sql);
 	res_set = mysql_store_result(_conn);
 	while ((row = mysql_fetch_row(res_set)) != NULL){ //
 		sscanf(row[0],"%d",&id);
+		sscanf(row[1],"%d",&GPSid);
+		sscanf(row[2],"%d",&GPSidNeg);
 	}
 	mysql_free_result(res_set);
 
 	//Step 2 -----------删除从表数据--------------
 	if(!winpoints->deletePintsByID(id))
 		return false;
+	if(GPSid!=-1){
+		winpoints->deleteGPSByID(GPSid);
+	}
+	if(GPSidNeg>0){
+		winpoints->deleteGPSByID(GPSidNeg);
+	}
 	
 	//Step 2 -----------根据主键删除数据--------------
 	memset(sql,0,sizeof(sql));
@@ -143,19 +165,25 @@ bool WinRoadDAO::deleteAllByMapID(unsigned int mapID){
 	MYSQL_RES *res_set;
 	MYSQL_ROW row;
 	vector<int> vPointsIDs; //点集ID
-	int id; 
+	vector<int> vGPSsIDs; //正序点集ID
+	vector<int> vGPSsIDsNeg; //逆序点集ID
+	int id,GPSid,GPSidNeg; 
 	auto winpoints=WinPointsDAO::getInstance();
 
 	winpoints->init(_conn);
 	memset(sql,0,sizeof(sql));
 
 	//Step 1 -----------------查询所有从表点集ID-----------
-	sprintf(sql,"SELECT pInLineID FROM tb_win_road WHERE mapID=%d",mapID);
+	sprintf(sql,"SELECT pInLineID,GPSListID,GPSListIDNeg FROM tb_win_road WHERE mapID=%d",mapID);
 	mysql_query(_conn,sql);
 	res_set = mysql_store_result(_conn);
 	while ((row = mysql_fetch_row(res_set)) != NULL){ //
 		sscanf(row[0],"%d",&id);
+		sscanf(row[1],"%d",&GPSid);
+		sscanf(row[2],"%d",&GPSidNeg);
 		vPointsIDs.push_back(id);
+		vGPSsIDs.push_back(GPSid);;
+		vGPSsIDsNeg.push_back(GPSidNeg);
 	}
 	mysql_free_result(res_set);
 
@@ -163,6 +191,18 @@ bool WinRoadDAO::deleteAllByMapID(unsigned int mapID){
 	//if(!winpoints->deleteNPointsByIDs(vPointsIDs))
 	//	return false;
 	winpoints->deleteNPointsByIDs(vPointsIDs);
+	//正
+	for(auto theid : vGPSsIDs){
+		if(theid!=-1){
+			winpoints->deleteGPSByID(theid);
+		}
+	}
+	//逆
+	for(auto theid : vGPSsIDsNeg){
+		if(theid>0){ //0 -1都为无效ID
+			winpoints->deleteGPSByID(theid);
+		}
+	}
 
 	//Step 3 -----------根据主键删除数据--------------
 	memset(sql,0,sizeof(sql));
@@ -194,6 +234,12 @@ void WinRoadDAO::getEntitiesByMapID(unsigned int mapID,vector<CREATE_MAP_ROAD> &
 		sscanf(row[3],"%d",&pointsID);
 		winpoints->getPointsByID(pointsID,tRoad.pInLine);
 		row2Entity(row,tRoad);
+		if(tRoad.road.GPSDataFrom==NJUST_MAP_GPS_FROM_CAR){ //车采类型,则读取数据
+			sscanf(row[27],"%d",&pointsID);
+			winpoints->getGPSByID(pointsID,tRoad.realGPS);
+			sscanf(row[28],"%d",&pointsID);
+			winpoints->getGPSByID(pointsID,tRoad.realGPSNeg);
+		}
 		models.push_back(tRoad);
 	}
 	mysql_free_result(res_set);

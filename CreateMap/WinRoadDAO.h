@@ -30,8 +30,10 @@ private:
 	// 参数:   const MODEL_WINROAD & model 道路属性
 	// 参数:   unsigned int mapID  地图ID
 	// 参数:   unsigned int pid    点集ID 
+	// 参数:   unsigned int GPSid  车采GPS的ID 
+	// 参数:   unsigned int GPSidNeg  逆序车采GPS的ID 
 	//************************************
-	void getInsertSql(char *sql,const MODEL_WINROAD &model,unsigned int mapID,unsigned int pid);
+	void getInsertSql(char *sql,const MODEL_WINROAD &model,unsigned int mapID,unsigned int pid,int GPSid,int GPSidNeg);
 
 	//查询的数据项转化为结构体中数据
 	void row2Entity(const MYSQL_ROW &row,CREATE_MAP_ROAD &model);

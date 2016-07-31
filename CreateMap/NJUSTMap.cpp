@@ -115,7 +115,7 @@ bool NJUSTMap::merge2Line(const vector<DRAW_RECORD> &mergeV,MAP_ROAD package){
 			break;
 		}
 	}
-	//补充设置ID
+	//设置ID
 	if(roads.empty()){
 		package.idself=START_LINE_ID;
 	}else{
@@ -139,20 +139,36 @@ bool NJUSTMap::merge2Line(const vector<DRAW_RECORD> &mergeV,MAP_ROAD package){
 	//设置 相应节点的邻接ID
 	for( int i=0;i<nodes.size();i++){
 		if(nodes[i].node.idself==package.idstart){ //设置出发路口 
+			  bool isHave=false;
 			  int nindex=nodes[i].node.neigh;
-			  nodes[i].node.NeighLineID[nindex]=package.idself;
-			  nodes[i].node.NeighNoteID[nindex]=package.idend;
-			  nodes[i].node.neigh++;
-			  assert(nodes[i].node.neigh<4); //最多四个路口
+			  for(int j=0;j<nindex;j++){ //重复则不添加
+				  if(package.idend==nodes[i].node.NeighNoteID[j]){ //该节点以及添加过
+					  isHave=true;break;
+				  }
+			  }
+			  if(!isHave){
+				  nodes[i].node.NeighLineID[nindex]=package.idself;
+				  nodes[i].node.NeighNoteID[nindex]=package.idend;
+				  nodes[i].node.neigh++;
+				  assert(nodes[i].node.neigh<=4); //最多四个路口
+			  }
 		}
-		if(nodes[i].node.idself==package.idend){
-			  int nindex=nodes[i].node.neigh;
-			  nodes[i].node.NeighLineID[nindex]=package.idself;
-			  nodes[i].node.NeighNoteID[nindex]=package.idstart;
-			  nodes[i].node.neigh++;
-			  assert(nodes[i].node.neigh<4); //最多四个路口
-		}
-	}
+		if(nodes[i].node.idself==package.idend){ //设置结束路口
+			   bool isHave=false;
+			   int nindex=nodes[i].node.neigh;
+			   for(int j=0;j<nindex;j++){ //重复则不添加
+				 if(package.idstart==nodes[i].node.NeighNoteID[j]){ //该节点已经添加过
+						isHave=true;break;
+				 }
+			   }
+			   if(!isHave){
+				   nodes[i].node.NeighLineID[nindex]=package.idself;
+				   nodes[i].node.NeighNoteID[nindex]=package.idstart;
+				   nodes[i].node.neigh++;
+				   assert(nodes[i].node.neigh<=4); //最多四个路口
+			   }
+		}//if 
+	}//for
 	return true;
 }
 
@@ -189,6 +205,7 @@ void NJUSTMap::deleteRoadByIndex(int index){
 bool NJUSTMap::merge2Cross(const vector<DRAW_RECORD> &mergeV,CPoint line2ID){
 	unsigned int i,j;
 	CREATE_MAP_CROSS cross;
+	cross.GPSDataFrom=NJUST_MAP_GPS_FROM_HAND_DRAW;
 	//目前只支持直线和断点的连接 设置线上内容
 	for(i=0;i<mergeV.size();i++){
 		switch (mergeV[i].type)
@@ -258,47 +275,104 @@ CString NJUSTMap::printRoadBack()const{
 
 
 bool NJUSTMap::writeRoad(CString path){
-
 	unsigned int i,j;
-	//保存道路
+	//Step 1 -----------保存道路--------------
 	for(i=0;i<roads.size();i++){
-		CString filename;
-		filename.Format(L"%s\\%d-%d.db",path, 
+		CString filenameP,filenameN; //正序
+		filenameP.Format(L"%s\\%d-%d.db",path, 
 								roads[i].road.idstart-START_NODE_ID+1,
 								roads[i].road.idend-START_NODE_ID+1);
-		
+		filenameN.Format(L"%s\\%d-%d.db",path, 
+			roads[i].road.idend-START_NODE_ID+1,
+			roads[i].road.idstart-START_NODE_ID+1);
 		CFile file;
-		if(file.Open(filename,CFile::modeCreate|CFile::modeWrite)){
-			for(j=0;j<roads[i].pInLine.size();j++){
-				COMPUTE_GPS var(roads[i].pInLine[j].x,roads[i].pInLine[j].y,0.0,0.0);
-				pixel2GPS(var);
-				MAP_DOUBLE_POINT outpoint;
-				outpoint.x=var.lng;outpoint.y=var.lat;
-				outpoint.x*=60.0;outpoint.y*=60.0;     //转化为分
-				file.Write(&outpoint,sizeof(MAP_DOUBLE_POINT));
+		//Step 1.1 -----------手绘点集--------------
+		if(roads[i].road.GPSDataFrom==NJUST_MAP_GPS_FROM_HAND_DRAW){
+			if(file.Open(filenameP,CFile::modeCreate|CFile::modeWrite)){
+				for(j=0;j<roads[i].pInLine.size();j++){
+					COMPUTE_GPS var(roads[i].pInLine[j].x,roads[i].pInLine[j].y,0.0,0.0);
+					pixel2GPS(var);
+					MAP_DOUBLE_POINT outpoint;
+					outpoint.x=var.lng;outpoint.y=var.lat;
+					outpoint.x*=60.0;outpoint.y*=60.0;     //转化为分
+					file.Write(&outpoint,sizeof(MAP_DOUBLE_POINT));
+				}
+				file.Close();
 			}
-			file.Close();
-		}	
-	}
-	//保存路口
+		}
+		//Step 1.2 -----------保存采集GPS--------------
+		if(roads[i].road.GPSDataFrom==NJUST_MAP_GPS_FROM_CAR){
+			if(!roads[i].realGPS.empty()){//有正序
+				if(file.Open(filenameP,CFile::modeCreate|CFile::modeWrite)){
+					for(auto &gps:roads[i].realGPS){
+						MAP_DOUBLE_POINT outpoint=gps;
+						outpoint.x*=60.0;outpoint.y*=60.0;     //转化为分
+						file.Write(&outpoint,sizeof(MAP_DOUBLE_POINT));
+					}
+				}
+				file.Close();
+			}//if 有正序
+			if(!roads[i].realGPSNeg.empty()){//有逆序
+				if(file.Open(filenameN,CFile::modeCreate|CFile::modeWrite)){
+					for(auto &gps:roads[i].realGPSNeg){
+						MAP_DOUBLE_POINT outpoint=gps;
+						outpoint.x*=60.0;outpoint.y*=60.0;     //转化为分
+						file.Write(&outpoint,sizeof(MAP_DOUBLE_POINT));
+					}
+				}
+				file.Close();
+			}//if 有逆序
+		}//if from_car	
+	}//for roads
+
+	//Step 2 -----------保存路口--------------
 	for(i=0;i<crosses.size();i++){
-		CString filename;
-		filename.Format(L"%s\\%d+%d.db",path, 
+		CString filenameP,filenameN;
+		filenameP.Format(L"%s\\%d+%d.db",path, 
 								crosses[i].idstart-START_LINE_ID+1,
 								crosses[i].idend-START_LINE_ID+1);
+		filenameN.Format(L"%s\\%d+%d.db",path, 
+			crosses[i].idend-START_LINE_ID+1,
+			crosses[i].idstart-START_LINE_ID+1);
 		CFile file;
-		if(file.Open(filename,CFile::modeCreate|CFile::modeWrite)){
-			for(j=0;j<crosses[i].points.size();j++){
-				COMPUTE_GPS var(crosses[i].points[j].x,crosses[i].points[j].y,0.0,0.0);
-				pixel2GPS(var);
-				MAP_DOUBLE_POINT outpoint;
-				outpoint.x=var.lng;outpoint.y=var.lat;
-				outpoint.x*=60.0;outpoint.y*=60.0;     //转化为分
-				file.Write(&outpoint,sizeof(MAP_DOUBLE_POINT));
+		//Step 2.2 -----------保存手绘GPS--------------
+		if(crosses[i].GPSDataFrom==NJUST_MAP_GPS_FROM_HAND_DRAW){
+			if(file.Open(filenameP,CFile::modeCreate|CFile::modeWrite)){
+				for(j=0;j<crosses[i].points.size();j++){
+					COMPUTE_GPS var(crosses[i].points[j].x,crosses[i].points[j].y,0.0,0.0);
+					pixel2GPS(var);
+					MAP_DOUBLE_POINT outpoint;
+					outpoint.x=var.lng;outpoint.y=var.lat;
+					outpoint.x*=60.0;outpoint.y*=60.0;     //转化为分
+					file.Write(&outpoint,sizeof(MAP_DOUBLE_POINT));
+				}
+				file.Close();
 			}
-			file.Close();
-		}	
-	}
+		}
+		//Step 2.3 -----------保存GPS--------------
+		if(crosses[i].GPSDataFrom==NJUST_MAP_GPS_FROM_CAR){
+			if(!crosses[i].realGPS.empty()){ //正
+				if(file.Open(filenameP,CFile::modeCreate|CFile::modeWrite)){
+						for(auto &gps:crosses[i].realGPS){
+							MAP_DOUBLE_POINT outpoint=gps;
+							outpoint.x*=60.0;outpoint.y*=60.0;     //转化为分
+							file.Write(&outpoint,sizeof(MAP_DOUBLE_POINT));
+						}
+						file.Close();
+				}
+			}
+			if(!crosses[i].realGPSNeg.empty()){ //逆
+				if(file.Open(filenameN,CFile::modeCreate|CFile::modeWrite)){
+					for(auto &gps:crosses[i].realGPSNeg){
+						MAP_DOUBLE_POINT outpoint=gps;
+						outpoint.x*=60.0;outpoint.y*=60.0;     //转化为分
+						file.Write(&outpoint,sizeof(MAP_DOUBLE_POINT));
+					}
+					file.Close();
+				}
+			}//end 逆
+	   }//from car	
+	}//for cross
 	return true;
 }
 
@@ -306,53 +380,109 @@ bool NJUSTMap::writeRoad(CString path){
 //在指定目录下保存文本文件
 bool NJUSTMap::writeRoadTxt(CString path){
 	unsigned int i,j;
-	//保存道路
+	//Step 1 -----------保存道路--------------
 	for(i=0;i<roads.size();i++){
-		CString filename;
-		filename.Format(L"%s\\%d-%d.txt",path, 
+		CString filenameP,filenameN;
+		filenameP.Format(L"%s\\%d-%d.txt",path, 
 								roads[i].road.idstart-START_NODE_ID+1,
 								roads[i].road.idend-START_NODE_ID+1);
-		
+		filenameN.Format(L"%s\\%d-%d.txt",path, 
+			roads[i].road.idend-START_NODE_ID+1,
+			roads[i].road.idstart-START_NODE_ID+1);
 		CFile file;
-		//CArchive ar(&file,CArchive::store);
-		if(file.Open(filename,CFile::modeCreate|CFile::modeWrite)){
-			for(j=0;j<roads[i].pInLine.size();j++){
-				COMPUTE_GPS var(roads[i].pInLine[j].x,roads[i].pInLine[j].y,0.0,0.0);
-				pixel2GPS(var);
-				MAP_DOUBLE_POINT outpoint;
-				outpoint.x=var.lng;outpoint.y=var.lat;
-				//outpoint.x*=60.0;outpoint.y*=60.0;     //转化为分
-				
-				char buf[100];  
-				sprintf(buf,"%.10lf %.10lf \r\n",outpoint.x,outpoint.y);  
-				file.Write(buf,strlen(buf));
-			}
-		
-			file.Close();
-		}	
-	}
-	//保存路口
-	for(i=0;i<crosses.size();i++){
-		CString filename;
-		filename.Format(L"%s\\%d+%d.txt",path, 
-								crosses[i].idstart-START_LINE_ID+1,
-								crosses[i].idend-START_LINE_ID+1);
-		CFile file;
-		if(file.Open(filename,CFile::modeCreate|CFile::modeWrite)){
-			for(j=0;j<crosses[i].points.size();j++){
-				COMPUTE_GPS var(crosses[i].points[j].x,crosses[i].points[j].y,0.0,0.0);
-				pixel2GPS(var);
-				MAP_DOUBLE_POINT outpoint;
-				outpoint.x=var.lng;outpoint.y=var.lat;
-				//outpoint.x*=60.0;outpoint.y*=60.0;     //转化为分
-				
-				char buf[100];  
-				sprintf(buf,"%.10lf %.10lf\r\n",outpoint.x,outpoint.y);  
-				file.Write(buf,strlen(buf));
+		//Step 1.1 -----------手绘--------------
+		if(roads[i].road.GPSDataFrom==NJUST_MAP_GPS_FROM_HAND_DRAW){
+			if(file.Open(filenameP,CFile::modeCreate|CFile::modeWrite)){ //打开文件
+				for(j=0;j<roads[i].pInLine.size();j++){
+					COMPUTE_GPS var(roads[i].pInLine[j].x,roads[i].pInLine[j].y,0.0,0.0);
+					pixel2GPS(var);
+					MAP_DOUBLE_POINT outpoint;
+					outpoint.x=var.lng;outpoint.y=var.lat;
+					char buf[100];  
+					sprintf(buf,"%.10lf %.10lf \r\n",outpoint.x,outpoint.y);  
+					file.Write(buf,strlen(buf));
+				}
+				file.Close();
 			}
 		}
-		file.Close();
-	}
+		//Step 1.2 -----------采集GPS--------------
+		if(roads[i].road.GPSDataFrom==NJUST_MAP_GPS_FROM_CAR){
+			if(!roads[i].realGPS.empty()){//有正序
+				if(file.Open(filenameP,CFile::modeCreate|CFile::modeWrite)){
+					for(auto &gps:roads[i].realGPS){
+						MAP_DOUBLE_POINT outpoint=gps;
+						char buf[100];  
+						sprintf(buf,"%.10lf %.10lf \r\n",outpoint.x,outpoint.y);  
+						file.Write(buf,strlen(buf));
+					}
+					file.Close();
+				}
+			}//if 正序
+			if(!roads[i].realGPSNeg.empty()){//有逆序
+				if(file.Open(filenameN,CFile::modeCreate|CFile::modeWrite)){
+					for(auto &gps:roads[i].realGPSNeg){
+						MAP_DOUBLE_POINT outpoint=gps;
+						char buf[100];  
+						sprintf(buf,"%.10lf %.10lf \r\n",outpoint.x,outpoint.y);  
+						file.Write(buf,strlen(buf));
+					}
+					file.Close();
+				}
+			}//if 逆序
+		}//if from car
+	}//for road
+	
+	//Step 2 -----------保存路口--------------
+	for(i=0;i<crosses.size();i++){
+		CString filenameP,filenameN;
+		filenameP.Format(L"%s\\%d+%d.txt",path, 
+								crosses[i].idstart-START_LINE_ID+1,
+								crosses[i].idend-START_LINE_ID+1);
+		filenameN.Format(L"%s\\%d+%d.txt",path, 
+			crosses[i].idend-START_LINE_ID+1,
+			crosses[i].idstart-START_LINE_ID+1);
+		CFile file;
+		//Step 2.1 -----------手绘--------------
+		if(crosses[i].GPSDataFrom==NJUST_MAP_GPS_FROM_HAND_DRAW){
+			if(file.Open(filenameP,CFile::modeCreate|CFile::modeWrite)){
+				for(j=0;j<crosses[i].points.size();j++){
+					COMPUTE_GPS var(crosses[i].points[j].x,crosses[i].points[j].y,0.0,0.0);
+					pixel2GPS(var);
+					MAP_DOUBLE_POINT outpoint;
+					outpoint.x=var.lng;outpoint.y=var.lat;
+					char buf[100];  
+					sprintf(buf,"%.10lf %.10lf\r\n",outpoint.x,outpoint.y);  
+					file.Write(buf,strlen(buf));
+				}
+				file.Close();
+			}
+		}
+		//Step 2.2 -----------保存GPS--------------
+		if(crosses[i].GPSDataFrom==NJUST_MAP_GPS_FROM_CAR){
+			if(!crosses[i].realGPS.empty()){ //有正序
+				if(file.Open(filenameP,CFile::modeCreate|CFile::modeWrite)){
+					for(auto &gps:crosses[i].realGPS){
+						MAP_DOUBLE_POINT outpoint=gps;
+						char buf[100];  
+						sprintf(buf,"%.10lf %.10lf\r\n",outpoint.x,outpoint.y);  
+						file.Write(buf,strlen(buf));
+					}
+					file.Close();
+				}
+			}
+			if(!crosses[i].realGPSNeg.empty()){ //有逆序
+				if(file.Open(filenameN,CFile::modeCreate|CFile::modeWrite)){
+					for(auto &gps:crosses[i].realGPS){
+						MAP_DOUBLE_POINT outpoint=gps;
+						char buf[100];  
+						sprintf(buf,"%.10lf %.10lf\r\n",outpoint.x,outpoint.y);  
+						file.Write(buf,strlen(buf));
+					}
+					file.Close();
+				}
+			}//逆序
+		}//from car
+	}//for cross
 	return true;
 }
 
@@ -780,8 +910,10 @@ void NJUSTMap::getLineFunctionPara(int startID,int endStart,double &k,double &b,
 
 }
 
-int NJUSTMap::getIndexByGPS(double lng,double lat){
+int NJUSTMap::getIndexByGPS(double lng,double lat,double dis){
 	double minDlen=100;//最大值不会超过100
+	double thres=dis/100000; //米->度
+	thres=thres*thres;
 	int index; //最近的索引
 	int k=0;
 	for(auto &node:nodes){
@@ -794,7 +926,41 @@ int NJUSTMap::getIndexByGPS(double lng,double lat){
 		}
 		k++;
 	}
-	if(minDlen<0.005*0.005){ //0.001 == 2米  10米
+	if(minDlen<thres){ //0.001 == 2米  40米
+		return nodes[index].node.idself-START_NODE_ID+1;
+	}
+	return -1;
+}
+
+
+//在排除特定点的情况下 返回dis范围内的最近节点
+int NJUSTMap::getNodeIndexByGPSWithoutV(double lng,double lat,double dis,vector<MAP_TASK_NODE_ZZ> v){
+	double minDlen=100;//最大值不会超过100
+	double thres=dis/100000; //米->度
+	thres=thres*thres;
+	int index; //最近的索引
+	int k=0;
+	for(auto &node:nodes){
+		bool isHave=false;
+		for(auto &tv:v){
+			if(node.node.idself-START_NODE_ID+1==tv.resultCode){//已经在路网中
+				isHave=true;break;
+			}
+		}
+		if(isHave){ //存在则不搜索
+			k++;
+			continue;
+		}
+		double dlng=node.node.gpsx-lng;
+		double dlat=node.node.gpsy-lat;
+		double dlen2=dlat*dlat+dlng*dlng;
+		if(dlen2<minDlen){  //
+			minDlen=dlen2;
+			index=k;
+		}
+		k++;
+	}
+	if(minDlen<thres){ 
 		return nodes[index].node.idself-START_NODE_ID+1;
 	}
 	return -1;

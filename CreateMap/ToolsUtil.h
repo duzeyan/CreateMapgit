@@ -1,6 +1,9 @@
 #pragma once
 
-#include "NJUST_MAP_data.h"
+#include"MAP_BASIC_data.h"
+#include "NJUSTMap.h"
+
+
 class ToolsUtil
 {
 public:
@@ -16,6 +19,17 @@ public:
 	//宽字符转化为ASSIC dstLen单位为字节
 	static void WtoA(char* dst,unsigned int dstLen,const CString *src);
 
+	//在直线模型下修补断层
+	static void CompleGPS(vector<MAP_DOUBLE_POINT> &GPSList);
+
+	//解析路点文件 总装版本
+	static int AnalyticalZZ(NJUSTMap &map); 
+
+	//解析路点文件 自然基金版本
+	static int AnalyticalZR(NJUSTMap &map); 
+
+	//读取任务路点文件,显示在图中
+	static int ReadTaskFile();
 
 	//解析惯性导航信息
 	static int ToolsUtil::NJUST_MC_Decode_IP_Data( const void* pIPData, const int nBytes,

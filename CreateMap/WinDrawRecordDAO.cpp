@@ -118,6 +118,7 @@ bool WinDrawRecordDAO::deleteAllByMapID(unsigned int mapID){
 
 //根据mapID获取该地图的所有绘画记录
 void WinDrawRecordDAO::getEntitiesByMapID(unsigned int mapID,vector<DRAW_RECORD> &models){
+	models.clear();
 	char sql[SQL_S_LEN];
 	MYSQL_RES *res_set;
 	MYSQL_ROW row;

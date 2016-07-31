@@ -22,6 +22,7 @@ public :
 
 	//删除该地图的所有路口信息
 	bool deleteEntitiesByMapID(unsigned int mapID);
+
 private: 
 };
 

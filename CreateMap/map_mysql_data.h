@@ -20,7 +20,7 @@
 //数据库状态
 typedef struct DB_STATE{
 	int mapid;  //地图ID
-	//..
+	char smallImagePath[STRING_S_LEN];
 }DB_STATE;
 
 /////////// 以下代码为model层 
@@ -38,6 +38,7 @@ typedef struct MODEL_WINMAPNAME{
 	int ID;
 	char name[STRING_S_LEN];
 	char imagepath[STRING_S_LEN];
+	char smallImagepath[STRING_S_LEN];
 }MODEL_WINMAPNAME;
 
 //对应于 tb_win_road 表

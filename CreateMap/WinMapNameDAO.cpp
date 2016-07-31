@@ -42,6 +42,7 @@ void WinMapNameDAO::getAllEntities(vector<MODEL_WINMAPNAME> &vModels){
 		sscanf(row[0],"%d",&winmapname.ID);
 		strcpy(winmapname.name,row[1]);
 		strcpy(winmapname.imagepath,row[2]);
+		strcpy(winmapname.smallImagepath,row[3]);
 		vModels.push_back(winmapname);
 	}
 	mysql_free_result(res_set);
@@ -57,7 +58,7 @@ void WinMapNameDAO::getEntityByID(unsigned int mapID,MODEL_WINMAPNAME &model){
 
 	//Step 1 -----------查询--------------
 	memset(sql,0,sizeof(sql));
-	sprintf(sql,"SELECT * FROM tb_win_mapname ");
+	sprintf(sql,"SELECT * FROM tb_win_mapname where ID=%d ",mapID);
 	mysql_query(_conn, sql);
 
 	//Step 2 -----------获取数据--------------
@@ -71,6 +72,7 @@ void WinMapNameDAO::getEntityByID(unsigned int mapID,MODEL_WINMAPNAME &model){
 	while ((row = mysql_fetch_row(res_set)) != NULL){ //遍历结果集
 		strcpy(model.name,row[1]);
 		strcpy(model.imagepath,row[2]);
+		strcpy(model.smallImagepath,row[3]);
 	}
 	mysql_free_result(res_set);
 	return ;

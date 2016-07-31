@@ -1,14 +1,21 @@
 #include"stdafx.h"
 #include"DrawMapMark.h"
 
+#define COLOR_START RGB(0,0,0) //起点
+#define COLOR_END RGB(255,0,0)       //终点
+#define COLOR_SPLIT RGB(0,0,255)     //分成点
+#define COLOR_TASK RGB(0,255,255)    //任务点
+#define COLOR_NORMAL RGB(127,127,127)  //普通点
+
 
 //在目标上 绘制直线 p1首端 p2尾端
 void drawmap::DrawLine(CDC *pdc,CPoint p1,CPoint p2,COLORREF color){
 	CPen pen;
-	pen.CreatePen(PS_SOLID,1,color);
+	pen.CreatePen(PS_SOLID,3,color);
 	pdc->SelectObject(pen);
 	pdc->MoveTo(p1);
 	pdc->LineTo(p2);
+	pdc->SetPixel(p1,RGB(255,255,255));
 }
 
 void drawmap::DrawLineBresenham(CDC *pdc,CPoint p1,CPoint p2,COLORREF color){
@@ -90,7 +97,7 @@ void drawmap::DrawObstacles(CDC *pdc,CPoint p1,CPoint p2,COLORREF color,int id){
 	CPoint pt=p2-p1;
 	int r=sqrt(pt.x*pt.x+pt.y*pt.y);
 
-	pen.CreatePen(PS_SOLID,1,color);
+	pen.CreatePen(PS_SOLID,3,color);
 	pdc->SelectStockObject(NULL_BRUSH);
 	pdc->SelectObject(pen);
 	pdc->MoveTo(p1);
@@ -112,7 +119,7 @@ void drawmap::DrawNodeMark(CDC *pdc,CPoint p,unsigned int r,COLORREF color,int  
 	int rr=10;
 	CRect textRect(p.x+rr,p.y-5*rr,p.x+10*rr,p.y-rr);
 
-	pen.CreatePen(PS_SOLID,1,color);
+	pen.CreatePen(PS_SOLID,3,color);
 	pdc->SelectStockObject(NULL_BRUSH);
 	pdc->SelectObject(pen);
 	pdc->MoveTo(p);
@@ -199,7 +206,7 @@ void drawmap::DrawByRecord(CImage *ptrImage,const vector<DRAW_RECORD>  &vRecord,
 //
 void drawmap::DrawBezier(CDC *pdc,CPoint points[],unsigned int count,COLORREF color){
 	CPen pen;
-	pen.CreatePen(PS_SOLID,1,color);
+	pen.CreatePen(PS_SOLID,3,color);
 	pdc->SelectObject(pen);
 	pdc->PolyBezier(points,count);
 }
@@ -354,4 +361,100 @@ CString drawmap::PrintRecord(DRAW_RECORD record){
 		break;
 	}
 	return str;
+}
+
+//绘制数据来源为GPS的道路或者路口
+void drawmap::DrawEleFromGPS(CDC *pDC,CPoint p){
+	CPen pen;
+	pen.CreatePen(PS_SOLID,2,RGB(0,255,255));
+	pDC->SelectObject(pen);
+	pDC->SelectStockObject(GRAY_BRUSH);
+	int r=1;  //半径
+	pDC->MoveTo(p);
+	pDC->Ellipse(p.x-r,p.y-r,p.x+r,p.y+r);
+}
+
+//绘制数据来源为绘制
+void drawmap::DrawEleFromDraw(CDC *pDC,CPoint p){
+	CPen pen;
+	pen.CreatePen(PS_SOLID,2,RGB(255,0,255));
+	pDC->SelectObject(pen);
+	pDC->SelectStockObject(GRAY_BRUSH);
+	int r=1;  //半径
+	pDC->MoveTo(p);
+	pDC->Ellipse(p.x-r,p.y-r,p.x+r,p.y+r);
+}
+
+void drawmap::DrawCarPoint(CDC *pDC,CPoint p){
+	CPen pen;
+	pen.CreatePen(PS_SOLID,1,RGB(255,255,255));
+	pDC->SelectObject(pen);
+	//if(m_isStartGPS)
+		//pDC->SelectStockObject(BLACK_BRUSH); //记录GPS为黑点
+	//else
+	pDC->SelectStockObject(WHITE_BRUSH);
+	pDC->MoveTo(p);
+	int r=1;  //半径
+	pDC->Ellipse(p.x-r,p.y-r,p.x+r,p.y+r);
+}
+
+//绘制任务文件
+void drawmap::DrawTaskPoint(CDC *pDC,vector<MAP_TASK_NODE_ZZ> &tasks){
+	int r;  //半径
+	CPen* OldPen=NULL;
+	CPen *pen=NULL;
+	pDC->SelectStockObject(WHITE_BRUSH);
+	for(auto &ts:tasks){
+		CPoint p((int)ts.longtitude,(int)ts.latitude);
+		switch(ts.type){
+			case 0:{//起点
+				pen=new CPen(PS_SOLID,2,COLOR_START);
+				OldPen=pDC->SelectObject(pen);
+				r=6;
+				break;
+			}
+			case 1:{//终点
+				pen=new CPen(PS_SOLID,3,COLOR_END);
+				OldPen=pDC->SelectObject(pen);
+				r=6;
+				break;
+			}
+			case 3:{//分叉点
+				pen=new CPen(PS_SOLID,3,COLOR_SPLIT);
+				OldPen=pDC->SelectObject(pen);
+				r=4;
+				break;
+			}
+			case 4:{//任务点
+				pen=new CPen(PS_SOLID,3,COLOR_TASK);
+				OldPen=pDC->SelectObject(pen);
+				r=4;
+				break;
+			}
+			case 2:{//normal
+				pen=new CPen(PS_SOLID,3,COLOR_NORMAL);
+				OldPen=pDC->SelectObject(pen);
+				r=2;
+				break;
+			 }
+
+		}//switch
+		pDC->Ellipse(p.x-r,p.y-r,p.x+r,p.y+r);
+		pDC->SelectObject(OldPen);
+		delete pen;
+	}
+	//pDC->SelectObject(oldBr);
+}
+
+//绘制预演路径
+void drawmap::DrawPlanPath(CDC *pDC,vector<CPoint> vps){
+	CPen pen;
+	pen.CreatePen(PS_SOLID,2,RGB(255,255,255));
+	pDC->SelectObject(pen);
+	pDC->SelectStockObject(WHITE_BRUSH);
+	for(auto &p:vps){
+		pDC->MoveTo(p);
+		int r=2;  //半径
+		pDC->Ellipse(p.x-r,p.y-r,p.x+r,p.y+r);
+	}
 }

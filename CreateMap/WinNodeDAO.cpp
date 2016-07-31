@@ -113,7 +113,6 @@ void WinNodeDAO::getEntitiesByMapID(unsigned int mapID,vector<CREATE_MAP_NODE> &
 	char sql[SQL_S_LEN];
 	MYSQL_RES *res_set;
 	MYSQL_ROW row;
-	int pointsID;
 	CREATE_MAP_NODE tNode;
 	auto winpoints=WinPointsDAO::getInstance();
 

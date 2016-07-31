@@ -28,6 +28,7 @@ public:
 
 	DECLARE_MESSAGE_MAP()
 	afx_msg void OnOpenMap();
+	afx_msg void On32778();
 };
 
 extern CCreateMapApp theApp;

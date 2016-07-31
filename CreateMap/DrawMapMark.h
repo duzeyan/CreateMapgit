@@ -57,6 +57,20 @@ namespace drawmap{
 	//获取贝塞尔点
 	CPoint PointOnCubicBezier( CPoint cp[4], float t ); 
 	
+	//绘制数据来源为GPS的道路或者路口
+	void DrawEleFromGPS(CDC *pdc,CPoint p);
+
+	//绘制数据来源为绘制
+	void DrawEleFromDraw(CDC *pdc,CPoint p);
+
+	//绘制车体GPS
+	void DrawCarPoint(CDC *pdc,CPoint p);
+
+	//绘制任务文件
+	void DrawTaskPoint(CDC *pdc,vector<MAP_TASK_NODE_ZZ> &tasks);
+
+	//绘制预演路径
+	void DrawPlanPath(CDC *pdc,vector<CPoint> vps);
 
 }
 

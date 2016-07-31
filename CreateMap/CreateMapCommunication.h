@@ -1,6 +1,5 @@
 #pragma once
 
-#include "NJUST_MAP_data.h"
 #include "UDP.h"
 #include <windows.h>
 
@@ -33,6 +32,6 @@ public:
 
 	 void        ShutDownCommunication();
 
-	 void  getGPSAndPostion(char * buff, int len,double longlat[2]);
+	 void  getGPSAndPostion(char * buff, int len,double longlat[2],int &frameID,int &state);
 };
 

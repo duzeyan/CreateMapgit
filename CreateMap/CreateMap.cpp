@@ -15,6 +15,7 @@
 
 BEGIN_MESSAGE_MAP(CCreateMapApp, CWinApp)
 	ON_COMMAND(ID_HELP, &CWinApp::OnHelp)
+	ON_COMMAND(ID_32778, &CCreateMapApp::On32778)
 END_MESSAGE_MAP()
 
 
@@ -92,3 +93,9 @@ BOOL CCreateMapApp::InitInstance()
 
 
 
+
+
+void CCreateMapApp::On32778()
+{
+	// TODO: 在此添加命令处理程序代码
+}

@@ -57,7 +57,10 @@ typedef struct CREATE_MAP_NODE{
 typedef struct CREATE_MAP_CROSS{
 	int idstart;			//路口进入ID
 	int idend;				//路口出ID
+	NJUST_MAP_GPS_SOURCE    GPSDataFrom;//GPS信息来源
    vector<CPoint> points;   //图中的路口坐标序列
+   vector<MAP_DOUBLE_POINT> realGPS;//车采GPS
+   vector<MAP_DOUBLE_POINT> realGPSNeg;//车采GPS 逆序列
 }CREATE_MAP_CROSS;
 
 
@@ -66,6 +69,8 @@ typedef struct  CREATE_MAP_ROAD{
 	CPoint position; //图中坐标 TODO无用
 	vector<CPoint> pInLine;//道路上的像素点 非连续
 	MAP_ROAD road; //道路信息
+	vector<MAP_DOUBLE_POINT> realGPS;//车采GPS 正序列
+	vector<MAP_DOUBLE_POINT> realGPSNeg;//车采GPS 逆序列
 }CREATE_MAP_ROAD;
 
 

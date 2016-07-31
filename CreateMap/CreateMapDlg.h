@@ -90,11 +90,18 @@ public:
 	bool m_isDrawCar;                   //控制绘制车体
 	bool m_isHighLight;    
 
+	//数据库
 	MysqlConnector m_dbcon;             //数据库连接
     DB_STATE m_dbstate;                 //当前数据库状态
 
-	////////////////////////////////////////////////////////////////////////// 反向操作变量
-	vector<MAP_DOUBLE_POINT> m_Show_GPSList; //读取的GFS
+	//////采集GPS
+	bool m_isStartGPS;//标志是否记录
+	vector<MAP_DOUBLE_POINT> m_realGPSList;//记录一段路GPS,用于赋给道路或路口
+	vector<CPoint> m_pathKeep;//记录绘制车体,刷新动作取消
+	////////////////////////////////////////////////////////////////////////// 反向显示变量
+	vector<MAP_DOUBLE_POINT> m_Show_GPSList; //读取规划结果文件
+	vector<MAP_TASK_NODE_ZZ> m_taskPoint;//任务路点文件
+	vector<MAP_TASK_NODE_ZZ> m_taskShow;//用于在大图中显示任务文件结果
 	int m_Show_cur; //当前读到的序列位置
 	//////////////////////////////////////////////////////////////////////////
 
@@ -230,4 +237,14 @@ public:
 protected:
 	afx_msg LRESULT OnMapGetgps(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnMapLocation(WPARAM wParam, LPARAM lParam);
+public:
+	//CComboBox m_comboxSelectEle;//地图结构列表(用于给地图元素赋GPS序列)
+	afx_msg void OnGiveGPS();
+	afx_msg void OnBnClickedButtonsavegps();
+	afx_msg void OnBnClickedButtonreadgps();
+	//CButton m_radioPN;
+	int m_radioPN;
+	afx_msg void OnBnClickedRadioP();
+	afx_msg void OnBnClickedRadioN();
+	afx_msg void OnShowtask();
 };

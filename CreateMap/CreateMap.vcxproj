@@ -187,6 +187,7 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <Text Include="NJUST_ALV_BYD_H\0.版本4.4.txt" />
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
@@ -202,13 +203,41 @@
     <ClInclude Include="ImageCacheManage.h" />
     <ClInclude Include="MapDAO.h" />
     <ClInclude Include="MapDrawControl.h" />
+    <ClInclude Include="MapFileStream.h" />
+    <ClInclude Include="MapModule.h" />
+    <ClInclude Include="MapTools.h" />
     <ClInclude Include="map_mysql_data.h" />
     <ClInclude Include="MAP_BASIC_data.h" />
     <ClInclude Include="ModifyNode.h" />
     <ClInclude Include="MySqlCommand.h" />
     <ClInclude Include="MysqlConnector.h" />
     <ClInclude Include="NJUSTMap.h" />
-    <ClInclude Include="NJUST_MAP_data.h" />
+    <ClInclude Include="NJUST_ALV_BYD_H\ALV_BYD.h" />
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_2D_data.h" />
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_2D_proc.h" />
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_3D4_data.h" />
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_3D4_proc.h" />
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_3D64_data.h" />
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_3D64_proc.h" />
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_3DESR_data.h" />
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_FU_data.h" />
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_FU_proc.h" />
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_Global_Def.h" />
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_IP_comm.h" />
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_IR_data.h" />
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_IR_proc.h" />
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_LS_data.h" />
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_LS_proc.h" />
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_MAP_data.h" />
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_MAP_proc.h" />
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_MC_data.h" />
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_MC_proc.h" />
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_MC_typedef.h" />
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_MO_data.h" />
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_MO_proc.h" />
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_PL_data.h" />
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_PL_proc.h" />
+    <ClInclude Include="NJUST_MAP_data.h.back" />
     <ClInclude Include="NJUST_MC_typedef.h" />
     <ClInclude Include="QDib.h" />
     <ClInclude Include="Resource.h" />
@@ -238,6 +267,9 @@
     <ClCompile Include="DIBAPI.CPP" />
     <ClCompile Include="DrawMapMark.cpp" />
     <ClCompile Include="ImageCacheManage.cpp" />
+    <ClCompile Include="MapFileStream.cpp" />
+    <ClCompile Include="MapModule.cpp" />
+    <ClCompile Include="MapTools.cpp" />
     <ClCompile Include="ModifyNode.cpp" />
     <ClCompile Include="MYFILE.CPP" />
     <ClCompile Include="MySqlCommand.cpp" />

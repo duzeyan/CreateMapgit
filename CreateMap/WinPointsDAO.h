@@ -25,7 +25,23 @@ public :
 
 	//根据ID获取点集 [out]vPoints 会先对vPoints调用clear()
 	void getPointsByID(int ID,vector<CPoint> &vPoints);
+
+	//////////////////////////附加插入GPS序列的部分//////////////////////
+	//插入GPS序列
+	unsigned int insertEntity(const vector<MAP_DOUBLE_POINT> &models);
+
+	//根据ID获取GPS集合
+	void getGPSByID(int ID,vector<MAP_DOUBLE_POINT> &vGPS);
+
+	//根据ID删除数据
+	bool deleteGPSByID(int ID);
+
+	//批量删除GPS
+	bool deleteNGPSByIDs(const vector<int> &vIDs);
+
+
 };
+
 
 static WinPointsDAO* s_winpointsdao;
 #endif

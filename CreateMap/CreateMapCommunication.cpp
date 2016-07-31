@@ -271,7 +271,7 @@ void CreateMapCommunication::ShutDownCommunication()
 
 
 //回调实现功能
-void  CreateMapCommunication::getGPSAndPostion(char * buff, int len,double longlat[2])
+void  CreateMapCommunication::getGPSAndPostion(char * buff, int len,double longlat[2],int &frameID,int &state)
 {
     
 	double   m_longtitude=0;
@@ -293,7 +293,8 @@ void  CreateMapCommunication::getGPSAndPostion(char * buff, int len,double longl
         {
             m_latitude=pNav->Latitude_degree*60;
 	        m_longtitude=pNav->Longitude_degree*60;
-
+			state=pNav->GPS_Status;
+			frameID=pNav->FrameID;
 			longlat[0]=m_longtitude;
 			longlat[1]=m_latitude;
 		}

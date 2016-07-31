@@ -157,8 +157,11 @@ public:
 	//获取直线方程
 	void getLineFunctionPara(int startID,int endStart,double &k,double &b,double &c);
 
-	//根据经度维度返回最近节点的编号 若差距太大返回-1
-	int getIndexByGPS(double lng,double lat);
+	//根据经度维度返回最近节点的编号 若差距太大返回-1 单位M
+	int getIndexByGPS(double lng,double lat,double dis);
+
+	//在排除特定点的情况下 返回dis范围内的最近节点
+	int getNodeIndexByGPSWithoutV(double lng,double lat,double dis,vector<MAP_TASK_NODE_ZZ> v);
 };
 
 #endif

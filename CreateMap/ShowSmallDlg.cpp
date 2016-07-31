@@ -14,7 +14,8 @@ IMPLEMENT_DYNAMIC(ShowSmallDlg, CDialogEx)
 ShowSmallDlg::ShowSmallDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(ShowSmallDlg::IDD, pParent)
 {
-
+	_isTransPath=false;
+	_isTransTask=false;
 }
 
 ShowSmallDlg::~ShowSmallDlg()
@@ -34,9 +35,8 @@ END_MESSAGE_MAP()
 
 
 void ShowSmallDlg::init(CString imagepath){
+	_smallImage.Destroy();
 	_smallImage.Load(imagepath);
-
-	
 	return;
 }
 
@@ -87,6 +87,19 @@ void ShowSmallDlg::setSrcImageInfo(int width,int height,int blockW,int blockH){
 	return;
 }
 
+//给出全局点
+void ShowSmallDlg::setPathPix(vector<CPoint> &pixs){
+	_isTransPath=false;
+	_pathList=pixs;
+	return;
+}
+
+//设置任务路点数据
+void ShowSmallDlg::setTaskPix(vector<MAP_TASK_NODE_ZZ> &tasks){
+	_isTransTask=false;
+	_tasks=tasks;
+	return;
+}
 
 
 // ShowSmallDlg 消息处理程序
@@ -100,7 +113,8 @@ void ShowSmallDlg::OnLButtonDown(UINT nFlags, CPoint point)
 	//_drawRect
 	//Step 1 -----------定位--------------
 	if(_drawRect.PtInRect(point)){
-		//AfxMessageBox(L"点在里面",MB_OK);
+		CWnd *pWnd=GetDlgItem(IDC_PICSMALL);
+		_picDC=pWnd->GetDC();
 		CPoint imageP=point-_drawRect.TopLeft();//缩略图片
 		double dx=_drawRect.Width()*1.0/_srcBlockW;
 		double dy=_drawRect.Height()*1.0/_srcBlockH;
@@ -117,6 +131,8 @@ void ShowSmallDlg::OnLButtonDown(UINT nFlags, CPoint point)
 		//高亮选择区域
 		drawCorr();
 		higthLightBlock();
+
+		pWnd->ReleaseDC(_picDC);
 	}
 
 	CDialogEx::OnLButtonDown(nFlags, point);
@@ -179,7 +195,7 @@ void ShowSmallDlg::higthLightBlock(){
 
 void ShowSmallDlg::OnPaint()
 {
-	CPaintDC dc(this); // 
+	//CPaintDC dc(this); // 
 
 	//Step 1 -----------加载图片控件DC--------------
 	CWnd *pWnd=GetDlgItem(IDC_PICSMALL);
@@ -191,10 +207,49 @@ void ShowSmallDlg::OnPaint()
 	_drawRect=getDrawRect();
 	CRect imageRect;
 	imageRect.SetRect(0,0,_smallImage.GetWidth(),_smallImage.GetHeight());
+	_picDC->SetStretchBltMode(COLORONCOLOR); //避免图片缩放失真
 	_smallImage.Draw(_picDC->m_hDC,_drawRect,imageRect);
-	
-	//Step 3 -----------绘制显示线--------------
+
+	//Step 3 -----------显示path--------------
+	if(!_isTransPath){ //未转化过
+		double scale=_drawRect.Width()*1.0/_srcW; //计算比例尺
+		double x,y;
+		int baseH=_drawRect.top;
+		int baseW=_drawRect.left;
+		for (auto &p:_pathList)
+		{
+			x=p.x*scale;
+			y=p.y*scale;
+			p.x=(int)x+baseW;//向下取整
+			p.y=(int)y+baseH;
+		}
+		_isTransPath=true;//标记转化过
+	}
+	//Step 4 -----------显示task--------------
+	if(!_isTransTask){ //未转化过
+		double scale=_drawRect.Width()*1.0/_srcW; //计算比例尺
+		double x,y;
+		int baseH=_drawRect.top;
+		int baseW=_drawRect.left;
+		for (auto &ts:_tasks) //经纬度中存的是转化过的坐标
+		{
+			x=ts.longtitude*scale;
+			y=ts.latitude*scale;
+			ts.longtitude=(int)x+baseW;//向下取整
+			ts.latitude=(int)y+baseH;
+		}
+		_isTransTask=true;//标记转化过
+	}
+	drawmap::DrawTaskPoint(_picDC,_tasks); //绘制任务点
+	drawmap::DrawPlanPath(_picDC,_pathList);//绘制预演结果
+	//Step 5 -----------绘制分割线--------------
 	drawCorr();
 	higthLightBlock();
+
+	pWnd->ReleaseDC(_picDC);
 	CDialogEx::OnPaint();
+}
+
+afx_msg void ShowSmallDlg::OnDestroy(){
+	CDialog::OnDestroy();
 }

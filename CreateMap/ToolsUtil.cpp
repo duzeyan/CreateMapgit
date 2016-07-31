@@ -1,6 +1,19 @@
 #include "stdafx.h"
 #include "ToolsUtil.h"
+#include "MAP_BASIC_data.h"
+#include <iostream>
+#include <fstream>
 #include<math.h>
+#include<string>
+#include<sstream>
+#include<string.h>
+
+using namespace std;
+
+//映射路口阈值
+const double FIND_NODE_THRE=50.0;
+//映射终点阈值
+const double FIND_END_THRE=5000.0;
 
 ToolsUtil::ToolsUtil(void)
 {
@@ -9,6 +22,69 @@ ToolsUtil::ToolsUtil(void)
 
 ToolsUtil::~ToolsUtil(void)
 {
+}
+
+
+//在直线模型下修补断层
+void ToolsUtil::CompleGPS(vector<MAP_DOUBLE_POINT> &GPSList){
+	int preLen=2;//取前2个点作为先验
+	double dx,dy,dt,dt1,dtSum;
+	bool isV;//主方向时候是水平
+	if(GPSList.size()<preLen)
+		return;
+	dx=dy=0.0;
+	//Step 1 -----------计算先验--------------
+	for(int i=0;i<preLen-1;i++){
+		dx+=(GPSList[i+1].x-GPSList[i].x);
+		dy+=(GPSList[i+1].y-GPSList[i].y);
+	}
+	dx/=(preLen-1);
+	dy/=(preLen-1);
+	if(abs(dx)>abs(dy)){
+		dt=dx;
+		isV=true;
+	}else{
+		dt=dy;
+		isV=false;
+	}
+	//Step 2 -----------查找缺口--------------
+	int cutI=-1;//缺口索引
+	for(int i=preLen-1;i<GPSList.size()-1;i++){
+		if(isV){
+			dt1=GPSList[i+1].x-GPSList[i].x;
+		}else{
+			dt1=GPSList[i+1].y-GPSList[i].y;
+		}
+		if(abs(dt1)>abs(10*dt)){
+			cutI=i+1;//断点后面
+			break;
+		}
+	}
+	if(cutI==0)
+		return;
+	//Step 3 -----------重算先验--------------
+	dx=dy=0.0;
+	for(int i=0;i<cutI-1;i++){
+		dx+=(GPSList[i+1].x-GPSList[i].x);
+		dy+=(GPSList[i+1].y-GPSList[i].y);
+	}
+	assert(cutI!=0);
+	dx/=(cutI-1);
+	dy/=(cutI-1);
+	if(abs(dx)>abs(dy)){
+		dt=dx;
+		isV=true;
+	}else{
+		dt=dy;
+		isV=false;
+	}
+
+	//Step 4 -----------填充缺口--------------
+	MAP_DOUBLE_POINT p=GPSList[cutI-1];
+	for(dtSum=0;dtSum<abs(dt1);cutI,dtSum+=abs(dt)){
+		p.x+=dx;p.y+=dy;
+		GPSList.insert(GPSList.begin()+cutI,p);//前插入
+	}
 }
 
 void ToolsUtil::GPS2Earthy(double x, double y, int &earthx, int &earthy)
@@ -112,6 +188,207 @@ void ToolsUtil::WtoA(char* dst,unsigned int dstLen,const CString *src){
 }
 
 
+//解析路点文件 自然基金版本
+int ToolsUtil::AnalyticalZR(NJUSTMap &map){
+	vector<string> strLines;
+	string oneline;
+	ifstream  fTask;
+	string filename="D:\\map\\task.txt";
+	//string filename="D:\\map\\KYXZ2016A.txt";
+	vector<MAP_TASK_NODE> vTask; //字符串解析成路点结构
+	vector<MAP_TASK_NODE> vOutTask; //用于生成initalNodequeue
+
+	//Step 1 -----------读取原文件--------------
+	fTask.open(filename);
+	if(fTask.is_open()){
+		//按行读入strLines
+		while (getline(fTask,oneline)){
+			strLines.push_back(oneline);
+		}
+		fTask.close();
+
+		//Step 2 -----------解析到结构体中--------------
+		for(auto &tline:strLines){
+			istringstream stream(tline);
+			MAP_TASK_NODE tasknode;
+			double height;     //没用到高度 暂时剔除
+			stream >> tasknode.num      >> tasknode.longtitude
+				>> tasknode.latitude >> height 
+				>> tasknode.shuxing1 >> tasknode.shuxing2;
+			vTask.push_back(tasknode);
+		}
+
+		int num=0; //用于tOutTask的编号
+		for (auto &tTasknode:vTask)
+		{
+			if (tTasknode.shuxing1 == 0 || tTasknode.shuxing1 == 7 || tTasknode.shuxing1 == 1)
+			{
+				int result = map.getIndexByGPS(tTasknode.longtitude, tTasknode.latitude,FIND_NODE_THRE);
+				//找到最近的点
+				if (result == -1) //没有ID返回
+					continue;
+				if(vOutTask.empty()){ //第一次不用跟前帧对比
+					MAP_TASK_NODE tasknode;
+					tasknode.num = num;
+					tasknode.longtitude = tTasknode.longtitude;//以分为单位
+					tasknode.latitude = tTasknode.latitude;
+					tasknode.noderesult = result;//不在路网中的点一次减小
+					tasknode.shuxing1 = tTasknode.shuxing1;
+					tasknode.shuxing2 = tTasknode.shuxing2;
+					tasknode.duiyingludianbianhao=tTasknode.num;
+					vOutTask.push_back(tasknode);
+					continue;
+				}
+				//重复不考虑
+				if(vOutTask.back().noderesult!=result){
+					MAP_TASK_NODE tasknode;
+					tasknode.num = num;
+					tasknode.longtitude = tTasknode.longtitude;//以分为单位
+					tasknode.latitude = tTasknode.latitude;
+					tasknode.noderesult = result;//不在路网中的点一次减小
+					tasknode.shuxing1 = tTasknode.shuxing1;
+					tasknode.shuxing2 = tTasknode.shuxing2;
+					tasknode.duiyingludianbianhao=tTasknode.num;
+					vOutTask.push_back(tasknode);
+				}
+			}
+		}
+
+		//写原始任务点文件InitialNodeQueue
+		CFile fileOut;
+		fileOut.Open(L"D:\\map\\InitialNodeQueue.db",CFile::modeCreate|CFile::modeWrite);
+		FILE *pft = fopen("D:\\map\\InitialNodeQueue.txt", "w");
+		for (auto &tTasknode:vOutTask){
+			fileOut.Write(&tTasknode, sizeof(MAP_TASK_NODE));
+			fprintf(pft,"%d\n",tTasknode.noderesult);
+		}
+		fileOut.Close();
+		fclose(pft);
+
+		//TRACE("结构体长度：%d",sizeof(ROADNODE));
+		//测试读
+		pft = fopen("D:\\map\\InitialNodeQueue.db", "rb");
+		fseek(pft, 0L, SEEK_END);
+		int len = ftell(pft) / sizeof(ROADNODE);
+		fseek(pft, 0L, SEEK_SET);
+		ROADNODE tROAD;
+		for(int i=0;i<len;i++){
+			fread(&tROAD, sizeof(ROADNODE), 1, pft);
+		}
+		fclose(pft);
+	}else{
+		AfxMessageBox(L"未找到文件",MB_OK);
+	}
+	return 0;
+}
+
+//解析路点文件 总装版本 -1终点定位失败
+int ToolsUtil::AnalyticalZZ(NJUSTMap &map){
+	vector<string> strLines;
+	string oneline;
+	ifstream  fTask;
+	string filename="D:\\map\\KYXZ2016A.txt";
+	vector<MAP_TASK_NODE_ZZ> vTask; //字符串解析成路点结构
+	vector<MAP_TASK_NODE_ZZ> vOutTask; //用于生成initalNodequeue
+
+	//Step 1 -----------读取原文件--------------
+	fTask.open(filename);
+	if(fTask.is_open()){
+		//按行读入strLines
+		while (getline(fTask,oneline)){
+			strLines.push_back(oneline);
+		}
+		fTask.close();
+
+		//Step 2 -----------解析到结构体中--------------
+		for(auto &tline:strLines){
+			istringstream stream(tline);
+			MAP_TASK_NODE_ZZ tasknode;
+			double height;     //没用到高度 暂时剔除
+			stream >> tasknode.num  >> tasknode.longtitude
+				>> tasknode.latitude >> tasknode.heightM 
+				>> tasknode.type;
+			tasknode.resultCode=-1;
+			vTask.push_back(tasknode);
+		}
+		//Step 3 -----------解析路点文件-------------- 
+		//结果 x,y,y,y,z1,t //x起点 y路口 z1解析终点 z2原始终点 t任务点
+		MAP_TASK_NODE_ZZ tasknode,endNode,missionNode;
+		for (auto &tTasknode:vTask)
+		{
+			//Step 3.1 -----------解析岔路口和起点--------------
+			if (tTasknode.type == 3||tTasknode.type == 0)
+			{
+				//在50米范围内
+				int result = map.getIndexByGPS(tTasknode.longtitude, tTasknode.latitude,FIND_NODE_THRE);
+				//找到最近的点
+				if (result == -1) //返回code
+					continue;
+				if(vOutTask.empty()){ //第一次不用跟前帧对比
+					tasknode=tTasknode;
+					tasknode.resultCode=result;
+					vOutTask.push_back(tasknode);
+					continue;
+				}
+				//重复不考虑
+				if(vOutTask.back().resultCode!=result){
+					tasknode=tTasknode;
+					tasknode.resultCode=result;
+					vOutTask.push_back(tasknode);
+					continue;
+				}
+			}
+			//Step 3.2 -----------暂时记录终点--------------
+			if(tTasknode.type == 1){
+				endNode=tTasknode;
+			}
+			//Step 3.3 -----------暂时记录任务点--------------
+			if(tTasknode.type == 4){
+				missionNode=tTasknode;
+			}
+		}
+
+		//Step 4.1 ----------解析终点到路网中---------------
+		//在5公里范围内最近的节点
+		int result = map.getNodeIndexByGPSWithoutV(endNode.longtitude, endNode.latitude,FIND_END_THRE,vOutTask);
+		//找到最近的点
+		if (result == -1) //返回code
+			return -1;
+		endNode.resultCode=result;
+		vOutTask.push_back(endNode);
+		vOutTask.push_back(missionNode);
+
+		//写原始任务点文件InitialNodeQueue
+		CFile fileOut;
+		fileOut.Open(L"D:\\map\\InitialNodeQueue.db",CFile::modeCreate|CFile::modeWrite);
+		FILE *pft = fopen("D:\\map\\InitialNodeQueue.txt", "w");
+		for (auto &tTasknode:vOutTask){
+			fileOut.Write(&tTasknode, sizeof(MAP_TASK_NODE_ZZ));
+			fprintf(pft,"%d\n",tTasknode.resultCode);
+		}
+		fileOut.Close();
+		fclose(pft);
+
+		//TRACE("结构体长度：%d",sizeof(ROADNODE));
+		//测试读
+		pft = fopen("D:\\map\\InitialNodeQueue.db", "rb");
+		fseek(pft, 0L, SEEK_END);
+		int len = ftell(pft) / sizeof(MAP_TASK_NODE_ZZ);
+		fseek(pft, 0L, SEEK_SET);
+		MAP_TASK_NODE_ZZ tROAD;
+		for(int i=0;i<len;i++){
+			fread(&tROAD, sizeof(MAP_TASK_NODE_ZZ), 1, pft);
+		}
+		fclose(pft);
+	}else{
+		AfxMessageBox(L"未找到文件",MB_OK);
+	}
+	return 0;
+}
+
+
+
+
 static NJUST_MC_STATE_INFO  gMCState;
 static NJUST_MC_NAV_INFO    gMCNav;
 static NJUST_MC_DRIVE_INFO  gMCDrive;
@@ -154,6 +431,8 @@ int ToolsUtil::NJUST_MC_Decode_IP_Data( const void* pIPData, const int nBytes,
 	//step.3----------返回-----------------------------------//
 	return errCode;
 }
+
+
 
 int ToolsUtil::NJUST_MC_Decode_State(const void* pIPData, const int nBytes)
 {   //解析导航信息:将数据解析到gMCState

@@ -40,12 +40,21 @@
     <Filter Include="MYSQL模块\DAO">
       <UniqueIdentifier>{5d2538c1-1583-4607-b625-4ac855c98175}</UniqueIdentifier>
     </Filter>
-    <Filter Include="对话框\附属对话框\子图对话框">
+    <Filter Include="对话框\附属对话框\缩略图对话框">
       <UniqueIdentifier>{6d48d720-0da4-49f9-b5cc-fd52a8edb539}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="地图规划模拟">
+      <UniqueIdentifier>{0f2fe7bf-40d4-4743-88a1-9c1dea2609a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="BYD头文件">
+      <UniqueIdentifier>{5750a0ab-c980-431d-bce0-d4ad84498673}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
+    <Text Include="NJUST_ALV_BYD_H\0.版本4.4.txt">
+      <Filter>BYD头文件</Filter>
+    </Text>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CreateMap.h">
@@ -95,9 +104,6 @@
     </ClInclude>
     <ClInclude Include="NJUST_MC_typedef.h">
       <Filter>通信模块</Filter>
-    </ClInclude>
-    <ClInclude Include="NJUST_MAP_data.h">
-      <Filter>地图结构</Filter>
     </ClInclude>
     <ClInclude Include="ModifyNode.h">
       <Filter>对话框\附属对话框</Filter>
@@ -157,7 +163,94 @@
       <Filter>绘图模块</Filter>
     </ClInclude>
     <ClInclude Include="ShowSmallDlg.h">
-      <Filter>对话框\附属对话框\子图对话框</Filter>
+      <Filter>对话框\附属对话框\缩略图对话框</Filter>
+    </ClInclude>
+    <ClInclude Include="MapFileStream.h">
+      <Filter>地图规划模拟</Filter>
+    </ClInclude>
+    <ClInclude Include="MapModule.h">
+      <Filter>地图规划模拟</Filter>
+    </ClInclude>
+    <ClInclude Include="MapTools.h">
+      <Filter>地图规划模拟</Filter>
+    </ClInclude>
+    <ClInclude Include="NJUST_ALV_BYD_H\ALV_BYD.h">
+      <Filter>BYD头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_2D_data.h">
+      <Filter>BYD头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_2D_proc.h">
+      <Filter>BYD头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_3D4_data.h">
+      <Filter>BYD头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_3D4_proc.h">
+      <Filter>BYD头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_3D64_data.h">
+      <Filter>BYD头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_3D64_proc.h">
+      <Filter>BYD头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_3DESR_data.h">
+      <Filter>BYD头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_FU_data.h">
+      <Filter>BYD头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_FU_proc.h">
+      <Filter>BYD头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_Global_Def.h">
+      <Filter>BYD头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_IP_comm.h">
+      <Filter>BYD头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_IR_data.h">
+      <Filter>BYD头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_IR_proc.h">
+      <Filter>BYD头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_LS_data.h">
+      <Filter>BYD头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_LS_proc.h">
+      <Filter>BYD头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_MAP_data.h">
+      <Filter>BYD头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_MAP_proc.h">
+      <Filter>BYD头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_MC_data.h">
+      <Filter>BYD头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_MC_proc.h">
+      <Filter>BYD头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_MC_typedef.h">
+      <Filter>BYD头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_MO_data.h">
+      <Filter>BYD头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_MO_proc.h">
+      <Filter>BYD头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_PL_data.h">
+      <Filter>BYD头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NJUST_ALV_BYD_H\NJUST_PL_proc.h">
+      <Filter>BYD头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NJUST_MAP_data.h.back">
+      <Filter>地图结构</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -246,7 +339,16 @@
       <Filter>绘图模块</Filter>
     </ClCompile>
     <ClCompile Include="ShowSmallDlg.cpp">
-      <Filter>对话框\附属对话框\子图对话框</Filter>
+      <Filter>对话框\附属对话框\缩略图对话框</Filter>
+    </ClCompile>
+    <ClCompile Include="MapFileStream.cpp">
+      <Filter>地图规划模拟</Filter>
+    </ClCompile>
+    <ClCompile Include="MapModule.cpp">
+      <Filter>地图规划模拟</Filter>
+    </ClCompile>
+    <ClCompile Include="MapTools.cpp">
+      <Filter>地图规划模拟</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

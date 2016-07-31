@@ -1,6 +1,9 @@
 #pragma once
 
-
+#include "MAP_BASIC_data.h"
+#include "DrawMapMark.h"
+#include <vector>
+using std::vector;
 // ShowSmallDlg 对话框
 
 class ShowSmallDlg : public CDialogEx
@@ -21,6 +24,10 @@ private:
 	int _srcBlockH;//原图高度分块
 	int _nowIndexX; //大图中块的索引
 	int _nowIndexY;
+	bool _isTransPath; //路线点集是转化过
+	bool _isTransTask; //路线点集是转化过
+	vector<CPoint> _pathList;//路线点集
+	vector<MAP_TASK_NODE_ZZ> _tasks;
 	CImage _smallImage;
 	CRect  _picRect;//图片控件大小
 	CDC *_picDC;//图片控件DC
@@ -34,12 +41,15 @@ public :
 	//给出现在的位置 在缩略图中突出子块
 	void setPosition(CPoint p);
 
+	//设置结果路径点
+	void setPathPix(vector<CPoint> &pixs);
 
+	//设置任务路点数据
+	void setTaskPix(vector<MAP_TASK_NODE_ZZ> &tasks);
 
 private:
 	//根据图片大小和图片控件大小
 	CRect getDrawRect();
-
 	//画出分割线
 	void drawCorr();
 	//高亮当前块
@@ -53,4 +63,5 @@ protected:
 public:
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnPaint();
+	afx_msg void OnDestroy();
 };
